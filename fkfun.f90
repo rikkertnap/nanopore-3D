@@ -91,14 +91,50 @@ enddo
 enddo
 enddo
 
-if(PBC.eq.0) then ! set no PBC in z
-do ix = 0, dimx+1
-do iy = 0, dimy+1
-   psi(ix, iy, dimz+1) = 0.0  ! psibulk = 0.0
-   psi(ix, iy, 0) = psi(ix, iy, 1) ! zero charge
-enddo
-enddo
-endif
+! Check PBC in borders
+
+select case (PBC(1)) ! x = 0
+case(0) ! set bulk 
+   psi(0,:,:) = 0.0 
+case(2)
+   psi(0,:,:) = psi(1,:,:) ! zero charge
+endselect
+
+select case (PBC(2)) ! x = dimx
+case(0) ! set bulk 
+   psi(dimx+1,:,:) = 0.0  
+case(2)
+   psi(dimx+1,:,:) = psi(dimx,:,:) ! zero charge
+endselect
+
+select case (PBC(3)) ! y = 0
+case(0) ! set bulk 
+   psi(:,0,:) = 0.0  
+case(2)
+   psi(:,0,:) = psi(:,1,:) ! zero charge
+endselect
+
+select case (PBC(4)) ! y = dimy
+case(0) ! set bulk 
+   psi(:,dimy+1,:) = 0.0
+case(2)
+   psi(:,dimy+1,:) = psi(:,dimy,:) ! zero charge
+endselect
+
+select case (PBC(5)) ! z = 0
+case(0) ! set bulk 
+   psi(:,:,0) = 0.0  
+case(2)
+   psi(:,:,0) = psi(:,:,1) ! zero charge
+endselect
+
+select case (PBC(6)) ! z = dimz
+case(0) ! set bulk 
+   psi(:,:,dimz+1) = 0.0
+case(2)
+   psi(:,:,dimz+1) = psi(:,:,dimz) ! zero charge
+endselect
+
 
 ! volume fraction and frdir
 
@@ -115,6 +151,7 @@ do ix=1,dimx
  enddo  
 enddo
 
+
 ! Calculo de xtotal para poor solvent
 ! en el lattice
 do ix=1,dimx
@@ -122,18 +159,8 @@ do ix=1,dimx
   do iz=1,dimz
    xtotal(ix, iy, iz) = 1.0-xpos(ix, iy,iz) - xneg(ix, iy, iz)- xh(ix, iy, iz) - xHplus(ix, iy, iz) - xOHmin(ix, iy, iz) ! xtotal es todo menos solvente e iones
   enddo
-
-
-  do iz = dimz+1,dimz+Xulimit
-  xtotal(ix,iy,iz) = 0.0 ! xtotal en bulk = 0.0
-  enddo
-  do iz = 1-Xulimit,0
-  xtotal(ix,iy,iz) = 0.0 ! xtotal en la superficie = 0.0
-  enddo
-
  enddo
 enddo
-
 
 
 ! Compute dielectric permitivity
@@ -179,23 +206,32 @@ do ix=1,dimx
      do ax = -Xulimit,Xulimit 
       do ay = -Xulimit,Xulimit
        do az = -Xulimit,Xulimit
+
             jx = ix+ax
             jy = iy+ay
-            jx = mod(jx-1+5*dimx, dimx) + 1
-            jy = mod(jy-1+5*dimy, dimy) + 1
+            jz = iz+az
 
-            select case (PBC)
-            case(0)
-              if(((iz+az).ge.1).and.(iz+az).le.dimz) then
-                fv = (1.0-volprot(jx,jy,iz+az))
-                protemp=protemp + Xu(ax,ay,az)*sttemp*xtotal(jx, jy, iz+az)*fv
-              endif
-            case(1)
-                jz = iz+az
-                jz = mod(jz-1+5*dimz, dimz) + 1
+            if(PBC(1).eq.1) then
+            jx = mod(jx-1+5*dimx, dimx) + 1
+            endif
+
+            if(PBC(3).eq.1) then
+            jy = mod(jy-1+5*dimy, dimy) + 1
+            endif
+
+            if(PBC(5).eq.1) then
+            jz = mod(jz-1+5*dimz, dimz) + 1
+            endif
+
+            if((jx.ge.1).and.(jx.le.dimx)) then
+            if((jy.ge.1).and.(jy.le.dimy)) then
+            if((jz.ge.1).and.(jz.le.dimz)) then
                 fv = (1.0-volprot(jx,jy,jz))
                 protemp=protemp + Xu(ax,ay,az)*sttemp*xtotal(jx, jy, jz)*fv
-            end select
+            endif
+            endif
+            endif
+
        enddo
       enddo
      enddo

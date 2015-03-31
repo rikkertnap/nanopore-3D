@@ -19,7 +19,7 @@ integer  dimx
 integer  dimy 
 integer  dimz 
 real*8 gama 
-integer PBC
+integer PBC(6)
 integer vtkflag
 endmodule
 

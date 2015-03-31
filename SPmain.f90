@@ -27,10 +27,6 @@ integer j
 
 !!!!!!!!!!!! global parameters ... !!!!!!
 verbose = 5
-PBC = 1 ! Peridic boundary conditions 
-        ! 0 = only x and y
-        ! 1 = xyz
-
 saveevery = 1
 
 counter = 0

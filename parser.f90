@@ -26,6 +26,8 @@ real*8 ndr
 
 ! not defined variables, change if any variable can take the value
 
+PBC = 1
+
 ndi = -1e5
 ndr = -1.0d10
 
@@ -91,6 +93,21 @@ do while (ios == 0)
 
 
  select case (label)
+
+ case ('PBC')
+   read(buffer, *, iostat=ios) PBC(1),PBC(2),PBC(3),PBC(4),PBC(5),PBC(6)
+   if(rank.eq.0)print*,'Set ',trim(label),' = ',trim(buffer)
+
+   do j = 1,5,2
+    if((PBC(j).eq.1).and.(PBC(j+1).ne.1)) then 
+      print*, 'Error in PBC'
+      stop
+    endif
+    if((PBC(j+1).eq.1).and.(PBC(j).ne.1)) then
+      print*, 'Error in PBC'
+      stop
+    endif
+   enddo
 
  case ('vtkflag')
    read(buffer, *, iostat=ios) vtkflag
@@ -201,6 +218,7 @@ do while (ios == 0)
      read(fh, *), basura
      do j = 1, NNN
      read(fh, *), Aell(1,j), Aell(2,j), Aell(3,j)
+     if(rank.eq.0)print*,'Set particle',j,'axis to',  Aell(1,j), Aell(2,j), Aell(3,j)
      enddo
      read(fh, *), basura
      do j = 1, NNN
@@ -214,6 +232,13 @@ do while (ios == 0)
          print*, rotmatrix(3,1,j), rotmatrix(3,2,j), rotmatrix(3,3,j)
      endif
      enddo
+
+     read(fh, *), basura
+     do j = 1, NNN
+     read(fh, *), sigma(j)
+     if(rank.eq.0)print*,'Set particle',j,'surface coverage to', echarge(j)
+     enddo
+
      read(fh, *), basura
      do j = 1, NNN
      read(fh, *), echarge(j)
@@ -222,7 +247,7 @@ do while (ios == 0)
      read(fh, *), basura
      do j = 1, NNN
      read(fh, *), eeps(j)
-     if(rank.eq.0)print*,'Set particle',j,'hydrophobicity to', echarge(j)
+     if(rank.eq.0)print*,'Set particle',j,'hydrophobicity to', eeps(j)
      enddo
 
      endif ! NNN

@@ -9,13 +9,62 @@ real*8 mmmult
 
 ! collision with walls and out of system
 
-if (PBC.eq.0) then
- if ((x(3).ge.dimz*delta).or.(x(3).le.0.0)) then
- testsystem = -1
- print*, 'wall'
- return
+if (PBC(1).ne.0) then
+ if (x(1).le.0.0) then
+  testsystem = -1
+  print*, 'wall', 1
+  stop
+  return
  endif
 endif
+
+if (PBC(2).ne.0) then
+ if (x(1).ge.dimx*delta) then
+  testsystem = -1
+  print*, 'wall', 2
+  stop
+  return
+ endif
+endif
+
+if (PBC(3).ne.0) then
+ if (x(2).le.0.0) then
+  testsystem = -1
+  print*, 'wall', 3
+  stop
+  return
+ endif
+endif
+
+if (PBC(4).ne.0) then
+ if (x(2).ge.dimy*delta) then
+  testsystem = -1
+  print*, 'wall', 4
+  stop
+  return
+ endif
+endif
+
+if (PBC(5).ne.0) then
+ if (x(3).le.0.0) then
+  testsystem = -1
+  print*, 'wall', 5
+  stop
+  return
+ endif
+endif
+
+if (PBC(6).ne.0) then
+ if (x(3).ge.dimz*delta) then
+  testsystem = -1
+  print*, 'wall', 6
+  stop
+  return
+ endif
+endif
+
+
+
 
 ! collision with particles
 

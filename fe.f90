@@ -278,33 +278,37 @@ endif
             do ay = -Xulimit,Xulimit
             do az = -Xulimit,Xulimit
 
-
             jx = ix+ax
             jy = iy+ay
+            jz = iz+az
 
+            if(PBC(1).eq.1) then
             jx = mod(jx-1+5*dimx, dimx) + 1
+            endif
+
+            if(PBC(3).eq.1) then
             jy = mod(jy-1+5*dimy, dimy) + 1
- 
-     select case(PBC)
-     case(0)  
-        if(((iz+az).ge.1).and.((iz+az).le.dimz)) then 
-        fv2 = (1.0-volprot(jx,jy,iz+az)) 
-        F_vdW = F_vdW - 0.5000*delta**3*xtotal(ix, iy, iz) &
-        *xtotal(jx, jy,iz+az)*Xu(ax, ay, az)*st*fv*fv2
-       endif 
-    case(1)
-        jz = iz+az
-        jz = mod(jz-1+5*dimz, dimz) + 1
+            endif
 
-        fv2 = (1.0-volprot(jx,jy,jz))
-        F_vdW = F_vdW - 0.5000*delta**3*xtotal(ix, iy, iz) &
+            if(PBC(5).eq.1) then
+            jz = mod(jz-1+5*dimz, dimz) + 1
+            endif
+
+            if((jx.ge.1).and.(jx.le.dimx)) then
+            if((jy.ge.1).and.(jy.le.dimy)) then
+            if((jz.ge.1).and.(jz.le.dimz)) then
+                fv2 = (1.0-volprot(jx,jy,jz)) 
+
+                F_vdW = F_vdW - 0.5000*delta**3*xtotal(ix, iy, iz) &
         *xtotal(jx, jy,jz)*Xu(ax, ay, az)*st*fv*fv2
-     endselect
+
+            endif
+            endif
+            endif
 
             enddo
             enddo
             enddo
-
 
       enddo
       enddo

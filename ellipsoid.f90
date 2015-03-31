@@ -84,7 +84,8 @@ real*8 temp2
 
 call make_ellipsoid ! update matrixes for all particles
 
-cutarea = 0.01 ! throw away cells that have less area than cutarea x area of the cell with largest area  
+!cutarea = 0.01 ! throw away cells that have less area than cutarea x area of the cell with largest area  
+cutarea = 0.0 ! throw away cells that have less area than cutarea x area of the cell with largest area  
 
 sumpolseg = 0.0
 
@@ -160,12 +161,12 @@ do j = 1, NNN
  volx1 = volx1/temp*area*sigma(j)
 
  maxss = 1.0d100
- 
+
  do ix = 1, dimx
  do iy = 1, dimy
  do iz = 1, dimz
- vvtemp = (1.0-volprot1(ix,iy,iz))*(delta**3)/vpol/vsol
 
+ vvtemp = (1.0-volprot1(ix,iy,iz))*(delta**3)/vpol/vsol
  sstemp = volx1(ix,iy,iz)/sigma(j)
  if(sstemp.eq.0.0) then
  vvtemp = 1.0d100
@@ -340,10 +341,17 @@ do ix = xmin, xmax
 do iy = ymin, ymax
 do iz = zmin, zmax
 
-jx=mod(ix+dimx-1,dimx)+1
-jy=mod(iy+dimy-1,dimy)+1
+jx=ix
+jy=iy
+jz=iz
 
-if(PBC.eq.1) then
+if(PBC(1).eq.1) then
+ jx=mod(ix+dimx-1,dimx)+1
+endif
+if(PBC(3).eq.1) then
+ jy=mod(iy+dimy-1,dimy)+1
+endif
+if(PBC(5).eq.1) then
  jz=mod(iz+dimz-1,dimz)+1
 endif
 
@@ -368,21 +376,22 @@ if((vect.ge.1.0).and.(vectx.le.1.0)) then           ! between ellipsoid 1 and 2
   flagin=.true.
   if(flagout.eqv..true.) then
 
-    select case (PBC)
-      case(0) 
-      if((iz.ge.1).and.(iz.le.dimz)) then
-         call intcellg(AAA,AAAX,Rell,ix,iy,iz,npoints,volprot1,com1)
-         volprot(jx,jy,iz) = volprot1
-         com(jx,jy,iz,:) = com1(:)
-      else
-         print*,'update_matrix: Flag', iz
-         flag=.true.
-      endif   
-      case(1)
-         call intcellg(AAA,AAAX,Rell,ix,iy,iz,npoints,volprot1,com1)
-         volprot(jx,jy,jz) = volprot1
-         com(jx,jy,jz,:) = com1(:)
-      end select
+    if ((jx.lt.1).or.(jx.gt.dimx)) then
+         print*,'update_matrix: ix', ix
+         stop
+    endif
+    if ((jy.lt.1).or.(jy.gt.dimy)) then
+         print*,'update_matrix: iy', iy
+         stop
+    endif
+    if ((jz.lt.1).or.(jz.gt.dimz)) then
+         print*,'update_matrix: iz', iz
+         stop
+    endif
+
+      call intcellg(AAA,AAAX,Rell,ix,iy,iz,npoints,volprot1,com1)
+      volprot(jx,jy,iz) = volprot1
+      com(jx,jy,iz,:) = com1(:)
 
       goto 999 ! one in and one out, break the cycle
   endif
@@ -390,21 +399,22 @@ else
   flagout=.true.
   if(flagin.eqv..true.) then
 
-      select case (PBC)
-      case(0)
-      if((iz.ge.1).and.(iz.le.dimz)) then
-         call intcellg(AAA,AAAX,Rell,ix,iy,iz,npoints,volprot1,com1)
-         volprot(jx,jy,iz) = volprot1
-         com(jx,jy,iz,:) = com1(:)
-      else
-         print*,'update_matrix: Flag', iz
-         flag=.true.
-      endif
-      case(1)
-         call intcellg(AAA,AAAX,Rell,ix,iy,iz,npoints,volprot1,com1)
-         volprot(jx,jy,jz) = volprot1
-         com(jx,jy,jz,:) = com1(:)
-      end select
+    if ((jx.lt.1).or.(jx.gt.dimx)) then
+         print*,'update_matrix: ix', ix
+         stop
+    endif
+    if ((jy.lt.1).or.(jy.gt.dimy)) then
+         print*,'update_matrix: iy', iy
+         stop
+    endif
+    if ((jz.lt.1).or.(jz.gt.dimz)) then
+         print*,'update_matrix: iz', iz
+         stop
+    endif
+
+    call intcellg(AAA,AAAX,Rell,ix,iy,iz,npoints,volprot1,com1)
+    volprot(jx,jy,iz) = volprot1
+    com(jx,jy,iz,:) = com1(:)
 
     goto 999 ! one in and one out, break the cycle
   endif
@@ -415,17 +425,21 @@ enddo
 enddo
 
 if((flagin.eqv..true.).and.(flagout.eqv..false.)) then 
-      select case(PBC)
-      case(0)
-      if((iz.ge.1).and.(iz.le.dimz)) then
-         volprot(jx,jy,iz)=1.0 ! all inside
-      else
-         print*,'update_matrix: Flag', iz
-         flag=.true.
-      endif
-      case(1)
-         volprot(jx,jy,jz)=1.0 ! all inside
-      endselect
+
+    if ((jx.lt.1).or.(jx.gt.dimx)) then
+         print*,'update_matrix: ix', ix
+         stop
+    endif
+    if ((jy.lt.1).or.(jy.gt.dimy)) then
+         print*,'update_matrix: iy', iy
+         stop
+    endif
+    if ((jz.lt.1).or.(jz.gt.dimz)) then
+         print*,'update_matrix: iz', iz
+         stop
+    endif
+
+    volprot(jx,jy,iz)=1.0 ! all inside
 endif
 999 continue
 
@@ -547,10 +561,17 @@ do ix = xmin, xmax
 do iy = ymin, ymax
 do iz = zmin, zmax
 
-jx=mod(ix+dimx-1,dimx)+1
-jy=mod(iy+dimy-1,dimy)+1
+jx=ix
+jy=iy
+jz=iz
 
-if(PBC.eq.1) then
+if(PBC(1).eq.1) then
+ jx=mod(ix+dimx-1,dimx)+1
+endif
+if(PBC(3).eq.1) then
+ jy=mod(iy+dimy-1,dimy)+1
+endif
+if(PBC(5).eq.1) then
  jz=mod(iz+dimz-1,dimz)+1
 endif
 
@@ -574,17 +595,21 @@ if(vect.le.1.0) then           ! inside the ellipsoid
   flagin=.true.
   if(flagout.eqv..true.) then
 
-    select case (PBC)
-      case(0) 
-      if((iz.ge.1).and.(iz.le.dimz)) then
-         volprot(jx,jy,iz) = intcell(AAA, Rell, ix,iy,iz, npoints)
-      else
-         print*,'update_matrix: Flag', iz
-         flag=.true.
-      endif   
-      case(1)
+    if ((jx.lt.1).or.(jx.gt.dimx)) then
+         print*,'update_matrix: ix', ix
+         stop
+    endif
+    if ((jy.lt.1).or.(jy.gt.dimy)) then
+         print*,'update_matrix: iy', iy
+         stop
+    endif
+    if ((jz.lt.1).or.(jz.gt.dimz)) then
+         print*,'update_matrix: iz', iz
+         stop
+    endif
+
+
          volprot(jx,jy,jz) = intcell(AAA, Rell, ix,iy,iz, npoints)
-      end select
 
       goto 999 ! one in and one out, break the cycle
   endif
@@ -592,17 +617,20 @@ else
   flagout=.true.
   if(flagin.eqv..true.) then
 
-      select case (PBC)
-      case(0)
-      if((iz.ge.1).and.(iz.le.dimz)) then
-         volprot(jx,jy,iz) = intcell(AAA, Rell, ix,iy,iz, npoints)
-      else
-         print*,'update_matrix: Flag', iz
-         flag=.true.
-      endif
-      case(1)
+    if ((jx.lt.1).or.(jx.gt.dimx)) then
+         print*,'update_matrix: ix', ix
+         stop
+    endif
+    if ((jy.lt.1).or.(jy.gt.dimy)) then
+         print*,'update_matrix: iy', iy
+         stop
+    endif
+    if ((jz.lt.1).or.(jz.gt.dimz)) then
+         print*,'update_matrix: iz', iz
+         stop
+    endif
+
          volprot(jx,jy,jz) = intcell(AAA, Rell, ix,iy,iz, npoints)
-      end select
 
     goto 999 ! one in and one out, break the cycle
   endif
@@ -613,17 +641,21 @@ enddo
 enddo
 
 if((flagin.eqv..true.).and.(flagout.eqv..false.)) then 
-      select case(PBC)
-      case(0)
-      if((iz.ge.1).and.(iz.le.dimz)) then
-         volprot(jx,jy,iz)=1.0 ! all inside
-      else
-         print*,'update_matrix: Flag', iz
-         flag=.true.
-      endif
-      case(1)
+
+    if ((jx.lt.1).or.(jx.gt.dimx)) then
+         print*,'update_matrix: ix', ix
+         stop
+    endif
+    if ((jy.lt.1).or.(jy.gt.dimy)) then
+         print*,'update_matrix: iy', iy
+         stop
+    endif
+    if ((jz.lt.1).or.(jz.gt.dimz)) then
+         print*,'update_matrix: iz', iz
+         stop
+    endif
+
          volprot(jx,jy,jz)=1.0 ! all inside
-      endselect
 endif
 999 continue
 
