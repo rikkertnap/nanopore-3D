@@ -39,22 +39,34 @@ do jj = 1, cpp(rank+1)
        v = MATMUL(MAT,x)
 
        do i = 1, 3
-  
             pxtemp(i,j) = v(i)             ! new coordinate system
-            do while (pxtemp(i,j).gt.maxx(i))
-             pxtemp(i,j) = pxtemp(i,j) - maxx(i)
-            enddo
+
+            if(PBC(2*i-1).eq.1) then
             do while (pxtemp(i,j).lt.1.0d-20)
               pxtemp(i,j) = pxtemp(i,j) + maxx(i)
             enddo     
+            endif
+
+            if(PBC(2*i).eq.1) then
+            do while (pxtemp(i,j).gt.maxx(i))
+             pxtemp(i,j) = pxtemp(i,j) - maxx(i)
+            enddo
+            endif
+
        enddo
 
        xx(:) = MATMUL(IMAT,pxtemp(:,j))
  
-       if(testsystem(xx).eq.-1) then
+       if(testsystem(xx).eq.-1) then ! if testsystem = -1,  there is a collision with all or particle 
          flag = -1
          exit
        endif
+
+       if(testsystem(xx).eq.-2) then ! if testsystem = -2, the polymer goes out-of-system
+         print*, 'pxs: out-of-system'
+         stop
+       endif
+
 
     enddo ! j
 
