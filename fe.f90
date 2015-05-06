@@ -220,7 +220,7 @@ endif
         call MPI_RECV(pro0, cuantas*cpp(ii), &
         MPI_DOUBLE_PRECISION, source, tag, MPI_COMM_WORLD,stat, err)
 
-       do jj = 1, cpp(rank+1)
+       do jj = 1, cpp(ii)
 !       print*, ii, jj, pro0(10,jj)
        iii = cppini(ii)+jj
        do i = 1, newcuantas0(iii)
