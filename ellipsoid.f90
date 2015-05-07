@@ -390,8 +390,8 @@ if((vect.ge.1.0).and.(vectx.le.1.0)) then           ! between ellipsoid 1 and 2
     endif
 
       call intcellg(AAA,AAAX,Rell,ix,iy,iz,npoints,volprot1,com1)
-      volprot(jx,jy,iz) = volprot1
-      com(jx,jy,iz,:) = com1(:)
+      volprot(jx,jy,jz) = volprot1
+      com(jx,jy,jz,:) = com1(:)
 
       goto 999 ! one in and one out, break the cycle
   endif
@@ -413,8 +413,8 @@ else
     endif
 
     call intcellg(AAA,AAAX,Rell,ix,iy,iz,npoints,volprot1,com1)
-    volprot(jx,jy,iz) = volprot1
-    com(jx,jy,iz,:) = com1(:)
+    volprot(jx,jy,jz) = volprot1
+    com(jx,jy,jz,:) = com1(:)
 
     goto 999 ! one in and one out, break the cycle
   endif
