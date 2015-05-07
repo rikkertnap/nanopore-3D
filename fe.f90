@@ -300,7 +300,7 @@ endif
                 fv2 = (1.0-volprot(jx,jy,jz)) 
 
                 F_vdW = F_vdW - 0.5000*delta**3*xtotal(ix, iy, iz) &
-        *xtotal(jx, jy,jz)*Xu(ax, ay, az)*st*fv*fv2
+        *xtotal(jx, jy,jz)*Xu(ax, ay, az)*st*fv*fv2/(vpol*vpol*vsol*vsol)
 
             endif
             endif

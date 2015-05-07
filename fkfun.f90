@@ -177,7 +177,7 @@ call dielectfcn(xtotal,volprot,epsfcn,Depsfcn)
 
 ! Calcula xpot
 
-sttemp = st*vpol*vsol
+sttemp = st/(vpol*vsol)
 
 do ix=1,dimx
  do iy=1,dimy
