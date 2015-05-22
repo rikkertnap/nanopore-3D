@@ -33,8 +33,10 @@ counter = 0
 counterr = 1
 
 call initmpi
-call readinput
+if(rank.eq.0)print*, 'Program Crystal'
+if(rank.eq.0)print*, 'GIT Version: ', _VERSION
 if(rank.eq.0)print*, 'MPI OK'
+call readinput
 
 call initconst
 call inittransf ! Create transformation matrixes
