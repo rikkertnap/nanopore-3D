@@ -209,6 +209,7 @@ if(rank.eq.0) then ! solo el jefe escribe a disco....
   write(310,*)'sigma cad/nm2 = ',ncha/(dimx*dimy*delta*delta)
   write(310,*)'gama =          ', gama, gama*180/pi
   write(310,*)'kai =          ', Xu
+  write(310,*)'GIT version = ', _VERSION
 
   sumpol = 0.0
   do ix = 1, dimx
