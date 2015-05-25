@@ -401,9 +401,9 @@ do i = 1, 2*ntot
 enddo
 
 iter = iter + 1
-!if(verbose.ge.3) then
-!if(rank.eq.0)print*,'fkfun:', iter, norma, q(1)
-!endif
+if(verbose.ge.3) then
+if(rank.eq.0)print*,'fkfun:', iter, norma, q(1)
+endif
 
 3333 continue
 ier2 = 0.0 

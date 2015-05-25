@@ -27,7 +27,6 @@ integer j
 
 
 !!!!!!!!!!!! global parameters ... !!!!!!
-verbose = 5
 saveevery = 1
 
 counter = 0

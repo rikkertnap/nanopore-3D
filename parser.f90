@@ -32,6 +32,7 @@ PBC = 1
 ndi = -1e5
 ndr = -1.0d10
 
+verbose = 5
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !
@@ -109,6 +110,10 @@ do while (ios == 0)
       stop
     endif
    enddo
+
+ case ('verbose')
+   read(buffer, *, iostat=ios) verbose
+   if(rank.eq.0)print*,'Set ',trim(label),' = ',trim(buffer)
 
  case ('vtkflag')
    read(buffer, *, iostat=ios) vtkflag
