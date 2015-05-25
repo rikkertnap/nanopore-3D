@@ -44,7 +44,7 @@ do ix = -limit, limit
  enddo
 enddo
 
-MCsteps = 100*limit
+MCsteps = 200*Xulimit
 !if(rank.eq.0)print*, 'kais: CORREGIR MCSTEPS!!!!'
 
 l = lseg 

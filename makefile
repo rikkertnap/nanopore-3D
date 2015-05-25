@@ -46,6 +46,7 @@ all:	$(TARGET)
 
 $(TARGET): $(SRC:.f90=.o)
 	$(FF) -o $(TARGET) $(SRC:.f90=.o) $(LFLAGS) $(GFLAGS)
+	cp $(TARGET) $(VER)
 
 $(SRC:.f90=.o): $(SRC)
 	${FF} -c ${FFLAGS}  $(SRC) $(LFLAGS) $(GFLAGS)
