@@ -134,6 +134,7 @@ use ematrix
 use fields_fkfun
 use MPI
 use kinsol
+use kaist
 implicit none
 integer cccc
 character*20 filename

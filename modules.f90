@@ -74,7 +74,12 @@ real*8 vpol0
 real*8 vsol0
 real*8 vsalt
 real*8 zpos,zneg, zpol
+endmodule
+
+module kaist
+integer nst
 real*8 st
+real*8 sts(100)
 endmodule
 
 module fields_fkfun

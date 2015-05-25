@@ -14,6 +14,7 @@ use conformations
 use ematrix
 use ellipsoid
 use transform
+use kaist
 implicit none
 
 integer*4 ier2

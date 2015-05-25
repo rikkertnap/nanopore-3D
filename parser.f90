@@ -10,6 +10,7 @@ use inputtemp
 use transform
 use system
 use kai
+use kaist
 implicit none
 
 ! Input related variables
@@ -50,7 +51,7 @@ Xulimit = ndi
 randominput = ndi
 
 lseg = ndr
-st = ndr
+nst = ndi
 dielS = ndr
 pHbulk = ndr
 dielP = ndr
@@ -190,9 +191,13 @@ do while (ios == 0)
    read(buffer, *, iostat=ios) infile
    if(rank.eq.0)print*,'Set ',trim(label),' = ',trim(buffer)
 
- case ('st')
-   read(buffer, *, iostat=ios) st
+ case ('nst')
+   read(buffer, *, iostat=ios) nst
    if(rank.eq.0)print*,'Set ',trim(label),' = ',trim(buffer)
+  
+   do i = 1, nst
+   read(fh,*)sts(i)
+   enddo 
 
  case ('Xulimit')
    read(buffer, *, iostat=ios) Xulimit
@@ -276,6 +281,7 @@ if(randominput.eq.ndi)call stopundef('randominput')
 if(Xulimit.eq.ndi)call stopundef('Xulimit')
 if(readchains.eq.ndi)call stopundef('Xulimit')
 if(kaptype.eq.ndi)call stopundef('kaptype')
+if(nst.eq.ndi)call stopundef('kaptype')
 
 if(delta.eq.ndr)call stopundef('delta')
 if(dielS.eq.ndr)call stopundef('dielS')

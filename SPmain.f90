@@ -8,6 +8,7 @@ use const
 use montecarlo
 use ematrix
 use old
+use kaist
 
 implicit none
 integer counter, counterr
@@ -76,13 +77,8 @@ if(rank.eq.0)print*, 'Graftpoints OK'
 call creador ! Genera cadenas
 if(rank.eq.0)print*, 'Creador OK'
 
-if(infile.eq.0) then
-   call solve
-   call Free_Energy_Calc(counter)
-   call savedata(counter/saveevery)
-else
+if(infile.ne.0) then
    call retrivefromdisk(counter)
-   counterr = counter
    if(rank.eq.0)print*, 'Load input from file'
    if(rank.eq.0)print*, 'Free energy', free_energy
    infile = 2
@@ -93,15 +89,19 @@ else
     stop
    endif
 
-   call solve
-   call Free_Energy_Calc(counter)
-   if(rank.eq.0)print*, 'Free energy after solving', free_energy
 endif
 
-counter = 1
-call savedata(counter)
-if(rank.eq.0)print*, 'Save OK'
-call store2disk(counter)
+do counter = 1, nst
+ st = sts(counter)
+ if(rank.eq.0)print*,'Switch to st = ', st
+ call solve
+ call Free_Energy_Calc(counter)
+ if(rank.eq.0)print*, 'Free energy after solving', free_energy
+ call savedata(counter)
+ if(rank.eq.0)print*, 'Save OK'
+ call store2disk(counter)
+enddo
+
 call endall
 end
 
