@@ -28,6 +28,7 @@ real*8 rands
 real*8 suma
 real*8 or
 real*8 cutoff
+real*8 volume
 
 ALLOCATE (Xu(-Xulimit:Xulimit,-Xulimit:Xulimit,-Xulimit:Xulimit))
 
@@ -45,6 +46,9 @@ do ix = -limit, limit
 enddo
 
 MCsteps = 200*Xulimit
+volume = dfloat(MCsteps)**3
+
+
 !if(rank.eq.0)print*, 'kais: CORREGIR MCSTEPS!!!!'
 
 l = lseg 
@@ -78,8 +82,8 @@ sumXu = 0.0
 do ix = -Xulimit, Xulimit
 do iy = -Xulimit, Xulimit
 do iz = -Xulimit, Xulimit
- Xu(ix, iy, iz) = matriz(ix, iy, iz)/(MCsteps**3)*((2.0*cutoff)**3)
- suma = suma +  matriz(ix, iy, iz)/(MCsteps**3)*((2.0*cutoff)**3)
+ Xu(ix, iy, iz) = matriz(ix, iy, iz)/volume*((2.0*cutoff)**3)
+ suma = suma +  matriz(ix, iy, iz)/volume*((2.0*cutoff)**3)
  sumXu = sumXu + Xu(ix, iy, iz)
 enddo
 enddo
@@ -91,12 +95,21 @@ suma = 0.0
 do ix = -limit, limit
 do iy = -limit, limit
 do iz = -limit, limit
- suma = suma +  matriz(ix, iy, iz)/(MCsteps**3)*((2.0*cutoff)**3)
+ suma = suma +  matriz(ix, iy, iz)/volume*((2.0*cutoff)**3)
 enddo
 enddo
 enddo
 
 if(rank.eq.0)print*, 'kais: Total Sum', suma
+
+do ix = -Xulimit, Xulimit
+do iy = -Xulimit, Xulimit
+do iz = -Xulimit, Xulimit
+if(rank.eq.0)write(999,*)ix,iy,iz,Xu(ix, iy, iz)
+enddo
+enddo
+enddo
+
  
 end
 
