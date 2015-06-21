@@ -90,10 +90,11 @@ if(infile.ne.0) then
 
 endif
 
-do counter = 1, nst
- st = sts(counter)
+do i = 1, nst
+ st = sts(i)
  if(rank.eq.0)print*,'Switch to st = ', st
  call solve
+ counterr = counter + i
  call Free_Energy_Calc(counter)
  if(rank.eq.0)print*, 'Free energy after solving', free_energy
  call savedata(counter)
