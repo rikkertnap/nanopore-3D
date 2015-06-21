@@ -23,7 +23,7 @@ real*8 theta
 real*8, external :: rands
 logical flag
 character*10 filename
-integer j
+integer j, i
 
 
 !!!!!!!!!!!! global parameters ... !!!!!!
