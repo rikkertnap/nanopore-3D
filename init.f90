@@ -46,19 +46,19 @@ implicit none
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!! 
 
 if(rank.eq.0) then
-       open(unit=301, file='F_tot.dat')
-       open(unit=302, file='F_mixs.dat')
-       open(unit=303, file='F_mixpos.dat')
-       open(unit=304, file='F_mixneg.dat')
-       open(unit=305, file='F_mixH.dat')
-       open(unit=306, file='F_mixOH.dat')
-       open(unit=307, file='F_conf.dat')
-       open(unit=308, file='F_eq.dat')
-       open(unit=309, file='F_vdW.dat')
-       open(unit=410, file='F_eps.dat')
-       open(unit=311, file='F_electro.dat')
-       open(unit=312, file='F_tot2.dat')
-       open(unit=314, file='F_mixpos2.dat')
+       open(unit=301, file='F_tot.dat', access='APPEND')
+       open(unit=302, file='F_mixs.dat',  access='APPEND')
+       open(unit=303, file='F_mixpos.dat',  access='APPEND')
+       open(unit=304, file='F_mixneg.dat',  access='APPEND')
+       open(unit=305, file='F_mixH.dat',  access='APPEND')
+       open(unit=306, file='F_mixOH.dat',  access='APPEND')
+       open(unit=307, file='F_conf.dat',  access='APPEND')
+       open(unit=308, file='F_eq.dat',  access='APPEND')
+       open(unit=309, file='F_vdW.dat',  access='APPEND')
+       open(unit=410, file='F_eps.dat',  access='APPEND')
+       open(unit=311, file='F_electro.dat',  access='APPEND')
+       open(unit=312, file='F_tot2.dat',  access='APPEND')
+       open(unit=314, file='F_mixpos2.dat',  access='APPEND')
 endif
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!
