@@ -95,11 +95,11 @@ do i = 1, nst
  if(rank.eq.0)print*,'Switch to st = ', st
  call solve
  counterr = counter + i
- call Free_Energy_Calc(counter)
+ call Free_Energy_Calc(counterr)
  if(rank.eq.0)print*, 'Free energy after solving', free_energy
- call savedata(counter)
+ call savedata(counterr)
  if(rank.eq.0)print*, 'Save OK'
- call store2disk(counter)
+ call store2disk(counterr)
 enddo
 
 call endall
