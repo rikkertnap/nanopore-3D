@@ -299,6 +299,7 @@ use MPI
 use const
 implicit none
 integer counter
+character*20 filename
 
 if(rank.eq.0) then
 open (unit=8, file='out.out', form='unformatted')
@@ -327,6 +328,40 @@ write(8)xOHmin
 write(8)fdis
 close(8)
 endif
+
+if(rank.eq.0) then
+write(filename,'(A4, I3.3, A4)')'out.', counter, '.dat'
+open(unit=8, file=filename)
+
+open (unit=8, file='out.out', form='unformatted')
+write(8)counter
+write(8)seed
+write(8)free_energy
+write(8)Rell
+write(8)xflag
+write(8)volprot
+write(8)voleps
+write(8)volq
+write(8)volx
+write(8)rotmatrix
+write(8)AAA
+write(8)AAAL
+write(8)AAAS
+write(8)AAAX
+write(8)orient
+write(8)avpol
+write(8)epsfcn
+write(8)Depsfcn
+write(8)xpos
+write(8)xneg
+write(8)xHplus
+write(8)xOHmin
+write(8)fdis
+close(8)
+endif
+
+
+
 end subroutine
 
 

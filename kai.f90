@@ -14,6 +14,7 @@ use kai
 use molecules
 use MPI
 use chainsdat
+use transform
 implicit none
 
 real*8 l ! medio lseg, radio del segmento
@@ -29,30 +30,22 @@ real*8 suma
 real*8 or
 real*8 cutoff
 real*8 volume
+real*8 xx(3), vv(3)
+integer temp
 
-ALLOCATE (Xu(-Xulimit:Xulimit,-Xulimit:Xulimit,-Xulimit:Xulimit))
-
-limit = Xulimit +1
+cutoff = float(Xulimit)*delta ! cutoff sphere in real space
+limit = Xulimit + 5 ! make it much larger, will check at the end.
 
 ALLOCATE (matriz(-limit:limit, -limit:limit, -limit:limit)) ! matriz de kai
 if(rank.eq.0)print*,'kais: Kai calculation'
 suma = 0.0
-do ix = -limit, limit
- do iy = -limit, limit
-  do iz = -limit, limit
-  matriz(ix, iy, iz) = 0.0
-  enddo
- enddo
-enddo
-
+matriz = 0.0
 MCsteps = 200*Xulimit
 volume = dfloat(MCsteps)**3
-
 
 !if(rank.eq.0)print*, 'kais: CORREGIR MCSTEPS!!!!'
 
 l = lseg 
-cutoff = float(Xulimit)*delta
 
 do jx = 1, MCsteps
 do jy = 1, MCsteps
@@ -68,9 +61,16 @@ z = 2.0*cutoff*(((float(jz)-0.5)/float(MCsteps))-0.5)
  if(radio.lt.l) cycle ! esta dentro de la esfera del segmento
 
  ! celda 
- ix = int(anint(x/delta))   ! espacio de la grilla
- iy = int(anint(y/delta))
- iz = int(anint(z/delta))
+
+ vv(1) = x ! real space
+ vv(2) = y
+ vv(3) = z
+
+ xx = MATMUL(MAT,vv) ! xx in transformed space
+
+ ix = int(anint(xx(1)/delta))   ! espacio de la grilla
+ iy = int(anint(xx(2)/delta))
+ iz = int(anint(xx(3)/delta))
 
  matriz(ix, iy, iz) = matriz(ix, iy, iz) + (l/radio)**6
 
@@ -78,6 +78,30 @@ enddo
 enddo
 enddo
 
+! Find minimum Xulimit
+
+Xulimit = 0
+do ix = -limit, limit
+do iy = -limit, limit
+do iz = -limit, limit
+if(matriz(ix,iy,iz).ne.0.0) then
+  if(Xulimit.lt.abs(ix))Xulimit=abs(ix)
+  if(Xulimit.lt.abs(iy))Xulimit=abs(iy)
+  if(Xulimit.lt.abs(iz))Xulimit=abs(iz)
+endif
+enddo
+enddo
+enddo
+
+if(Xulimit.eq.limit) then
+print*, 'kais: error Xulimit = limit'
+call MPI_FINALIZE(ierr)
+stop
+endif
+
+if(rank.eq.0)print*,'kais: New Xulimit', Xulimit
+
+ALLOCATE (Xu(-Xulimit:Xulimit,-Xulimit:Xulimit,-Xulimit:Xulimit))
 sumXu = 0.0
 do ix = -Xulimit, Xulimit
 do iy = -Xulimit, Xulimit

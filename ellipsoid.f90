@@ -1,6 +1,7 @@
 subroutine randomvect(V)
 use const
 implicit none
+
 real*8, external :: rands
 real*8 u, w
 real*8 V(3)
@@ -123,7 +124,7 @@ do j = 1, NNN
 ! do ix = 1, dimx
 ! do iy = 1, dimy
 ! do iz = 1, dimz
-! if(volx(ix,iy,iz).ne.0.0)print*, ix,iy,iz, volx(ix,iy,iz),com(ix,iy,iz,:)
+! if(volx(ix,iy,iz).ne.0.0)print*, 'ellipsoid:', ix,iy,iz, volx(ix,iy,iz),com(ix,iy,iz,:)
 ! enddo
 ! enddo
 ! enddo
@@ -171,7 +172,7 @@ do j = 1, NNN
  if(sstemp.eq.0.0) then
  vvtemp = 1.0d100
  else
-! print*, ix,iy,iz,(1.0-volprot1(ix,iy,iz)),volx1(ix,iy,iz)
+! print*, 'ellipsoid:', ix,iy,iz,(1.0-volprot1(ix,iy,iz)),volx1(ix,iy,iz)
  vvtemp = vvtemp/sstemp
  endif
 
@@ -180,9 +181,9 @@ do j = 1, NNN
  enddo
  enddo
 
- if(rank.eq.0)print*, 'Maxsigma for ', j,'is ', maxss
+ if(rank.eq.0)print*, 'ellipsoid:', 'Maxsigma for ', j,'is ', maxss
 
-! print*, j, area,sigma(j)
+! print*, 'ellipsoid:', j, area,sigma(j)
  sumpolseg = sumpolseg + area*sigma(j)*long
 
 !! volume  
@@ -210,9 +211,9 @@ do j = 1, NNN
 temp = temp + 4.0/3.0*pi*Aell(1,j)*Aell(2,j)*Aell(3,j)
 enddo
 if (rank.eq.0) then
-print*, 'update_matrix: Total volumen real space= ', temp
-print*, 'update_matrix: Total discretized volumen =', sum(volprot)*delta**3
-print*, 'number of monomers in system =', sumpolseg 
+print*, 'ellipsoid:', 'update_matrix: Total volumen real space= ', temp
+print*, 'ellipsoid:', 'update_matrix: Total discretized volumen =', sum(volprot)*delta**3
+print*, 'ellipsoid:', 'number of monomers in system =', sumpolseg 
 endif
 endif
 
@@ -377,15 +378,15 @@ if((vect.ge.1.0).and.(vectx.le.1.0)) then           ! between ellipsoid 1 and 2
   if(flagout.eqv..true.) then
 
     if ((jx.lt.1).or.(jx.gt.dimx)) then
-         print*,'update_matrix: ix', ix
+         print*, 'ellipsoid:','update_matrix: ix', ix
          stop
     endif
     if ((jy.lt.1).or.(jy.gt.dimy)) then
-         print*,'update_matrix: iy', iy
+         print*, 'ellipsoid:','update_matrix: iy', iy
          stop
     endif
     if ((jz.lt.1).or.(jz.gt.dimz)) then
-         print*,'update_matrix: iz', iz
+         print*, 'ellipsoid:','update_matrix: iz', iz
          stop
     endif
 
@@ -400,15 +401,15 @@ else
   if(flagin.eqv..true.) then
 
     if ((jx.lt.1).or.(jx.gt.dimx)) then
-         print*,'update_matrix: ix', ix
+         print*, 'ellipsoid:','update_matrix: ix', ix
          stop
     endif
     if ((jy.lt.1).or.(jy.gt.dimy)) then
-         print*,'update_matrix: iy', iy
+         print*, 'ellipsoid:','update_matrix: iy', iy
          stop
     endif
     if ((jz.lt.1).or.(jz.gt.dimz)) then
-         print*,'update_matrix: iz', iz
+         print*, 'ellipsoid:','update_matrix: iz', iz
          stop
     endif
 
@@ -427,15 +428,15 @@ enddo
 if((flagin.eqv..true.).and.(flagout.eqv..false.)) then 
 
     if ((jx.lt.1).or.(jx.gt.dimx)) then
-         print*,'update_matrix: ix', ix
+         print*, 'ellipsoid:','update_matrix: ix', ix
          stop
     endif
     if ((jy.lt.1).or.(jy.gt.dimy)) then
-         print*,'update_matrix: iy', iy
+         print*, 'ellipsoid:','update_matrix: iy', iy
          stop
     endif
     if ((jz.lt.1).or.(jz.gt.dimz)) then
-         print*,'update_matrix: iz', iz
+         print*, 'ellipsoid:','update_matrix: iz', iz
          stop
     endif
 
@@ -596,15 +597,15 @@ if(vect.le.1.0) then           ! inside the ellipsoid
   if(flagout.eqv..true.) then
 
     if ((jx.lt.1).or.(jx.gt.dimx)) then
-         print*,'update_matrix: ix', ix
+         print*, 'ellipsoid:','update_matrix: ix', ix
          stop
     endif
     if ((jy.lt.1).or.(jy.gt.dimy)) then
-         print*,'update_matrix: iy', iy
+         print*, 'ellipsoid:','update_matrix: iy', iy
          stop
     endif
     if ((jz.lt.1).or.(jz.gt.dimz)) then
-         print*,'update_matrix: iz', iz
+         print*, 'ellipsoid:','update_matrix: iz', iz
          stop
     endif
 
@@ -618,15 +619,15 @@ else
   if(flagin.eqv..true.) then
 
     if ((jx.lt.1).or.(jx.gt.dimx)) then
-         print*,'update_matrix: ix', ix
+         print*, 'ellipsoid:','update_matrix: ix', ix
          stop
     endif
     if ((jy.lt.1).or.(jy.gt.dimy)) then
-         print*,'update_matrix: iy', iy
+         print*, 'ellipsoid:','update_matrix: iy', iy
          stop
     endif
     if ((jz.lt.1).or.(jz.gt.dimz)) then
-         print*,'update_matrix: iz', iz
+         print*, 'ellipsoid:','update_matrix: iz', iz
          stop
     endif
 
@@ -643,15 +644,15 @@ enddo
 if((flagin.eqv..true.).and.(flagout.eqv..false.)) then 
 
     if ((jx.lt.1).or.(jx.gt.dimx)) then
-         print*,'update_matrix: ix', ix
+         print*, 'ellipsoid:','update_matrix: ix', ix
          stop
     endif
     if ((jy.lt.1).or.(jy.gt.dimy)) then
-         print*,'update_matrix: iy', iy
+         print*, 'ellipsoid:','update_matrix: iy', iy
          stop
     endif
     if ((jz.lt.1).or.(jz.gt.dimz)) then
-         print*,'update_matrix: iz', iz
+         print*, 'ellipsoid:','update_matrix: iz', iz
          stop
     endif
 

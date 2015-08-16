@@ -15,12 +15,17 @@
 
 module system 
 real*8 delta
+real*8 cdiva
 integer  dimx 
 integer  dimy 
 integer  dimz 
 real*8 gama 
 integer PBC(6)
 integer vtkflag
+endmodule
+
+module s2d
+integer scx,scy,scz
 endmodule
 
 module old
@@ -171,6 +176,7 @@ real*8, allocatable :: AAAS(:,:,:)
 real*8, allocatable :: AAAL(:,:,:)
 real*8, allocatable :: AAAX(:,:,:)
 real*8, allocatable :: Rell(:,:)
+real*8, allocatable :: Rellf(:,:)
 real*8, allocatable :: orient(:,:)
 real*8, allocatable :: echarge(:)
 real*8, allocatable :: sigma(:)

@@ -1,26 +1,37 @@
 subroutine inittransf
 use const
 use transform 
+use system
+use MPI
 
 implicit none
 real*8 beta
 real*8 temp(3,3)
-integer dimn
+integer dimn, j
+real*8 x(3),xx(3), vect1(3),vect2(3),vect3(3), vol
+real*8 vectc(3)
+real*8 fix
+real*8 cdivl
 
 gama0 = gama0/180.0*pi
-beta = (pi/2.0 - gama0)/2.0
 
-MAT(1,1) = cos(beta)
-MAT(1,2) = -sin(beta)
+beta = (pi/2.0 - gama0)/2.0
+cdivl = cdiva/(sqrt((cos(beta)**2) - (sin(beta)**2)))
+fix = 1.0/(cdivl**(1.0/3.0))
+
+MAT(1,1) = cos(beta)/fix
+MAT(1,2) = -sin(beta)/fix
 MAT(1,3) = 0.0
-MAT(2,1) = -sin(beta)
-MAT(2,2) = cos(beta)
+MAT(2,1) = -sin(beta)/fix
+MAT(2,2) = cos(beta)/fix
 MAT(2,3) = 0.0
-MAT(3,1) = 0.0
-MAT(3,2) = 0.0
-MAT(3,3) = 1.0
 
 MAT = MAT/(sqrt((cos(beta)**2) - (sin(beta)**2)))
+
+MAT(3,1) = 0.0
+MAT(3,2) = 0.0
+MAT(3,3) = 1.0/cdivl/fix ! divide by cdivl to keep constant volume
+
 
 TMAT = TRANSPOSE(MAT)
 
@@ -28,7 +39,97 @@ dimn = 3
 temp = MAT
 
 call inverse(temp,IMAT,dimn)
+
+xx(1) = delta
+xx(2) = 0.0
+xx(3) = 0.0
+
+x = MATMUL(IMAT,xx) 
+vect1 = x
+
+xx(2) = delta
+xx(1) = 0.0
+xx(3) = 0.0
+
+x = MATMUL(IMAT,xx) !
+vect2 = x
+
+xx(3) = delta
+xx(2) = 0.0
+xx(1) = 0.0
+
+x = MATMUL(IMAT,xx) ! 
+vect3 = x
+
+call cross_product(vect2,vect3,vectc)
+
+vol = DOT_PRODUCT(vect1,vectc)
+
+if(rank.eq.0)print*, 'transform:', 'Volume of a lattice cell in real space', vol, 'nm^3'
+if(rank.eq.0)print*, 'transform:', 'Volume of a lattice cell in transformed space', delta**3, 'nm^3'
+
+xx(1) = delta*dfloat(dimx)
+xx(2) = 0.0
+xx(3) = 0.0
+
+x = MATMUL(IMAT,xx) 
+vect1 = x
+
+xx(2) = delta*dfloat(dimy)
+xx(1) = 0.0
+xx(3) = 0.0
+
+x = MATMUL(IMAT,xx) !
+vect2 = x
+
+xx(3) = delta*dfloat(dimz)
+xx(2) = 0.0
+xx(1) = 0.0
+
+x = MATMUL(IMAT,xx) ! 
+vect3 = x
+
+call cross_product(vect2,vect3,vectc)
+
+vol = DOT_PRODUCT(vect1,vectc)
+
+if(rank.eq.0)print*, 'transform:', 'a / nm ', norm2(vect1)
+if(rank.eq.0)print*, 'transform:', 'b / nm ', norm2(vect2)
+if(rank.eq.0)print*, 'transform:', 'c / nm ', norm2(vect3)
+if(rank.eq.0)print*, 'transform:', 'gama ', gama0*180/3.14159 
+if(rank.eq.0)print*, 'transform:', 'c/a', norm2(vect3)/norm2(vect1)
+if(rank.eq.0)print*, 'transform:', 'c/b', norm2(vect3)/norm2(vect2)
+if(rank.eq.0)print*, 'transform:', 'cell volume ', vol, 'nm^3'
+
 end subroutine
+
+subroutine initellpos ! transforms ellipsoid coordinates from fractional to real
+use const
+use transform
+use system
+use MPI
+use ellipsoid
+implicit none
+integer j
+real*8 vect(3), vect2(3)
+
+do j = 1, NNN
+
+vect(1) = Rellf(1,j)*delta*dfloat(dimx)
+vect(2) = Rellf(2,j)*delta*dfloat(dimy)
+vect(3) = Rellf(3,j)*delta*dfloat(dimz)
+vect2 = MATMUL(IMAT,vect)
+Rell(:,j) = vect2(:)
+
+if(rank.eq.0)print*, 'transform:','Coordinates of particle',j,' in real space ', Rell(:,j)
+enddo
+
+
+
+
+end subroutine
+
+
 
 
 
@@ -111,3 +212,12 @@ do k=1,n
   b(k)=0.0
 end do
 end subroutine inverse
+
+subroutine cross_product(a, b, c)
+    real*8, dimension(3) :: c
+    real*8, dimension(3), intent(in) :: a, b
+ 
+    c(1) = a(2)*b(3) - a(3)*b(2)
+    c(2) = a(3)*b(1) - a(1)*b(3)
+    c(3) = a(1)*b(2) - b(1)*a(2)
+end subroutine cross_product

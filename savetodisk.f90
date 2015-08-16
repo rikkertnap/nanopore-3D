@@ -2,11 +2,8 @@ subroutine savetodisk(array, title, counter)
 
 use system
 use transform
+use s2d
 implicit none
-
-integer scx
-integer scy
-integer dimzview
 
 integer ix, iy, iz, jx, jy, jz
 real*8 array(dimx, dimy, dimz)
@@ -20,10 +17,6 @@ real*4 singlepres
 real*8 x(3), v(3)
 !-----  coordenadas -------------------------
 ! Variables
-
-scx = 1 ! supercell en x
-scy = 1 ! supercell en y
-dimzview = dimz ! maximo en z
 
 arraytemp = 0
 do iz = 1, dimz
@@ -78,11 +71,11 @@ if(vtkflag.eq.1) then
       write(45,'(A)')title
       write(45,'(A)')'ASCII'
       write(45,'(A)')'DATASET STRUCTURED_GRID '
-      write(45,'(A, I5, A1, I5, A1, I5)')'DIMENSIONS', dimzview+1, ' ', scy*dimy+1, ' ',scx*dimx+1
-      write(45,'(A, I8, A)')'POINTS ',(scx*dimx+1)*(scy*dimy+1)*(dimzview+1),' float'
+      write(45,'(A, I5, A1, I5, A1, I5)')'DIMENSIONS', scz*dimz+1, ' ', scy*dimy+1, ' ',scx*dimx+1
+      write(45,'(A, I8, A)')'POINTS ',(scx*dimx+1)*(scy*dimy+1)*(scz*dimz+1),' float'
       do ix = 0, scx*dimx
         do iy = 0, scy*dimy
-          do iz = 0, dimzview
+          do iz = 0, scz*dimz
 
           v(1) = ix*delta ! transformed coordinates
           v(2) = iy*delta
@@ -95,14 +88,14 @@ if(vtkflag.eq.1) then
         enddo
       enddo
 
-      write(45,'(A, I8)')'CELL_DATA ', scx*scy*dimx*dimy*dimzview
+      write(45,'(A, I8)')'CELL_DATA ', scx*scy*scz*dimx*dimy*dimz
       tempc = 'SCALARS ' // title // ' float 1'
       write(45,'(A)')tempc
       write(45,'(A)')'LOOKUP_TABLE default'
 
        do ix = 1, scx*dimx
         do iy = 1, scy*dimy
-          do iz = 1, dimzview
+          do iz = 1, scz*dimz
 
             jx= ix
             do while(jx.gt.dimx)

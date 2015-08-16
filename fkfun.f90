@@ -330,10 +330,6 @@ do ix=1,dimx
       f(ix+dimx*(iy-1)+dimx*dimy*(iz-1))= avpol(ix,iy,iz) + xh(ix,iy,iz) + &
       xneg(ix, iy, iz) + xpos(ix, iy, iz) + xHplus(ix, iy, iz) + &
       xOHmin(ix, iy, iz) -1.000000d0
-
-
-      print*, ix,iy,iz,avpol(ix,iy,iz), volprot(ix,iy,iz)
-
       enddo
    enddo
 enddo

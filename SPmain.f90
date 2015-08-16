@@ -40,6 +40,7 @@ call readinput
 
 call initconst
 call inittransf ! Create transformation matrixes
+call initellpos ! calculate real positions for ellipsoid centers
 call initall
 call allocation
 

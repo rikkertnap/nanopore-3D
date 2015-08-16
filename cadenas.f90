@@ -18,23 +18,23 @@ integer nchas
 newcuantas = 0
 
 if((readchains.eq.-1).and.(rank.eq.0)) then
-print*, 'Saving conformations...'
+print*, 'creador:', 'Saving conformations...'
 open(file='cadenas.dat',unit=3113)
 endif
 
 if(readchains.eq.1) then
- if(rank.eq.0)print*, 'Loading conformations'
+ if(rank.eq.0)print*, 'creador:', 'Loading conformations'
  open(file='cadenas.dat',unit=3113)
  do i = 1, cuantas
  do j = 1, long
   read(3113,*)in1(j,1),in1(j,2),in1(j,3)
  enddo
  call pxs
-! print*, i, newcuantas(1)
+! print*, 'creador:', i, newcuantas(1)
  enddo
 
 ! do il = 1, ncha
-! print*, newcuantas(il)
+! print*, 'creador:', newcuantas(il)
 ! enddo
 ! stop
 
@@ -330,13 +330,13 @@ enddo
 
 if(rank.eq.0) then
 if(verbose.ge.1) then
- print*, 'graftingpoints:'
- print*, 'ncha = ', ncha
+ print*, 'creador:', 'graftingpoints:'
+ print*, 'creador:', 'ncha = ', ncha
  do j = 1, size
- print*, ' cpp    ', j, ' = ', cpp(j)
- print*, ' cppini ', j, ' = ', cppini(j)+1
- print*, ' cppfin ', j, ' = ', cppini(j)+cpp(j)
- print*, '!!!!!!!!!!!!!!!!!!!!!!!!!'
+ print*, 'creador:', ' cpp    ', j, ' = ', cpp(j)
+ print*, 'creador:', ' cppini ', j, ' = ', cppini(j)+1
+ print*, 'creador:', ' cppfin ', j, ' = ', cppini(j)+cpp(j)
+ print*, 'creador:', '!!!!!!!!!!!!!!!!!!!!!!!!!'
  enddo
 endif
 endif
