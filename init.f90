@@ -17,7 +17,6 @@ use ellipsoid
 implicit none
 pi = acos(-1.0)
 seed = 15615
-gama = 90.0/180.0 * pi
 lb = 0.714 ! bjerrum lenght in nm
 zpos = 1.0
 zneg = -1.0
@@ -208,7 +207,6 @@ if(rank.eq.0) then ! solo el jefe escribe a disco....
   write(310,*)'long        = ',long
   write(310,*)'iterations  = ',iter
   write(310,*)'sigma cad/nm2 = ',ncha/(dimx*dimy*delta*delta)
-  write(310,*)'gama =          ', gama, gama*180/pi
   write(310,*)'kai =          ', Xu
   write(310,*)'GIT version = ', _VERSION
 

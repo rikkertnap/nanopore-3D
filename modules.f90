@@ -19,7 +19,6 @@ real*8 cdiva
 integer  dimx 
 integer  dimy 
 integer  dimz 
-real*8 gama 
 integer PBC(6)
 integer vtkflag
 endmodule

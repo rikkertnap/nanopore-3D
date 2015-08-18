@@ -108,7 +108,6 @@ do j = 1, NNN
 
  call rotvo(orient(:,j), rotmatrix(:,:,j))
 
- gama = 90.0/180.0*pi
  npoints = 50
 
  flag = .false.
