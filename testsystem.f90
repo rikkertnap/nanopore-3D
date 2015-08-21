@@ -3,10 +3,17 @@ use system
 use ellipsoid
 use transform
 implicit none
-real*8 x(3), xx(3), v(3)
-integer j
+real*8 x(3), xx(3), v(3), maxx(3)
+integer j, i
 real*8 vect
 real*8 mmmult
+real, external :: PBCSYMR, PBCREFR
+
+
+
+maxx(1) = float(dimx)*delta
+maxx(2) = float(dimy)*delta
+maxx(3) = float(dimz)*delta
 
 ! collision with walls and out of system
 
@@ -42,18 +49,28 @@ if (x(3).gt.(float(dimz)*delta)) then
  if (PBC(6).eq.0)testsystem = -2
 endif
 
+if (testsystem.eq.0) then ! saves some time
+
+v = MATMUL(MAT,x) ! to transformed space
+
+do i = 1, 3 ! put into cell
+   if(PBC(2*i-1).eq.1)v(i) = PBCSYMR(v(i),maxx(i))
+   if(PBC(2*i-1).eq.3)v(i) = PBCREFR(v(i),maxx(i))
+enddo
+
+x(:) = MATMUL(IMAT,v(:)) ! back to real space
+
 ! collision with particles
 do j = 1, NNN
-xx(:) = x(:) - Rell(:,j)
-
+xx(:) = x(:) - Rell(:,j) ! distamce to particle center
 
 v = xx
-xx = MATMUL(MAT,v)
-xx(1) = xx(1) - nint(xx(1) / (float(dimx)*delta)) * float(dimx)*delta
-xx(2) = xx(2) - nint(xx(2) / (float(dimy)*delta)) * float(dimy)*delta
-xx(3) = xx(3) - nint(xx(3) / (float(dimz)*delta)) * float(dimz)*delta
-v(:) = MATMUL(IMAT,xx)
-xx = v
+xx = MATMUL(MAT,v) ! to transformed space
+! Looks for near neighbor, only important for PBC
+if(PBC(1).eq.1)xx(1) = xx(1) - nint(xx(1) / (float(dimx)*delta)) * float(dimx)*delta
+if(PBC(3).eq.1)xx(2) = xx(2) - nint(xx(2) / (float(dimy)*delta)) * float(dimy)*delta
+if(PBC(5).eq.1)xx(3) = xx(3) - nint(xx(3) / (float(dimz)*delta)) * float(dimz)*delta
+xx(:) = MATMUL(IMAT,xx) ! to real space
 
 vect = mmmult(xx,AAA(:,:,j))
 
@@ -62,6 +79,8 @@ vect = mmmult(xx,AAA(:,:,j))
   return
  endif
 enddo
+
+endif ! testsystem = 0
 
 return
 

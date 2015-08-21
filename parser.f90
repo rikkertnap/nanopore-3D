@@ -114,7 +114,16 @@ do while (ios == 0)
       print*, 'parser:', 'Error in PBC'
       stop
     endif
+    if((PBC(j).eq.3).and.(PBC(j+1).ne.3)) then
+      print*, 'parser:', 'Error in PBC'
+      stop
+    endif
+    if((PBC(j+1).eq.3).and.(PBC(j).ne.3)) then
+      print*, 'parser:', 'Error in PBC'
+      stop
+    endif
    enddo
+
 
  case ('verbose')
    read(buffer, *, iostat=ios) verbose

@@ -31,6 +31,7 @@ real*8 MVV,MUU,MWW,MVU,MVW,MUW
 real*8 psivv,psiuu,psiww, psivu,psivw,psiuw
 real*8 psiv(3), epsv(3)
 
+integer, external :: PBCSYMI, PBCREFI
 
 ! poor solvent 
 real*8 sttemp
@@ -78,21 +79,31 @@ do ix=1,dimx
   enddo
  enddo
 enddo
-      
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!      
 ! Boundary conditions electrostatic potential
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+! Reflection or PBC, (PBC = 1 or 3)
  
 do jx = 0, dimx+1
 do jy = 0, dimy+1
 do jz = 0, dimz+1
-   ix = mod(jx-1+5*dimx, dimx) + 1
-   iy = mod(jy-1+5*dimy, dimy) + 1
-   iz = mod(jz-1+5*dimz, dimz) + 1
+
+if (PBC(1).eq.1)ix = PBCSYMI(jx,dimx)
+if (PBC(1).eq.3)ix = PBCREFI(jx,dimx)
+if (PBC(3).eq.1)iy = PBCSYMI(jy,dimy)
+if (PBC(3).eq.3)iy = PBCREFI(jy,dimy)
+if (PBC(5).eq.1)iz = PBCSYMI(jz,dimz)
+if (PBC(5).eq.3)iz = PBCREFI(jz,dimz)
+
    psi(jx, jy, jz) = psi(ix, iy, iz)
+
 enddo
 enddo
 enddo
 
-! Check PBC in borders
+! Bulk or Wall, PBC = 0 or 2
 
 select case (PBC(1)) ! x = 0
 case(0) ! set bulk 
@@ -135,7 +146,6 @@ case(0) ! set bulk
 case(2)
    psi(:,:,dimz+1) = psi(:,:,dimz) ! zero charge
 endselect
-
 
 ! volume fraction and frdir
 
@@ -216,13 +226,14 @@ do ix=1,dimx
             jx = mod(jx-1+5*dimx, dimx) + 1
             endif
 
-            if(PBC(3).eq.1) then
-            jy = mod(jy-1+5*dimy, dimy) + 1
-            endif
+            if(PBC(1).eq.1)jx = PBCSYMI(jx,dimx)
+            if(PBC(1).eq.3)jx = PBCREFI(jx,dimx)
 
-            if(PBC(5).eq.1) then
-            jz = mod(jz-1+5*dimz, dimz) + 1
-            endif
+            if(PBC(3).eq.1)jy = PBCSYMI(jy,dimy)
+            if(PBC(3).eq.3)jy = PBCREFI(jy,dimy)
+
+            if(PBC(5).eq.1)jz = PBCSYMI(jz,dimz)
+            if(PBC(5).eq.3)jz = PBCREFI(jz,dimz)
 
             if((jx.ge.1).and.(jx.le.dimx)) then
             if((jy.ge.1).and.(jy.le.dimy)) then

@@ -250,14 +250,22 @@ integer jx,jy, jz
 real*8 Rpos(3)
 real*8 maxAell
 logical flag
-
 real*8 box(4)
 real*8 x(3), v(3)
-
 integer xmin,xmax,ymin,ymax,zmin,zmax
 integer i,j
-
+integer symx, symy, symz
 real*8 com1(3), volprot1
+logical flagsym
+
+! CHECK FOR REFLECTION SYMMETRY PBC
+symx=0
+symy=0
+symz=0
+if((PBC(1).eq.3).and.(PBC(2).eq.3))symx = 1
+if((PBC(3).eq.3).and.(PBC(4).eq.3))symy = 1
+if((PBC(5).eq.3).and.(PBC(6).eq.3))symz = 1
+
 volprot = 0.0
 
 maxAell = max(AellX(1),AellX(2),AellX(3)) ! maximum lenght/2.0 of a box enclosing the ellipsoid in Cartesian Coordinates
@@ -376,22 +384,37 @@ if((vect.ge.1.0).and.(vectx.le.1.0)) then           ! between ellipsoid 1 and 2
   flagin=.true.
   if(flagout.eqv..true.) then
 
+  flagsym = .false.
     if ((jx.lt.1).or.(jx.gt.dimx)) then
+       if(symx.eq.0) then
          print*, 'ellipsoid:','update_matrix: ix', ix
          stop
+       else
+         flagsym = .true.
+       endif
     endif
     if ((jy.lt.1).or.(jy.gt.dimy)) then
+       if(symy.eq.0) then
          print*, 'ellipsoid:','update_matrix: iy', iy
          stop
+       else
+         flagsym = .true.
+       endif
     endif
     if ((jz.lt.1).or.(jz.gt.dimz)) then
+       if(symz.eq.0) then
          print*, 'ellipsoid:','update_matrix: iz', iz
          stop
+       else
+         flagsym = .true.
+       endif
     endif
 
+    if(flagsym.eqv..false.) then ! cell is not out of system due to reflection symmetry
       call intcellg(AAA,AAAX,Rell,ix,iy,iz,npoints,volprot1,com1)
       volprot(jx,jy,jz) = volprot1
       com(jx,jy,jz,:) = com1(:)
+    endif
 
       goto 999 ! one in and one out, break the cycle
   endif
@@ -399,22 +422,37 @@ else
   flagout=.true.
   if(flagin.eqv..true.) then
 
+  flagsym = .false.
     if ((jx.lt.1).or.(jx.gt.dimx)) then
+       if(symx.eq.0) then
          print*, 'ellipsoid:','update_matrix: ix', ix
          stop
+       else
+         flagsym = .true.
+       endif
     endif
     if ((jy.lt.1).or.(jy.gt.dimy)) then
+       if(symy.eq.0) then
          print*, 'ellipsoid:','update_matrix: iy', iy
          stop
+       else
+         flagsym = .true.
+       endif
     endif
     if ((jz.lt.1).or.(jz.gt.dimz)) then
+       if(symz.eq.0) then
          print*, 'ellipsoid:','update_matrix: iz', iz
          stop
+       else
+         flagsym = .true.
+       endif
     endif
 
-    call intcellg(AAA,AAAX,Rell,ix,iy,iz,npoints,volprot1,com1)
-    volprot(jx,jy,jz) = volprot1
-    com(jx,jy,jz,:) = com1(:)
+    if(flagsym.eqv..false.) then ! cell is not out of system due to reflection symmetry
+     call intcellg(AAA,AAAX,Rell,ix,iy,iz,npoints,volprot1,com1)
+     volprot(jx,jy,jz) = volprot1
+     com(jx,jy,jz,:) = com1(:)
+    endif
 
     goto 999 ! one in and one out, break the cycle
   endif
@@ -426,20 +464,36 @@ enddo
 
 if((flagin.eqv..true.).and.(flagout.eqv..false.)) then 
 
+  flagsym = .false.
     if ((jx.lt.1).or.(jx.gt.dimx)) then
+       if(symx.eq.0) then
          print*, 'ellipsoid:','update_matrix: ix', ix
          stop
+       else
+         flagsym = .true.
+       endif
     endif
     if ((jy.lt.1).or.(jy.gt.dimy)) then
+       if(symy.eq.0) then
          print*, 'ellipsoid:','update_matrix: iy', iy
          stop
+       else
+         flagsym = .true.
+       endif
     endif
     if ((jz.lt.1).or.(jz.gt.dimz)) then
+       if(symz.eq.0) then
          print*, 'ellipsoid:','update_matrix: iz', iz
          stop
+       else
+         flagsym = .true.
+       endif
     endif
 
-    volprot(jx,jy,iz)=1.0 ! all inside
+    if(flagsym.eqv..false.) then ! cell is not out of system due to reflection symmetry
+      volprot(jx,jy,iz)=1.0 ! all inside
+    endif
+
 endif
 999 continue
 
@@ -476,7 +530,16 @@ real*8 x(3), v(3)
 integer xmin,xmax,ymin,ymax,zmin,zmax
 integer i,j
 
+integer symx, symy, symz
+logical flagsym
 
+! CHECK FOR REFLECTION SYMMETRY PBC
+symx=0
+symy=0
+symz=0
+if((PBC(1).eq.3).and.(PBC(2).eq.3))symx = 1
+if((PBC(3).eq.3).and.(PBC(4).eq.3))symy = 1
+if((PBC(5).eq.3).and.(PBC(6).eq.3))symz = 1
 
 volprot = 0.0
 
@@ -595,21 +658,35 @@ if(vect.le.1.0) then           ! inside the ellipsoid
   flagin=.true.
   if(flagout.eqv..true.) then
 
+  flagsym = .false.
     if ((jx.lt.1).or.(jx.gt.dimx)) then
+       if(symx.eq.0) then
          print*, 'ellipsoid:','update_matrix: ix', ix
          stop
+       else
+         flagsym = .true.
+       endif
     endif
     if ((jy.lt.1).or.(jy.gt.dimy)) then
+       if(symy.eq.0) then
          print*, 'ellipsoid:','update_matrix: iy', iy
          stop
+       else
+         flagsym = .true.
+       endif
     endif
     if ((jz.lt.1).or.(jz.gt.dimz)) then
+       if(symz.eq.0) then
          print*, 'ellipsoid:','update_matrix: iz', iz
          stop
+       else
+         flagsym = .true.
+       endif
     endif
 
-
+    if(flagsym.eqv..false.) then ! cell is not out of system due to reflection symmetry
          volprot(jx,jy,jz) = intcell(AAA, Rell, ix,iy,iz, npoints)
+    endif
 
       goto 999 ! one in and one out, break the cycle
   endif
@@ -617,20 +694,35 @@ else
   flagout=.true.
   if(flagin.eqv..true.) then
 
+  flagsym = .false.
     if ((jx.lt.1).or.(jx.gt.dimx)) then
+       if(symx.eq.0) then
          print*, 'ellipsoid:','update_matrix: ix', ix
          stop
+       else
+         flagsym = .true.
+       endif
     endif
     if ((jy.lt.1).or.(jy.gt.dimy)) then
+       if(symy.eq.0) then
          print*, 'ellipsoid:','update_matrix: iy', iy
          stop
+       else
+         flagsym = .true.
+       endif
     endif
     if ((jz.lt.1).or.(jz.gt.dimz)) then
+       if(symz.eq.0) then
          print*, 'ellipsoid:','update_matrix: iz', iz
          stop
+       else
+         flagsym = .true.
+       endif
     endif
 
+    if(flagsym.eqv..false.) then ! cell is not out of system due to reflection symmetry
          volprot(jx,jy,jz) = intcell(AAA, Rell, ix,iy,iz, npoints)
+    endif
 
     goto 999 ! one in and one out, break the cycle
   endif
@@ -642,20 +734,35 @@ enddo
 
 if((flagin.eqv..true.).and.(flagout.eqv..false.)) then 
 
+  flagsym = .false.
     if ((jx.lt.1).or.(jx.gt.dimx)) then
+       if(symx.eq.0) then
          print*, 'ellipsoid:','update_matrix: ix', ix
          stop
+       else
+         flagsym = .true.
+       endif
     endif
     if ((jy.lt.1).or.(jy.gt.dimy)) then
+       if(symy.eq.0) then
          print*, 'ellipsoid:','update_matrix: iy', iy
          stop
+       else
+         flagsym = .true.
+       endif
     endif
     if ((jz.lt.1).or.(jz.gt.dimz)) then
+       if(symz.eq.0) then
          print*, 'ellipsoid:','update_matrix: iz', iz
          stop
+       else
+         flagsym = .true.
+       endif
     endif
 
+    if(flagsym.eqv..false.) then ! cell is not out of system due to reflection symmetry
          volprot(jx,jy,jz)=1.0 ! all inside
+    endif
 endif
 999 continue
 

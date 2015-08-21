@@ -15,6 +15,8 @@ character*6 titlez
 character*21 filename, tempc
 real*4 singlepres
 real*8 x(3), v(3)
+integer, external :: PBCSYMI, PBCREFI
+
 !-----  coordenadas -------------------------
 ! Variables
 
@@ -97,17 +99,14 @@ if(vtkflag.eq.1) then
         do iy = 1, scy*dimy
           do iz = 1, scz*dimz
 
-            jx= ix
-            do while(jx.gt.dimx)
-            jx=jx-dimx
-            enddo
+            if(PBC(1).ne.3)jx = PBCSYMI(ix,dimx)
+            if(PBC(1).eq.3)jx = PBCREFI(ix,dimx)
 
-            jy= iy
-            do while(jy.gt.dimy)
-            jy=jy-dimy
-            enddo
+            if(PBC(3).ne.3)jy = PBCSYMI(iy,dimy)
+            if(PBC(3).eq.3)jy = PBCREFI(iy,dimy)
 
-            jz=iz
+            if(PBC(5).ne.3)jz = PBCSYMI(iz,dimz)
+            if(PBC(5).eq.3)jz = PBCREFI(iz,dimz)
 
             singlepres = array(jx, jy, jz) ! Lo necesito en single presicion
  

@@ -50,6 +50,8 @@ real*8 fv, fv2
 integer counter
 real*8 psiv(3)
 
+integer, external :: PBCSYMI, PBCREFI
+
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!11
 !
 !  Recupera pro(i) de todos los procesos para calculo de F
@@ -283,17 +285,14 @@ endif
             jy = iy+ay
             jz = iz+az
 
-            if(PBC(1).eq.1) then
-            jx = mod(jx-1+5*dimx, dimx) + 1
-            endif
+            if(PBC(1).eq.1)jx = PBCSYMI(jx,dimx)
+            if(PBC(1).eq.3)jx = PBCREFI(jx,dimx)
 
-            if(PBC(3).eq.1) then
-            jy = mod(jy-1+5*dimy, dimy) + 1
-            endif
+            if(PBC(3).eq.1)jy = PBCSYMI(jy,dimy)
+            if(PBC(3).eq.3)jy = PBCREFI(jy,dimy)
 
-            if(PBC(5).eq.1) then
-            jz = mod(jz-1+5*dimz, dimz) + 1
-            endif
+            if(PBC(5).eq.1)jz = PBCSYMI(jz,dimz)
+            if(PBC(5).eq.3)jz = PBCREFI(jz,dimz)
 
             if((jx.ge.1).and.(jx.le.dimx)) then
             if((jy.ge.1).and.(jy.le.dimy)) then

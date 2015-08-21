@@ -58,7 +58,7 @@ xx(3) = delta
 xx(2) = 0.0
 xx(1) = 0.0
 
-x = MATMUL(IMAT,xx) ! 
+x = MATMUL(IMAT,xx) ! to real space 
 vect3 = x
 
 call cross_product(vect2,vect3,vectc)

@@ -21,6 +21,8 @@ real*8 maxx(3)
 integer flag
 integer a1,a2,a3
 
+real, external :: PBCSYMR, PBCREFR
+
 maxx(1) = float(dimx)*delta
 maxx(2) = float(dimy)*delta
 maxx(3) = float(dimz)*delta
@@ -36,26 +38,15 @@ do jj = 1, cpp(rank+1)
 
        x = x + posicion(ii,:)
  
-       v = MATMUL(MAT,x)
+       v = MATMUL(MAT,x) ! to transformed space
 
        do i = 1, 3
             pxtemp(i,j) = v(i)             ! new coordinate system
-
-            if(PBC(2*i-1).eq.1) then
-            do while (pxtemp(i,j).lt.1.0d-20)
-              pxtemp(i,j) = pxtemp(i,j) + maxx(i)
-            enddo     
-            endif
-
-            if(PBC(2*i).eq.1) then
-            do while (pxtemp(i,j).gt.maxx(i))
-             pxtemp(i,j) = pxtemp(i,j) - maxx(i)
-            enddo
-            endif
-
+            if(PBC(2*i-1).eq.1)pxtemp(i,j) = PBCSYMR(pxtemp(i,j),maxx(i))
+            if(PBC(2*i-1).eq.3)pxtemp(i,j) = PBCREFR(pxtemp(i,j),maxx(i))
        enddo
 
-       xx(:) = MATMUL(IMAT,pxtemp(:,j))
+       xx(:) = MATMUL(IMAT,pxtemp(:,j)) ! to real space
  
        if(testsystem(xx).eq.-1) then ! if testsystem = -1,  there is a collision with all or particle 
          flag = -1
