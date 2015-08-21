@@ -82,6 +82,7 @@ real*8 sstemp,vvtemp, maxss
 real*8 cutarea
 real*8 temp
 real*8 temp2
+real*8 sumvoleps1, sumvolprot1, sumvolq1, sumvolx1
 
 call make_ellipsoid ! update matrixes for all particles
 
@@ -112,13 +113,13 @@ do j = 1, NNN
 
  flag = .false.
 
- call integrate(AAAL(:,:,j),AellL(:,j), Rell(:,j),npoints, voleps1 ,flag)
+ call integrate(AAAL(:,:,j),AellL(:,j), Rell(:,j),npoints, voleps1 , sumvoleps1, flag)
  flag = .false. ! not a problem if eps lays outside boundaries
- call integrate(AAA(:,:,j),Aell(:,j), Rell(:,j),npoints, volprot1, flag)
+ call integrate(AAA(:,:,j),Aell(:,j), Rell(:,j),npoints, volprot1, sumvolprot1, flag)
 
- call integrate(AAAS(:,:,j),AellS(:,j), Rell(:,j),npoints, volq1, flag)
+ call integrate(AAAS(:,:,j),AellS(:,j), Rell(:,j),npoints, volq1, sumvolq1, flag)
 
- call integrateg(AAA(:,:,j),Aell(:,j),AAAX(:,:,j),AellX(:,j), Rell(:,j),npoints, volx1, com)
+ call integrateg(AAA(:,:,j),Aell(:,j),AAAX(:,:,j),AellX(:,j), Rell(:,j),npoints, volx1,sumvolx1, com)
 
 ! do ix = 1, dimx
 ! do iy = 1, dimy
@@ -130,8 +131,9 @@ do j = 1, NNN
 ! stop
 
 !! volume
- temp = 4.0/3.0*pi*Aell(1,j)*Aell(2,j)*Aell(3,j)/(sum(volprot1)*delta**3) ! rescales volume
+ temp = 4.0/3.0*pi*Aell(1,j)*Aell(2,j)*Aell(3,j)/(sumvolprot1*delta**3) ! rescales volume
  volprot1 = volprot1*temp                                                 ! OJO: transformation should mantain cell volumen
+ sumvolprot1 = sumvolprot1*temp
 
 !! eps
  voleps1 = voleps1-volprot1
@@ -139,11 +141,11 @@ do j = 1, NNN
 
 !! charge
  volq1 = volprot1-volq1
- temp = sum(volq1)
+ temp = sumvolprot1-sumvolq1
  volq1 = volq1/temp*echarge(j)/(delta**3) ! sum(volq) is echarge
 
 !! grafting
- temp = sum(volx1)
+ temp = sumvolx1
 
  pnumber = 1.6075
 
@@ -229,12 +231,13 @@ counter = 1
 call savetodisk(volx, title, counter)
 end subroutine
 
-subroutine integrateg(AAA,Aell,AAAX, AellX, Rell, npoints,volprot, com)
+subroutine integrateg(AAA,Aell,AAAX, AellX, Rell, npoints,volprot,sumvolprot,com)
 ! call integrateg(AAA(:,:,j),Aell(:,j),AAAX(:,:,j),AellX(:,j), Rell(:,j),npoints, volq1, com)
 use system
 use transform
 
 implicit none
+real*8 sumvolprot
 integer npoints
 real*8 AAA(3,3), AAAX(3,3)
 real*8 volprot(dimx,dimy,dimz)
@@ -267,6 +270,7 @@ if((PBC(3).eq.3).and.(PBC(4).eq.3))symy = 1
 if((PBC(5).eq.3).and.(PBC(6).eq.3))symz = 1
 
 volprot = 0.0
+sumvolprot = 0.0 ! total volumen, including that outside system
 
 maxAell = max(AellX(1),AellX(2),AellX(3)) ! maximum lenght/2.0 of a box enclosing the ellipsoid in Cartesian Coordinates
 
@@ -410,8 +414,9 @@ if((vect.ge.1.0).and.(vectx.le.1.0)) then           ! between ellipsoid 1 and 2
        endif
     endif
 
-    if(flagsym.eqv..false.) then ! cell is not out of system due to reflection symmetry
       call intcellg(AAA,AAAX,Rell,ix,iy,iz,npoints,volprot1,com1)
+      sumvolprot = sumvolprot + volprot1
+    if(flagsym.eqv..false.) then ! cell is not out of system due to reflection symmetry
       volprot(jx,jy,jz) = volprot1
       com(jx,jy,jz,:) = com1(:)
     endif
@@ -448,10 +453,12 @@ else
        endif
     endif
 
+
+      call intcellg(AAA,AAAX,Rell,ix,iy,iz,npoints,volprot1,com1)
+      sumvolprot = sumvolprot + volprot1
     if(flagsym.eqv..false.) then ! cell is not out of system due to reflection symmetry
-     call intcellg(AAA,AAAX,Rell,ix,iy,iz,npoints,volprot1,com1)
-     volprot(jx,jy,jz) = volprot1
-     com(jx,jy,jz,:) = com1(:)
+      volprot(jx,jy,jz) = volprot1
+      com(jx,jy,jz,:) = com1(:)
     endif
 
     goto 999 ! one in and one out, break the cycle
@@ -490,6 +497,8 @@ if((flagin.eqv..true.).and.(flagout.eqv..false.)) then
        endif
     endif
 
+    sumvolprot = sumvolprot + 1.0
+
     if(flagsym.eqv..false.) then ! cell is not out of system due to reflection symmetry
       volprot(jx,jy,iz)=1.0 ! all inside
     endif
@@ -505,11 +514,12 @@ end subroutine
 
 
 
-subroutine integrate(AAA,Aell, Rell, npoints,volprot, flag)
+subroutine integrate(AAA,Aell, Rell, npoints,volprot,sumvolprot, flag)
 use system
 use transform
 
 implicit none
+real*8 sumvolprot
 integer npoints
 real*8 AAA(3,3)
 real*8 volprot(dimx,dimy,dimz)
@@ -532,6 +542,7 @@ integer i,j
 
 integer symx, symy, symz
 logical flagsym
+real*8 voltemp
 
 ! CHECK FOR REFLECTION SYMMETRY PBC
 symx=0
@@ -542,6 +553,7 @@ if((PBC(3).eq.3).and.(PBC(4).eq.3))symy = 1
 if((PBC(5).eq.3).and.(PBC(6).eq.3))symz = 1
 
 volprot = 0.0
+sumvolprot = 0.0 ! total volumen, including that outside the system
 
 maxAell = max(Aell(1),Aell(2),Aell(3)) ! maximum lenght/2.0 of a box enclosing the ellipsoid in Cartesian Coordinates
 
@@ -684,8 +696,11 @@ if(vect.le.1.0) then           ! inside the ellipsoid
        endif
     endif
 
+    voltemp =  intcell(AAA, Rell, ix,iy,iz, npoints)
+    sumvolprot = sumvolprot + voltemp
+
     if(flagsym.eqv..false.) then ! cell is not out of system due to reflection symmetry
-         volprot(jx,jy,jz) = intcell(AAA, Rell, ix,iy,iz, npoints)
+         volprot(jx,jy,jz) = sumvolprot
     endif
 
       goto 999 ! one in and one out, break the cycle
@@ -720,8 +735,11 @@ else
        endif
     endif
 
+    voltemp = intcell(AAA, Rell, ix,iy,iz, npoints)
+    sumvolprot = sumvolprot + voltemp
+
     if(flagsym.eqv..false.) then ! cell is not out of system due to reflection symmetry
-         volprot(jx,jy,jz) = intcell(AAA, Rell, ix,iy,iz, npoints)
+         volprot(jx,jy,jz) = voltemp
     endif
 
     goto 999 ! one in and one out, break the cycle
@@ -760,6 +778,7 @@ if((flagin.eqv..true.).and.(flagout.eqv..false.)) then
        endif
     endif
 
+         sumvolprot = sumvolprot + 1.0
     if(flagsym.eqv..false.) then ! cell is not out of system due to reflection symmetry
          volprot(jx,jy,jz)=1.0 ! all inside
     endif
