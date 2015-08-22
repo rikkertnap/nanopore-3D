@@ -700,7 +700,7 @@ if(vect.le.1.0) then           ! inside the ellipsoid
     sumvolprot = sumvolprot + voltemp
 
     if(flagsym.eqv..false.) then ! cell is not out of system due to reflection symmetry
-         volprot(jx,jy,jz) = sumvolprot
+         volprot(jx,jy,jz) = voltemp
     endif
 
       goto 999 ! one in and one out, break the cycle
