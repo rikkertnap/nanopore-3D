@@ -22,6 +22,7 @@ integer flag
 integer a1,a2,a3
 
 real, external :: PBCSYMR, PBCREFR
+real*8, parameter :: erd =0.99999
 
 maxx(1) = float(dimx)*delta
 maxx(2) = float(dimy)*delta
@@ -47,7 +48,7 @@ do jj = 1, cpp(rank+1)
        enddo
 
        xx(:) = MATMUL(IMAT,pxtemp(:,j)) ! to real space
- 
+
        if(testsystem(xx).eq.-1) then ! if testsystem = -1,  there is a collision with all or particle 
          flag = -1
          exit
@@ -63,9 +64,9 @@ do jj = 1, cpp(rank+1)
 
     if(flag.eq.0) then
     newcuantas(ii) = newcuantas(ii)+1
-    px(newcuantas(ii), :, jj) = int(pxtemp(1,:)/delta) + 1
-    py(newcuantas(ii), :, jj) = int(pxtemp(2,:)/delta) + 1
-    pz(newcuantas(ii), :, jj) = int(pxtemp(3,:)/delta) + 1
+    px(newcuantas(ii), :, jj) = int(pxtemp(1,:)*erd/delta) + 1 ! erd compresses coordinates very slighly to prevent numerical errors
+    py(newcuantas(ii), :, jj) = int(pxtemp(2,:)*erd/delta) + 1
+    pz(newcuantas(ii), :, jj) = int(pxtemp(3,:)*erd/delta) + 1
     endif
 
 enddo ! jj
