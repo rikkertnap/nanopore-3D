@@ -21,8 +21,7 @@ real*8 maxx(3)
 integer flag
 integer a1,a2,a3
 
-real, external :: PBCSYMR, PBCREFR
-real*8, parameter :: erd =0.99999
+integer, external :: PBCREFI, PBCSYMI
 
 maxx(1) = float(dimx)*delta
 maxx(2) = float(dimy)*delta
@@ -39,22 +38,12 @@ do jj = 1, cpp(rank+1)
 
        x = x + posicion(ii,:)
  
-       v = MATMUL(MAT,x) ! to transformed space
-
-       do i = 1, 3
-            pxtemp(i,j) = v(i)             ! new coordinate system
-            if(PBC(2*i-1).eq.1)pxtemp(i,j) = PBCSYMR(pxtemp(i,j),maxx(i))
-            if(PBC(2*i-1).eq.3)pxtemp(i,j) = PBCREFR(pxtemp(i,j),maxx(i))
-       enddo
-
-       xx(:) = MATMUL(IMAT,pxtemp(:,j)) ! to real space
-
-       if(testsystem(xx).eq.-1) then ! if testsystem = -1,  there is a collision with all or particle 
+       if(testsystem(x).eq.-1) then ! if testsystem = -1,  there is a collision with all or particle 
          flag = -1
          exit
        endif
 
-       if(testsystem(xx).eq.-2) then ! if testsystem = -2, the polymer goes out-of-system
+       if(testsystem(x).eq.-2) then ! if testsystem = -2, the polymer goes out-of-system
          print*, 'pxs: out-of-system'
          stop
        endif
@@ -64,9 +53,18 @@ do jj = 1, cpp(rank+1)
 
     if(flag.eq.0) then
     newcuantas(ii) = newcuantas(ii)+1
-    px(newcuantas(ii), :, jj) = int(pxtemp(1,:)*erd/delta) + 1 ! erd compresses coordinates very slighly to prevent numerical errors
+    px(newcuantas(ii), :, jj) = int(pxtemp(1,:)*erd/delta) + 1
+            if(PBC(1).eq.1)px(newcuantas(ii), :, jj) = PBCSYMI(px(newcuantas(ii),:,jj),dimx)
+            if(PBC(1).eq.3)px(newcuantas(ii), :, jj) = PBCREFI(px(newcuantas(ii),:,jj),dimx)
+ 
     py(newcuantas(ii), :, jj) = int(pxtemp(2,:)*erd/delta) + 1
+            if(PBC(3).eq.1)py(newcuantas(ii),:,jj) = PBCSYMI(py(newcuantas(ii),:,jj),dimy)
+            if(PBC(3).eq.3)py(newcuantas(ii),:,jj) = PBCREFI(py(newcuantas(ii),:,jj),dimy)
+
     pz(newcuantas(ii), :, jj) = int(pxtemp(3,:)*erd/delta) + 1
+            if(PBC(5).eq.1)pz(newcuantas(ii),:,jj) = PBCSYMI(pz(newcuantas(ii),:,jj),dimz)
+            if(PBC(5).eq.3)pz(newcuantas(ii),:,jj) = PBCREFI(pz(newcuantas(ii),:,jj),dimz)
+
     endif
 
 enddo ! jj
