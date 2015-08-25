@@ -53,15 +53,15 @@ do jj = 1, cpp(rank+1)
 
     if(flag.eq.0) then
     newcuantas(ii) = newcuantas(ii)+1
-    px(newcuantas(ii), :, jj) = int(pxtemp(1,:)*erd/delta) + 1
+    px(newcuantas(ii), :, jj) = int(pxtemp(1,:)/delta) + 1
             if(PBC(1).eq.1)px(newcuantas(ii), :, jj) = PBCSYMI(px(newcuantas(ii),:,jj),dimx)
             if(PBC(1).eq.3)px(newcuantas(ii), :, jj) = PBCREFI(px(newcuantas(ii),:,jj),dimx)
  
-    py(newcuantas(ii), :, jj) = int(pxtemp(2,:)*erd/delta) + 1
+    py(newcuantas(ii), :, jj) = int(pxtemp(2,:)/delta) + 1
             if(PBC(3).eq.1)py(newcuantas(ii),:,jj) = PBCSYMI(py(newcuantas(ii),:,jj),dimy)
             if(PBC(3).eq.3)py(newcuantas(ii),:,jj) = PBCREFI(py(newcuantas(ii),:,jj),dimy)
 
-    pz(newcuantas(ii), :, jj) = int(pxtemp(3,:)*erd/delta) + 1
+    pz(newcuantas(ii), :, jj) = int(pxtemp(3,:)/delta) + 1
             if(PBC(5).eq.1)pz(newcuantas(ii),:,jj) = PBCSYMI(pz(newcuantas(ii),:,jj),dimz)
             if(PBC(5).eq.3)pz(newcuantas(ii),:,jj) = PBCREFI(pz(newcuantas(ii),:,jj),dimz)
 
