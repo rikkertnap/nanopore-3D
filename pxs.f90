@@ -19,7 +19,7 @@ real*8 v(3)
 integer testsystem
 real*8 maxx(3)
 integer flag
-integer a1,a2,a3
+integer aa
 
 integer, external :: PBCREFI, PBCSYMI
 
@@ -56,20 +56,20 @@ do jj = 1, cpp(rank+1)
 
     if(flag.eq.0) then
     newcuantas(ii) = newcuantas(ii)+1
-    px(newcuantas(ii), :, jj) = floor(pxtemp(1,:)/delta) + 1
             do j = 1, long
-            if(PBC(1).eq.1)px(newcuantas(ii),j,jj) = PBCSYMI(px(newcuantas(ii),j,jj),dimx)
-            if(PBC(1).eq.3)px(newcuantas(ii),j,jj) = PBCREFI(px(newcuantas(ii),j,jj),dimx)
+            aa = floor(pxtemp(1,j)/delta) + 1
+            if(PBC(1).eq.1)px(newcuantas(ii),j,jj) = PBCSYMI(aa,dimx)
+            if(PBC(1).eq.3)px(newcuantas(ii),j,jj) = PBCREFI(aa,dimx)
             enddo
-    py(newcuantas(ii), :, jj) = floor(pxtemp(2,:)/delta) + 1
             do j = 1, long
-            if(PBC(3).eq.1)py(newcuantas(ii),j,jj) = PBCSYMI(py(newcuantas(ii),j,jj),dimy)
-            if(PBC(3).eq.3)py(newcuantas(ii),j,jj) = PBCREFI(py(newcuantas(ii),j,jj),dimy)
+            aa = floor(pxtemp(2,j)/delta) + 1
+            if(PBC(3).eq.1)py(newcuantas(ii),j,jj) = PBCSYMI(aa,dimy)
+            if(PBC(3).eq.3)py(newcuantas(ii),j,jj) = PBCREFI(aa,dimy)
             enddo
-    pz(newcuantas(ii), :, jj) = floor(pxtemp(3,:)/delta) + 1
             do j = 1, long
-            if(PBC(5).eq.1)pz(newcuantas(ii),j,jj) = PBCSYMI(pz(newcuantas(ii),j,jj),dimz)
-            if(PBC(5).eq.3)pz(newcuantas(ii),j,jj) = PBCREFI(pz(newcuantas(ii),j,jj),dimz)
+            aa = floor(pxtemp(3,j)/delta) + 1
+            if(PBC(5).eq.1)pz(newcuantas(ii),j,jj) = PBCSYMI(aa,dimz)
+            if(PBC(5).eq.3)pz(newcuantas(ii),j,jj) = PBCREFI(aa,dimz)
             enddo
     endif
 
