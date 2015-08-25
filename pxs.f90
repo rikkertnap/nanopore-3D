@@ -37,6 +37,9 @@ do jj = 1, cpp(rank+1)
        x(3) = in1(j, 1)
 
        x = x + posicion(ii,:)
+       v = MATMUL(MAT,x)
+       pxtemp(:,j) = v(:)
+
  
        if(testsystem(x).eq.-1) then ! if testsystem = -1,  there is a collision with all or particle 
          flag = -1
