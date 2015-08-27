@@ -6,7 +6,7 @@ end function
 integer function PBCREFI(i,dimi) ! returns the reflection cell coordinate 
 integer i, dimi, iaux, iaux2
 iaux = mod(i-1+5*dimi,dimi)+1
-iaux2 = abs(mod(int(float(i-1)/float(dimi)),2))
+iaux2 = abs(mod(floor(float(i-1)/float(dimi)),2))
 PBCREFI = iaux+(dimi-2*iaux+1)*iaux2
 end function
 
