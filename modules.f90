@@ -15,6 +15,7 @@
 
 module system 
 real*8 delta
+real*8 dx,dy,dz
 real*8 cdiva
 integer  dimx 
 integer  dimy 

@@ -61,6 +61,9 @@ dielS = ndr
 pHbulk = ndr
 dielP = ndr
 delta = ndr
+dx = ndr
+dy = ndr
+dz = ndr
 cdiva = ndr
 csalt = ndr
 zpol = ndr
@@ -160,6 +163,18 @@ do while (ios == 0)
 
  case ('delta')
    read(buffer, *, iostat=ios) delta
+   if(rank.eq.0)print*, 'parser:','Set ',trim(label),' = ',trim(buffer)
+
+ case ('dx')
+   read(buffer, *, iostat=ios) dx
+   if(rank.eq.0)print*, 'parser:','Set ',trim(label),' = ',trim(buffer)
+
+ case ('dy')
+   read(buffer, *, iostat=ios) dy
+   if(rank.eq.0)print*, 'parser:','Set ',trim(label),' = ',trim(buffer)
+
+ case ('dz')
+   read(buffer, *, iostat=ios) dz
    if(rank.eq.0)print*, 'parser:','Set ',trim(label),' = ',trim(buffer)
 
  case ('cdiva')
@@ -324,6 +339,9 @@ if(kaptype.eq.ndi)call stopundef('kaptype')
 if(nst.eq.ndi)call stopundef('kaptype')
 
 if(delta.eq.ndr)call stopundef('delta')
+if(dx.eq.ndr)call stopundef('dx')
+if(dy.eq.ndr)call stopundef('dy')
+if(dz.eq.ndr)call stopundef('dz')
 if(cdiva.eq.ndr)call stopundef('cdiva')
 if(dielS.eq.ndr)call stopundef('dielS')
 if(dielP.eq.ndr)call stopundef('dielP')

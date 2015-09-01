@@ -115,9 +115,9 @@ real*8 vect(3), vect2(3)
 
 do j = 1, NNN
 
-vect(1) = Rellf(1,j)*delta*dfloat(dimx)
-vect(2) = Rellf(2,j)*delta*dfloat(dimy)
-vect(3) = Rellf(3,j)*delta*dfloat(dimz)
+vect(1) = Rellf(1,j)*delta*dfloat(dimx) + dx*delta
+vect(2) = Rellf(2,j)*delta*dfloat(dimy) + dy*delta
+vect(3) = Rellf(3,j)*delta*dfloat(dimz) + dz*delta
 vect2 = MATMUL(IMAT,vect)
 Rell(:,j) = vect2(:)
 
