@@ -102,6 +102,7 @@ endif
 if(rank.eq.0)print*,'kais: New Xulimit', Xulimit
 
 ALLOCATE (Xu(-Xulimit:Xulimit,-Xulimit:Xulimit,-Xulimit:Xulimit))
+Xu = 0.0
 sumXu = 0.0
 do ix = -Xulimit, Xulimit
 do iy = -Xulimit, Xulimit

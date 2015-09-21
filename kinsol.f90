@@ -94,7 +94,7 @@ real*8 scale(2*dimx*dimy*dimz)
 real*8 constr(2*dimx*dimy*dimz)
 integer*4  globalstrat, maxl, maxlrst
 integer*4 ier ! Kinsol error flag
-integer neq ! Kinsol number of equations
+integer*8 neq ! Kinsol number of equations
 integer*4 max_niter
 common /psize/ neq ! Kinsol
 integer ierr

@@ -222,10 +222,6 @@ do ix=1,dimx
             jy = iy+ay
             jz = iz+az
 
-            if(PBC(1).eq.1) then
-            jx = mod(jx-1+5*dimx, dimx) + 1
-            endif
-
             if(PBC(1).eq.1)jx = PBCSYMI(jx,dimx)
             if(PBC(1).eq.3)jx = PBCREFI(jx,dimx)
 
