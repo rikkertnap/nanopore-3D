@@ -12,6 +12,7 @@ real*8 x(3),xx(3), vect1(3),vect2(3),vect3(3), vol
 real*8 vectc(3)
 real*8 fix
 real*8 cdivl
+real*8, external :: NORMA
 
 gama0 = gama0/180.0*pi
 
@@ -93,15 +94,21 @@ call cross_product(vect2,vect3,vectc)
 
 vol = DOT_PRODUCT(vect1,vectc)
 
-if(rank.eq.0)print*, 'transform:', 'a / nm ', norm2(vect1)
-if(rank.eq.0)print*, 'transform:', 'b / nm ', norm2(vect2)
-if(rank.eq.0)print*, 'transform:', 'c / nm ', norm2(vect3)
+if(rank.eq.0)print*, 'transform:', 'a / nm ', NORMA(vect1)
+if(rank.eq.0)print*, 'transform:', 'b / nm ', NORMA(vect2)
+if(rank.eq.0)print*, 'transform:', 'c / nm ', NORMA(vect3)
 if(rank.eq.0)print*, 'transform:', 'gama ', gama0*180/3.14159 
-if(rank.eq.0)print*, 'transform:', 'c/a', norm2(vect3)/norm2(vect1)
-if(rank.eq.0)print*, 'transform:', 'c/b', norm2(vect3)/norm2(vect2)
+if(rank.eq.0)print*, 'transform:', 'c/a', NORMA(vect3)/NORMA(vect1)
+if(rank.eq.0)print*, 'transform:', 'c/b', NORMA(vect3)/NORMA(vect2)
 if(rank.eq.0)print*, 'transform:', 'cell volume ', vol, 'nm^3'
 
 end subroutine
+
+double precision function NORMA(x)
+implicit none
+real*8 x(3)
+NORMA = (x(1)**2+x(2)**2+x(3)**2)**(0.5)
+end function
 
 subroutine initellpos ! transforms ellipsoid coordinates from fractional to real
 use const
