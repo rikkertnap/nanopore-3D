@@ -28,12 +28,11 @@ integer i
 real*8 rands
 real*8 suma
 real*8 or
-real*8 cutoff
 real*8 volume
 real*8 xx(3), vv(3)
 integer temp
 
-cutoff = float(Xulimit)*delta ! cutoff sphere in real space
+Xulimit = int(cutoff/delta)+1
 limit = Xulimit + 5 ! make it much larger, will check at the end.
 
 ALLOCATE (matriz(-limit:limit, -limit:limit, -limit:limit)) ! matriz de kai

@@ -52,9 +52,8 @@ long = ndi
 cuantas = ndi
 readchains = ndi
 infile = ndi
-Xulimit = ndi
 randominput = ndi
-
+cutoff = ndr
 lseg = ndr
 nst = ndi
 dielS = ndr
@@ -251,8 +250,8 @@ do while (ios == 0)
    read(fh,*)sts(i)
    enddo 
 
- case ('Xulimit')
-   read(buffer, *, iostat=ios) Xulimit
+ case ('Xucutoff')
+   read(buffer, *, iostat=ios) cutoff
    if(rank.eq.0)print*, 'parser:','Set ',trim(label),' = ',trim(buffer)
 
  case ('kaptype')
@@ -333,8 +332,8 @@ if(long.eq.ndi)call stopundef('long')
 if(cuantas.eq.ndi)call stopundef('cuantas')
 if(infile.eq.ndi)call stopundef('infile')
 if(randominput.eq.ndi)call stopundef('randominput')
-if(Xulimit.eq.ndi)call stopundef('Xulimit')
-if(readchains.eq.ndi)call stopundef('Xulimit')
+if(cutoff.eq.ndr)call stopundef('Xucutoff')
+if(readchains.eq.ndi)call stopundef('readchains')
 if(kaptype.eq.ndi)call stopundef('kaptype')
 if(nst.eq.ndi)call stopundef('kaptype')
 

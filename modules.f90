@@ -139,6 +139,7 @@ endmodule
 
 module kai
 integer Xulimit
+real*8 cutoff
 real*8, allocatable :: Xu(:,:,:)
 real*8 sumXu
 endmodule
