@@ -302,28 +302,8 @@ character*20 filename
 if(rank.eq.0) then
 open (unit=8, file='out.out', form='unformatted')
 write(8)counter
-write(8)seed
 write(8)free_energy
-write(8)Rell
 write(8)xflag
-write(8)volprot
-write(8)voleps
-write(8)volq
-write(8)volx
-write(8)rotmatrix
-write(8)AAA
-write(8)AAAL
-write(8)AAAS
-write(8)AAAX
-write(8)orient
-write(8)avpol
-write(8)epsfcn
-write(8)Depsfcn
-write(8)xpos
-write(8)xneg
-write(8)xHplus
-write(8)xOHmin
-write(8)fdis
 close(8)
 endif
 
@@ -331,28 +311,8 @@ if(rank.eq.0) then
 write(filename,'(A4, I3.3, A4)')'out.', counter, '.dat'
 open(unit=8, file=filename)
 write(8)counter
-write(8)seed
 write(8)free_energy
-write(8)Rell
 write(8)xflag
-write(8)volprot
-write(8)voleps
-write(8)volq
-write(8)volx
-write(8)rotmatrix
-write(8)AAA
-write(8)AAAL
-write(8)AAAS
-write(8)AAAX
-write(8)orient
-write(8)avpol
-write(8)epsfcn
-write(8)Depsfcn
-write(8)xpos
-write(8)xneg
-write(8)xHplus
-write(8)xOHmin
-write(8)fdis
 close(8)
 endif
 end subroutine
@@ -369,28 +329,8 @@ integer counter
 
 open (unit=8, file='in.in', form='unformatted')
 read(8)counter
-read(8)seed
 read(8)free_energy
-read(8)Rell
 read(8)xflag
-read(8)volprot
-read(8)voleps
-read(8)volq
-read(8)volx
-read(8)rotmatrix
-read(8)AAA
-read(8)AAAL
-read(8)AAAS
-read(8)AAAX
-read(8)orient
-read(8)avpol
-read(8)epsfcn
-read(8)Depsfcn
-read(8)xpos
-read(8)xneg
-read(8)xHplus
-read(8)xOHmin
-read(8)fdis
 close(8)
 end subroutine
 
