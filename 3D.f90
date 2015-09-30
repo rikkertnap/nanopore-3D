@@ -18,6 +18,7 @@ integer i, ix, iy, iz
 !-----  varables de la resolucion -----------
 
 real*8 x1(2*dimx*dimy*dimz),xg1(2*dimx*dimy*dimz)
+real*8 f(2*dimx*dimy*dimz)
        
 integer n
 
@@ -64,7 +65,12 @@ endif
 if(rank.eq.0) then ! solo el jefe llama al solver
    iter = 0
    print*, 'solve: Enter solver ', 2*n, ' eqs'
-   call call_kinsol(x1, xg1, ier)
+
+   if(infile.ge.0) then
+    call call_kinsol(x1, xg1, ier)
+   if(infile.eq.-1) then
+    call fkfun(x1, f, ier)
+   endif
    flagsolver = 0
    CALL MPI_BCAST(flagsolver, 1, MPI_INTEGER, 0, MPI_COMM_WORLD,err)
 endif

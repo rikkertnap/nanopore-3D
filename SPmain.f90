@@ -81,7 +81,7 @@ if(infile.ne.0) then
    call retrivefromdisk(counter)
    if(rank.eq.0)print*, 'Load input from file'
    if(rank.eq.0)print*, 'Free energy', free_energy
-   infile = 2
+   if(infile.ne.-1)infile = 2
    call update_matrix(flag)
    if(flag.eqv..true.) then
     print*, 'Initial position of particle does not fit in z'
