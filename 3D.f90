@@ -123,7 +123,7 @@ enddo
 
 ! Chequea si exploto... => Sistema anti-crash
 
-if(infile.ne.5) then
+if(infile.ne.-1) then
   if((ier.lt.0).or.(.not.((norma.gt.0).or.(norma.lt.0))).or.(norma.gt.error)) then ! exploto...
     if(rank.eq.0)print*, 'solve: Error in solver: ', ier
     if(rank.eq.0)print*, 'solve: norma ', norma
