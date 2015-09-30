@@ -309,7 +309,7 @@ endif
 
 if(rank.eq.0) then
 write(filename,'(A4, I3.3, A4)')'out.', counter, '.dat'
-open(unit=8, file=filename)
+open(unit=8, file=filename, form='unformatted')
 write(8)counter
 write(8)free_energy
 write(8)xflag
