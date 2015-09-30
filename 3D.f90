@@ -68,6 +68,7 @@ if(rank.eq.0) then ! solo el jefe llama al solver
 
    if(infile.ge.0) then
     call call_kinsol(x1, xg1, ier)
+   endif
    if(infile.eq.-1) then
     call fkfun(x1, f, ier)
    endif
