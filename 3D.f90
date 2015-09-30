@@ -39,7 +39,7 @@ n = dimx*dimy*dimz
 
 ! Initial guess
 
-if(infile.eq.2) then
+if((infile.eq.2).or.(infile.eq.-1)) then
   do i = 1, 2*n  
       xg1(i) = xflag(i)     
       x1(i) = xflag(i)
