@@ -117,6 +117,7 @@ integer *4 ier ! Kinsol error flag
 integer *8 neq ! Kinsol number of equations
 real*8 norma
 real*8, ALLOCATABLE :: xflag(:) 
+real*8, ALLOCATABLE :: xpar(:) 
 endmodule
 
 module const

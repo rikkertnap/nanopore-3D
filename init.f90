@@ -190,6 +190,21 @@ if(rank.eq.0) then ! solo el jefe escribe a disco....
   title = 'avpar'
   call savetodisk(volprot, title, cccc)
 
+! save volprot for supercell
+
+if(rank.eq.0) then
+open (unit=8, file='out.par', form='unformatted')
+do ix=1,dimx
+ do iy=1,dimy
+  do iz=1,dimz
+  xpar(ix+dimx*(iy-1)+dimx*dimy*(iz-1)) = volprot(ix,iy,iz)
+  enddo
+ enddo
+enddo
+write(8)xpar
+close(8)
+endif
+
 ! system
 
   write(filename,'(A7, I3.3, A4)')'system.', cccc, '.dat'

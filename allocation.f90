@@ -22,6 +22,7 @@ ALLOCATE(xh(dimx, dimy, dimz))
 
 ! kinsol
 ALLOCATE (xflag(2*dimx*dimy*dimz))
+ALLOCATE (xpar(dimx*dimy*dimz))
 
 ! results
 ALLOCATE (avpol(dimx, dimy, dimz))
