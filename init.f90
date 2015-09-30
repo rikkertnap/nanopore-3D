@@ -330,8 +330,6 @@ endif
 if(rank.eq.0) then
 write(filename,'(A4, I3.3, A4)')'out.', counter, '.dat'
 open(unit=8, file=filename)
-
-open (unit=8, file='out.out', form='unformatted')
 write(8)counter
 write(8)seed
 write(8)free_energy
@@ -357,11 +355,7 @@ write(8)xOHmin
 write(8)fdis
 close(8)
 endif
-
-
-
 end subroutine
-
 
 subroutine retrivefromdisk(counter) ! saves state to disk
 use ellipsoid
