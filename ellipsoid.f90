@@ -83,6 +83,13 @@ real*8 cutarea
 real*8 temp
 real*8 temp2
 real*8 sumvoleps1, sumvolprot1, sumvolq1, sumvolx1
+integer ncha1
+real*8 volx1(maxvolx)
+real*8 com1(maxvolx,3)
+integer i
+real*8 volxx1(dimx,dimy,dimz)
+real*8 volxx(dimx,dimy,dimz)
+
 
 call make_ellipsoid ! update matrixes for all particles
 
@@ -96,7 +103,9 @@ voleps = 0.0
 volprot = 0.0
 volq = 0.0
 volx = 0.0
+volxx = 0.0
 com = 0.0
+ncha = 0
 
 do j = 1, NNN
 
@@ -119,16 +128,8 @@ do j = 1, NNN
 
  call integrate(AAAS(:,:,j),AellS(:,j), Rell(:,j),npoints, volq1, sumvolq1, flag)
 
- call integrateg(AAA(:,:,j),Aell(:,j),AAAX(:,:,j),AellX(:,j), Rell(:,j),npoints, volx1,sumvolx1, com)
-
-! do ix = 1, dimx
-! do iy = 1, dimy
-! do iz = 1, dimz
-! if(volx(ix,iy,iz).ne.0.0)print*, 'ellipsoid:', ix,iy,iz, volx(ix,iy,iz),com(ix,iy,iz,:)
-! enddo
-! enddo
-! enddo
-! stop
+ npoints = 100000000
+ call newintegrateg(Aell(:,j),Rell(:,j),npoints,volx1,sumvolx1, com1, ncha1, volxx1)
 
 !! volume
  temp = 4.0/3.0*pi*Aell(1,j)*Aell(2,j)*Aell(3,j)/(sumvolprot1*delta**3) ! rescales volume
@@ -145,8 +146,6 @@ do j = 1, NNN
  volq1 = volq1/temp*echarge(j)/(delta**3) ! sum(volq) is echarge
 
 !! grafting
- temp = sumvolx1
-
  pnumber = 1.6075
 
  area = (Aell(1,j)*Aell(2,j))**pnumber 
@@ -160,31 +159,24 @@ do j = 1, NNN
  volx1 = 0.0
  end where 
 
- volx1 = volx1/temp*area*sigma(j)
+ volx1 = volx1/sumvolx1*area*sigma(j)
+ volxx1 = volxx1/sumvolx1*area*sigma(j)
 
  maxss = 1.0d100
 
- do ix = 1, dimx
- do iy = 1, dimy
- do iz = 1, dimz
-
+ do i = 1, ncha1
  vvtemp = (1.0-volprot1(ix,iy,iz))*(delta**3)/vpol/vsol
- sstemp = volx1(ix,iy,iz)/sigma(j)
+ sstemp = volx1(i)/sigma(j)
  if(sstemp.eq.0.0) then
  vvtemp = 1.0d100
  else
 ! print*, 'ellipsoid:', ix,iy,iz,(1.0-volprot1(ix,iy,iz)),volx1(ix,iy,iz)
  vvtemp = vvtemp/sstemp
  endif
-
  if(vvtemp.lt.maxss)maxss=vvtemp
  enddo
- enddo
- enddo
-
  if(rank.eq.0)print*, 'ellipsoid:', 'Maxsigma for ', j,'is ', maxss
 
-! print*, 'ellipsoid:', j, area,sigma(j)
  sumpolseg = sumpolseg + area*sigma(j)*long
 
 !! volume  
@@ -199,7 +191,17 @@ do j = 1, NNN
  
  voleps = voleps + voleps1
  volq = volq + volq1 
- volx = volx + volx1
+
+! add com1 and volx to list
+
+ volxx = volxx + volxx1
+
+
+do i = 1, ncha1
+ncha = ncha+1
+volx(ncha)=volx1(i)
+com(ncha,:)=com1(i,:)
+enddo
 
 enddo
 title = 'avpro'
@@ -228,291 +230,8 @@ call savetodisk(volq, title, counter)
 
 title = 'avgrf'
 counter = 1
-call savetodisk(volx, title, counter)
+call savetodisk(volxx, title, counter)
 end subroutine
-
-subroutine integrateg(AAA,Aell,AAAX, AellX, Rell, npoints,volprot,sumvolprot,com)
-! call integrateg(AAA(:,:,j),Aell(:,j),AAAX(:,:,j),AellX(:,j), Rell(:,j),npoints, volq1, com)
-use system
-use transform
-
-implicit none
-real*8 sumvolprot
-integer npoints
-real*8 AAA(3,3), AAAX(3,3)
-real*8 volprot(dimx,dimy,dimz)
-real*8 com(dimx,dimy,dimz,3)
-real*8 Rell(3), Aell(3), AellX(3)
-real*8 dr(3), dxr(3)
-integer ix,iy,iz,ax,ay,az
-real*8 vect, vectx
-logical flagin, flagout
-real*8 intcell
-real*8 mmmult
-integer jx,jy, jz
-real*8 Rpos(3)
-real*8 maxAell
-logical flag
-real*8 box(4)
-real*8 x(3), v(3)
-integer xmin,xmax,ymin,ymax,zmin,zmax
-integer i,j
-integer symx, symy, symz
-real*8 com1(3), volprot1
-logical flagsym
-
-! CHECK FOR REFLECTION SYMMETRY PBC
-symx=0
-symy=0
-symz=0
-if((PBC(1).eq.3).and.(PBC(2).eq.3))symx = 1
-if((PBC(3).eq.3).and.(PBC(4).eq.3))symy = 1
-if((PBC(5).eq.3).and.(PBC(6).eq.3))symz = 1
-
-volprot = 0.0
-sumvolprot = 0.0 ! total volumen, including that outside system
-
-maxAell = max(AellX(1),AellX(2),AellX(3)) ! maximum lenght/2.0 of a box enclosing the ellipsoid in Cartesian Coordinates
-
-Rpos(1) = Rell(1)
-Rpos(2) = Rell(2)
-Rpos(3) = Rell(3)
-
-! create a box in transformed coordinate enclosing the ellipsoid
-!!!!!!!!!!!!!!!! xmin !!!!!!!!!!!!!!!
-x(1) = Rpos(1)-maxAell
-do j = 1, 2
-do i = 1, 2
-x(2) = Rpos(2)+maxAell*(-1.0)**j
-x(3) = Rpos(3)+maxAell*(-1.0)**i
-v = MATMUL(MAT,x)
-box(i+2*(j-1)) = v(1)
-enddo
-enddo
-xmin = int(minval(box)/delta)-2
-!!!!!!!!!!!!!! xmax !!!!!!!!!!!!!!!!!!!!!1
-x(1) = Rpos(1)+maxAell
-do j = 1, 2
-do i = 1, 2
-x(2) = Rpos(2)+maxAell*(-1.0)**j
-x(3) = Rpos(3)+maxAell*(-1.0)**i
-v = MATMUL(MAT,x)
-box(i+2*(j-1)) = v(1)
-enddo
-enddo
-xmax = int(maxval(box)/delta)+2
-!!!!!!!!!!!!!!!! ymin !!!!!!!!!!!!!!!
-x(2) = Rpos(2)-maxAell
-do j = 1, 2
-do i = 1, 2
-x(1) = Rpos(1)+maxAell*(-1.0)**j
-x(3) = Rpos(3)+maxAell*(-1.0)**i
-v = MATMUL(MAT,x)
-box(i+2*(j-1)) = v(2)
-enddo
-enddo
-ymin = int(minval(box)/delta)-2
-!!!!!!!!!!!!!!!! ymax !!!!!!!!!!!!!!!
-x(2) = Rpos(2)+maxAell
-do j = 1, 2
-do i = 1, 2
-x(1) = Rpos(1)+maxAell*(-1.0)**j
-x(3) = Rpos(3)+maxAell*(-1.0)**i
-v = MATMUL(MAT,x)
-box(i+2*(j-1)) = v(2)
-enddo
-enddo
-ymax = int(maxval(box)/delta)+2
-!!!!!!!!!!!!!!!! zmin !!!!!!!!!!!!!!!
-x(3) = Rpos(3)-maxAell
-do j = 1, 2
-do i = 1, 2
-x(1) = Rpos(1)+maxAell*(-1.0)**j
-x(2) = Rpos(2)+maxAell*(-1.0)**i
-v = MATMUL(MAT,x)
-box(i+2*(j-1)) = v(3)
-enddo
-enddo
-zmin = int(minval(box)/delta)-2
-!!!!!!!!!!!!!!!! zmax !!!!!!!!!!!!!!!
-x(3) = Rpos(3)+maxAell
-do j = 1, 2
-do i = 1, 2
-x(1) = Rpos(1)+maxAell*(-1.0)**j
-x(2) = Rpos(2)+maxAell*(-1.0)**i
-v = MATMUL(MAT,x)
-box(i+2*(j-1)) = v(3)
-enddo
-enddo
-zmax = int(maxval(box)/delta)+2
-
-! Make a list of the cells that have no ellipsoid, those that have part ellipsoid and those that have full ellipsoid
-! Consider boundary conditions 
-
-do ix = xmin, xmax
-do iy = ymin, ymax
-do iz = zmin, zmax
-
-jx=ix
-jy=iy
-jz=iz
-
-if(PBC(1).eq.1) then
- jx=mod(ix+dimx-1,dimx)+1
-endif
-if(PBC(3).eq.1) then
- jy=mod(iy+dimy-1,dimy)+1
-endif
-if(PBC(5).eq.1) then
- jz=mod(iz+dimz-1,dimz)+1
-endif
-
-flagin=.false.
-flagout=.false.
-
-do ax = -1,0
-do ay = -1,0
-do az = -1,0
-
-dr(1) = (ix+ax)*delta 
-dr(2) = (iy+ay)*delta 
-dr(3) = (iz+az)*delta
-
-! dr is in transformed space, change to cartesian space
-
-dxr = MATMUL(IMAT,dr) - Rell
-vect = mmmult(dxr,AAA)
-vectx = mmmult(dxr,AAAX)
-
-if((vect.ge.1.0).and.(vectx.le.1.0)) then           ! between ellipsoid 1 and 2
-  flagin=.true.
-  if(flagout.eqv..true.) then
-
-  flagsym = .false.
-    if ((jx.lt.1).or.(jx.gt.dimx)) then
-       if(symx.eq.0) then
-         print*, 'ellipsoid:','update_matrix: ix', ix
-         stop
-       else
-         flagsym = .true.
-       endif
-    endif
-    if ((jy.lt.1).or.(jy.gt.dimy)) then
-       if(symy.eq.0) then
-         print*, 'ellipsoid:','update_matrix: iy', iy
-         stop
-       else
-         flagsym = .true.
-       endif
-    endif
-    if ((jz.lt.1).or.(jz.gt.dimz)) then
-       if(symz.eq.0) then
-         print*, 'ellipsoid:','update_matrix: iz', iz
-         stop
-       else
-         flagsym = .true.
-       endif
-    endif
-
-      call intcellg(AAA,AAAX,Rell,ix,iy,iz,npoints,volprot1,com1)
-      sumvolprot = sumvolprot + volprot1
-    if(flagsym.eqv..false.) then ! cell is not out of system due to reflection symmetry
-      volprot(jx,jy,jz) = volprot1
-      com(jx,jy,jz,:) = com1(:)
-    endif
-
-      goto 999 ! one in and one out, break the cycle
-  endif
-else 
-  flagout=.true.
-  if(flagin.eqv..true.) then
-
-  flagsym = .false.
-    if ((jx.lt.1).or.(jx.gt.dimx)) then
-       if(symx.eq.0) then
-         print*, 'ellipsoid:','update_matrix: ix', ix
-         stop
-       else
-         flagsym = .true.
-       endif
-    endif
-    if ((jy.lt.1).or.(jy.gt.dimy)) then
-       if(symy.eq.0) then
-         print*, 'ellipsoid:','update_matrix: iy', iy
-         stop
-       else
-         flagsym = .true.
-       endif
-    endif
-    if ((jz.lt.1).or.(jz.gt.dimz)) then
-       if(symz.eq.0) then
-         print*, 'ellipsoid:','update_matrix: iz', iz
-         stop
-       else
-         flagsym = .true.
-       endif
-    endif
-
-
-      call intcellg(AAA,AAAX,Rell,ix,iy,iz,npoints,volprot1,com1)
-      sumvolprot = sumvolprot + volprot1
-    if(flagsym.eqv..false.) then ! cell is not out of system due to reflection symmetry
-      volprot(jx,jy,jz) = volprot1
-      com(jx,jy,jz,:) = com1(:)
-    endif
-
-    goto 999 ! one in and one out, break the cycle
-  endif
-endif
-
-enddo
-enddo
-enddo
-
-if((flagin.eqv..true.).and.(flagout.eqv..false.)) then 
-
-  flagsym = .false.
-    if ((jx.lt.1).or.(jx.gt.dimx)) then
-       if(symx.eq.0) then
-         print*, 'ellipsoid:','update_matrix: ix', ix
-         stop
-       else
-         flagsym = .true.
-       endif
-    endif
-    if ((jy.lt.1).or.(jy.gt.dimy)) then
-       if(symy.eq.0) then
-         print*, 'ellipsoid:','update_matrix: iy', iy
-         stop
-       else
-         flagsym = .true.
-       endif
-    endif
-    if ((jz.lt.1).or.(jz.gt.dimz)) then
-       if(symz.eq.0) then
-         print*, 'ellipsoid:','update_matrix: iz', iz
-         stop
-       else
-         flagsym = .true.
-       endif
-    endif
-
-    sumvolprot = sumvolprot + 1.0
-
-    if(flagsym.eqv..false.) then ! cell is not out of system due to reflection symmetry
-      volprot(jx,jy,iz)=1.0 ! all inside
-    endif
-
-endif
-999 continue
-
-enddo
-enddo
-enddo
-
-end subroutine
-
-
 
 subroutine integrate(AAA,Aell, Rell, npoints,volprot,sumvolprot, flag)
 use system
@@ -923,12 +642,119 @@ com(:) =com(:)/float(cc)
 end
 
 
+subroutine newintegrateg(Aell,Rell, npoints,volx1,sumvolx1,com1,ncha1,volxx1)
+use system
+use transform
+use chainsdat
+use ematrix
 
+implicit none
+real*8 sumvolx1
+integer npoints
+!real*8 AAA(3,3), AAAX(3,3)
+integer indexvolx(dimx,dimy,dimz)
+real*8 Rell(3), Aell(3)
+real*8 radio
+real*8 phi, dphi, tetha,dtetha, as, ds
+integer mphi, mtetha
+integer ix,iy,iz,jx,jy,jz
+real*8 x(3), v(3)
+integer i,j
+integer ncount
+real*8 pi
+real*8 comshift ! how far from the surface of the sphere the grafting point is
+integer ncha1 ! count for current sphere
+real*8 volx1(maxvolx)
+real*8 com1(maxvolx,3)
+real*8 volxx1(dimx,dimy,dimz)
 
+indexvolx = 0
+ncha1 = 0
+comshift = 1.0+lseg*1.5
+volx1 = 0.0
+sumvolx1 = 0.0 ! total volumen, including that outside system
+com1 = 0.0
+volxx1 = 0.0
 
+! This routine determines the surface coverage and grafting positions only for spheres
+!
 
+! check we have a sphere
 
+radio=Aell(1)
+if((radio.ne.Aell(2)).or.(radio.ne.Aell(3))) then 
+print*, 'newintegrateg: needs spherical particle... stop'
+stop
+endif
 
+do i = 1, npoints
+call randomvect(x) ! uniform points on a sphere
+
+x(:) = x(:)*radio + Rell(:)
+
+! x in real space, v in transformed space
+    v = MATMUL(MAT,x)
+
+    ix=int(v(1)/delta)+1  
+    iy=int(v(2)/delta)+1  
+    iz=int(v(3)/delta)+1  
+
+! PBC and check out of boundaries
+jx=ix    
+jy=iy
+jz=iz
+
+if(PBC(1).eq.1) then
+ jx=mod(ix+dimx-1,dimx)+1
+endif
+if(PBC(3).eq.1) then
+ jy=mod(iy+dimy-1,dimy)+1
+endif
+if(PBC(5).eq.1) then
+ jz=mod(iz+dimz-1,dimz)+1
+endif
+
+if((jx.gt.dimx).or.(jx.lt.1)) then
+print*, 'Error in newintegrateg: out of boundary x'
+stop
+endif
+
+if((jy.gt.dimy).or.(jy.lt.1)) then
+print*, 'Error in newintegrateg: out of boundary y'
+stop
+endif
+
+if((jz.gt.dimz).or.(jz.lt.1)) then
+print*, 'Error in newintegrateg: out of boundary z'
+stop
+endif
+
+! increase counter
+if(indexvolx(jx,jy,jz).eq.0) then
+
+ if(ncha1.eq.maxvolx) then
+   print*, 'ellipsoid: increase maxvolx'
+   stop
+ endif
+
+ ncha1 = ncha1 + 1
+ indexvolx(jx,jy,jz) = ncha1
+endif
+
+volxx1(jx,jy,jz) =  volxx1(jx,jy,jz) + 1.0
+volx1(indexvolx(jx,jy,jz)) = volx1(indexvolx(jx,jy,jz)) + 1.0
+com1(indexvolx(jx,jy,jz),:) = com1(indexvolx(jx,jy,jz),:) + x(:)
+sumvolx1 = sumvolx1 + 1.0
+
+enddo ! npoints
+
+do i = 1, ncha1
+com1(i,:) = com1(i,:)/volx1(i)
+com1(i,:) = ((com1(i,:)-Rell(:)))*comshift + Rell(:)
+!print*,i,com1(i,:),com1(i,1)**2+com1(i,2)**2+com1(i,3)**2
+enddo
+
+end
 
 
 

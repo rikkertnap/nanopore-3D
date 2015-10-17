@@ -16,7 +16,7 @@ use molecules
 use ellipsoid
 implicit none
 pi = acos(-1.0)
-seed = 15615
+seed = 938121
 lb = 0.714 ! bjerrum lenght in nm
 zpos = 1.0
 zneg = -1.0
@@ -239,67 +239,6 @@ endif
 
 endif
 
-end subroutine
-
-
-subroutine store
-
-use ellipsoid
-use kinsol
-use montecarlo
-use ematrix
-use results
-use old
-implicit none
-
-  free_energy_old = free_energy
-  Rell_old = Rell
-  xflag_old = xflag
-  volprot_old = volprot
-  voleps_old = voleps
-  volq_old = volq
-  volx_old = volx
-
-  rotmatrix_old = rotmatrix
-
-  avpol_old = avpol
-  epsfcn_old = epsfcn
-  Depsfcn_old = Depsfcn
-  xpos_old = xpos
-  xneg_old = xneg
-  xHplus_old = xHplus
-  xOHmin_old = xOHmin
-  fdis_old = fdis 
-end subroutine
-
-subroutine retrive
-
-use ellipsoid
-use kinsol
-use montecarlo
-use ematrix
-use results
-use old
-implicit none
-
-  free_energy = free_energy_old
-  Rell = Rell_old
-  xflag = xflag_old
-  volprot = volprot_old
-  voleps = voleps_old
-  volq = volq_old
-  volx = volx_old
-
-  rotmatrix = rotmatrix_old
-
-  avpol = avpol_old
-  epsfcn = epsfcn_old
-  Depsfcn = Depsfcn_old
-  xpos = xpos_old
-  xneg = xneg_old
-  xHplus = xHplus_old
-  xOHmin = xOHmin_old
-  fdis = fdis_old
 end subroutine
 
 subroutine store2disk(counter) ! saves state to disk

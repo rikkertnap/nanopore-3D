@@ -28,26 +28,6 @@ module s2d
 integer scx,scy,scz
 endmodule
 
-module old
-real*8 free_energy_old
-real*8, allocatable :: rotmatrix_old(:,:,:)
-real*8, allocatable :: Rell_old(:,:)
-real*8, allocatable :: xflag_old(:)
-real*8, allocatable :: volprot_old(:,:,:)
-real*8, allocatable :: voleps_old(:,:,:)
-real*8, allocatable :: volq_old(:,:,:)
-real*8, allocatable :: volx_old(:,:,:)
-real*8, allocatable :: avpol_old(:,:,:)
-real*8, allocatable :: epsfcn_old(:,:,:)
-real*8, allocatable :: Depsfcn_old(:,:,:)
-real*8, allocatable :: xpos_old(:,:,:) ! pos ion
-real*8, allocatable :: xneg_old(:,:,:) ! neg ioni
-real*8, allocatable :: qtot_old(:,:,:) ! Carga total
-real*8, allocatable :: xHplus_old(:,:,:) ! H+
-real*8, allocatable :: xOHmin_old(:,:,:) ! OH-
-real*8, allocatable :: fdis_old(:,:,:)
-endmodule
-
 module mkinsol
 double precision, allocatable :: pp(:)
 endmodule
@@ -193,9 +173,10 @@ real*8, allocatable :: voleps(:,:,:)
 real*8, allocatable :: voleps1(:,:,:)
 real*8, allocatable :: volq(:,:,:)
 real*8, allocatable :: volq1(:,:,:)
-real*8, allocatable :: volx(:,:,:)
-real*8, allocatable :: volx1(:,:,:)
-real*8, allocatable :: com(:,:,:,:)
+
+integer, parameter :: maxvolx = 10000
+real*8 volx(maxvolx)
+real*8 com(maxvolx,3)
 end module
 
 module inputtemp

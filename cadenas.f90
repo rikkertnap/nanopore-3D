@@ -62,6 +62,11 @@ do while (il.lt.cuantas)
   enddo
 enddo
 
+! do il = 1, ncha
+! print*, 'creador:', newcuantas(il)
+! enddo
+! stop
+
  if((readchains.eq.-1).and.(rank.eq.0))close(3113)
  100  return
 
@@ -289,36 +294,16 @@ use MPI
 use ematrix
 implicit none
 integer ix,iy,iz,j
+integer i
 
-ncha = 0 ! number of grafting points
 cpp = 0
-
-do ix = 1, dimx
- do iy = 1, dimy
-  do iz = 1, dimz
-  if(volx(ix,iy,iz).ne.0.0) then
-  ncha = ncha + 1
-  endif
-  enddo
- enddo
-enddo
 
 call allocatencha
 
-ncha = 0 ! number of grafting points
-do ix = 1, dimx 
- do iy = 1, dimy
-  do iz = 1, dimz 
-
-  if(volx(ix,iy,iz).ne.0.0) then
-  ncha = ncha + 1
-  ngpol(ncha) = volx(ix,iy,iz)
-  posicion(ncha, :) = com(ix,iy,iz,:)
-  cpp(mod(ncha,size)+1) = cpp(mod(ncha,size)+1) + 1
-  endif
-
-  enddo
- enddo
+do i = 1, ncha
+  ngpol(i) = volx(i)
+  posicion(i, :) = com(i,:)
+  cpp(mod(i,size)+1) = cpp(mod(i,size)+1) + 1
 enddo
 
 maxcpp = maxval(cpp)
