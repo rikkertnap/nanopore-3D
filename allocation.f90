@@ -8,7 +8,6 @@ use kinsol
 use results
 use ematrix
 use mkinsol
-use old
 use ellipsoid
 use MPI
 use kai
