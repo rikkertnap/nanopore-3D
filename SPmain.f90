@@ -22,7 +22,7 @@ real*8 theta
 real*8, external :: rands
 logical flag
 character*10 filename
-integer j, i
+integer j, i, ii, iii
 
 
 !!!!!!!!!!!! global parameters ... !!!!!!
@@ -93,13 +93,19 @@ endif
 do i = 1, nst
  st = sts(i)
  if(rank.eq.0)print*,'Switch to st = ', st
+do ii = 1, nsc
+ sc = scs(i)
+ if(rank.eq.0)print*,'Switch to sc = ', sc
+
  call solve
- counterr = counter + i
+ counterr = counter + i + ii  - 2
  call Free_Energy_Calc(counterr)
  if(rank.eq.0)print*, 'Free energy after solving', free_energy
  call savedata(counterr)
  if(rank.eq.0)print*, 'Save OK'
  call store2disk(counterr)
+
+enddo
 enddo
 
 call endall

@@ -71,6 +71,9 @@ vpol0 = ndr
 vsol0 = ndr
 gama0 = ndr
 
+nsc = 1
+scs(1) = 1.0
+
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 
@@ -250,6 +253,17 @@ do while (ios == 0)
    read(fh,*)sts(i)
    enddo 
 
+
+ case ('nsc')
+   read(buffer, *, iostat=ios) nsc
+   if(rank.eq.0)print*, 'parser:','Set ',trim(label),' = ',trim(buffer)
+  
+   do i = 1, nsc
+   read(fh,*)scs(i)
+   enddo 
+
+
+
  case ('Xucutoff')
    read(buffer, *, iostat=ios) cutoff
    if(rank.eq.0)print*, 'parser:','Set ',trim(label),' = ',trim(buffer)
@@ -335,7 +349,7 @@ if(randominput.eq.ndi)call stopundef('randominput')
 if(cutoff.eq.ndr)call stopundef('Xucutoff')
 if(readchains.eq.ndi)call stopundef('readchains')
 if(kaptype.eq.ndi)call stopundef('kaptype')
-if(nst.eq.ndi)call stopundef('kaptype')
+if(nst.eq.ndi)call stopundef('nst')
 
 if(delta.eq.ndr)call stopundef('delta')
 if(dx.eq.ndr)call stopundef('dx')

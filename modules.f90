@@ -65,6 +65,11 @@ module kaist
 integer nst
 real*8 st
 real*8 sts(100)
+
+integer nsc
+real*8 sc
+real*8 scs(100)
+
 endmodule
 
 module fields_fkfun

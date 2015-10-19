@@ -271,7 +271,7 @@ do jj = 1, cpp(rank+1)
    fv = (1.0-volprot(px(i,j, jj),py(i,j, jj),pz(i,j, jj)))
     avpol_temp(px(i,j, jj),py(i,j, jj),pz(i,j, jj))= &
     avpol_temp(px(i,j, jj),py(i,j, jj),pz(i,j, jj))+pro(i, jj)*vpol*vsol/(delta**3)/fv* &
-    ngpol(ii) ! ngpol(ii) has the number of chains grafted to the point ii
+    ngpol(ii)*sc ! ngpol(ii) has the number of chains grafted to the point ii
    enddo
 
    q_tosend=q_tosend+pro(i, jj)
