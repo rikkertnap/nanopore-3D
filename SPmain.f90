@@ -94,7 +94,7 @@ do i = 1, nst
  st = sts(i)
  if(rank.eq.0)print*,'Switch to st = ', st
 do ii = 1, nsc
- sc = scs(i)
+ sc = scs(ii)
  if(rank.eq.0)print*,'Switch to sc = ', sc
 
  call solve
