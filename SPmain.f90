@@ -98,7 +98,7 @@ do ii = 1, nsc
  if(rank.eq.0)print*,'Switch to sc = ', sc
 
  call solve
- counterr = counter + i + ii  - 2
+ counterr = counter + i + ii  - 1
  call Free_Energy_Calc(counterr)
  if(rank.eq.0)print*, 'Free energy after solving', free_energy
  call savedata(counterr)
