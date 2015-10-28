@@ -58,21 +58,38 @@ do jj = 1, cpp(rank+1)
     newcuantas(ii) = newcuantas(ii)+1
             do j = 1, long
             aa = floor(pxtemp(1,j)/delta) + 1
-            if(PBC(1).eq.1)px(newcuantas(ii),j,jj) = PBCSYMI(aa,dimx)
-            if(PBC(1).eq.3)px(newcuantas(ii),j,jj) = PBCREFI(aa,dimx)
-            if((PBC(1).eq.0).or.(PBC(1).eq.2))px(newcuantas(ii),j,jj) = aa
-            enddo
-            do j = 1, long
+            px(newcuantas(ii),j,jj) = aa
+            if(aa.lt.1) then
+              if(PBC(1).eq.1)px(newcuantas(ii),j,jj) = PBCSYMI(aa,dimx)
+              if(PBC(1).eq.3)px(newcuantas(ii),j,jj) = PBCREFI(aa,dimx)
+            endif
+            if(aa.gt.dimx) then
+              if(PBC(2).eq.1)px(newcuantas(ii),j,jj) = PBCSYMI(aa,dimx)
+              if(PBC(2).eq.3)px(newcuantas(ii),j,jj) = PBCREFI(aa,dimx)
+            endif
+
             aa = floor(pxtemp(2,j)/delta) + 1
-            if(PBC(3).eq.1)py(newcuantas(ii),j,jj) = PBCSYMI(aa,dimy)
-            if(PBC(3).eq.3)py(newcuantas(ii),j,jj) = PBCREFI(aa,dimy)
-            if((PBC(3).eq.0).or.(PBC(3).eq.2))py(newcuantas(ii),j,jj) = aa
-            enddo
-            do j = 1, long
+            py(newcuantas(ii),j,jj) = aa
+            if(aa.lt.1) then
+              if(PBC(3).eq.1)py(newcuantas(ii),j,jj) = PBCSYMI(aa,dimy)
+              if(PBC(3).eq.3)py(newcuantas(ii),j,jj) = PBCREFI(aa,dimy)
+            endif
+            if(aa.gt.dimy) then
+              if(PBC(4).eq.1)py(newcuantas(ii),j,jj) = PBCSYMI(aa,dimy)
+              if(PBC(4).eq.3)py(newcuantas(ii),j,jj) = PBCREFI(aa,dimy)
+            endif
+
             aa = floor(pxtemp(3,j)/delta) + 1
-            if(PBC(5).eq.1)pz(newcuantas(ii),j,jj) = PBCSYMI(aa,dimz)
-            if(PBC(5).eq.3)pz(newcuantas(ii),j,jj) = PBCREFI(aa,dimz)
-            if((PBC(5).eq.0).or.(PBC(5).eq.2))pz(newcuantas(ii),j,jj) = aa
+            pz(newcuantas(ii),j,jj) = aa
+            if(aa.lt.1) then
+              if(PBC(5).eq.1)pz(newcuantas(ii),j,jj) = PBCSYMI(aa,dimz)
+              if(PBC(5).eq.3)pz(newcuantas(ii),j,jj) = PBCREFI(aa,dimz)
+            endif
+            if(aa.gt.dimz) then
+              if(PBC(6).eq.1)pz(newcuantas(ii),j,jj) = PBCSYMI(aa,dimz)
+              if(PBC(6).eq.3)pz(newcuantas(ii),j,jj) = PBCREFI(aa,dimz)
+            endif
+ 
             enddo
     endif
 

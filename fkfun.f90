@@ -91,11 +91,19 @@ do jy = 0, dimy+1
 do jz = 0, dimz+1
 
 if (PBC(1).eq.1)ix = PBCSYMI(jx,dimx)
-if (PBC(1).eq.3)ix = PBCREFI(jx,dimx)
 if (PBC(3).eq.1)iy = PBCSYMI(jy,dimy)
-if (PBC(3).eq.3)iy = PBCREFI(jy,dimy)
 if (PBC(5).eq.1)iz = PBCSYMI(jz,dimz)
-if (PBC(5).eq.3)iz = PBCREFI(jz,dimz)
+
+
+if ((PBC(1).eq.3).and.(ix.lt.1))ix = PBCREFI(jx,dimx)
+if ((PBC(2).eq.3).and.(ix.gt.dimx))ix = PBCREFI(jx,dimx)
+
+if ((PBC(3).eq.3).and.(iy.lt.1))iy = PBCREFI(jy,dimy)
+if ((PBC(4).eq.3).and.(iy.gt.dimy))iy = PBCREFI(jy,dimy)
+
+if ((PBC(5).eq.3).and.(iz.lt.1))iz = PBCREFI(jz,dimz)
+if ((PBC(6).eq.3).and.(iz.gt.dimz))iz = PBCREFI(jz,dimz)
+
 
    psi(jx, jy, jz) = psi(ix, iy, iz)
 
@@ -222,14 +230,37 @@ do ix=1,dimx
             jy = iy+ay
             jz = iz+az
 
+            if(jx.lt.1) then
             if(PBC(1).eq.1)jx = PBCSYMI(jx,dimx)
             if(PBC(1).eq.3)jx = PBCREFI(jx,dimx)
+            endif
 
+            if(jx.gt.dimx) then
+            if(PBC(2).eq.1)jx = PBCSYMI(jx,dimx)
+            if(PBC(2).eq.3)jx = PBCREFI(jx,dimx)
+            endif
+
+            if(jy.lt.1) then
             if(PBC(3).eq.1)jy = PBCSYMI(jy,dimy)
             if(PBC(3).eq.3)jy = PBCREFI(jy,dimy)
+            endif
 
+            if(jy.gt.dimy) then
+            if(PBC(4).eq.1)jy = PBCSYMI(jy,dimy)
+            if(PBC(4).eq.3)jy = PBCREFI(jy,dimy)
+            endif
+
+
+            if(jz.lt.1) then
             if(PBC(5).eq.1)jz = PBCSYMI(jz,dimz)
             if(PBC(5).eq.3)jz = PBCREFI(jz,dimz)
+            endif
+
+            if(jz.gt.dimz) then
+            if(PBC(6).eq.1)jz = PBCSYMI(jz,dimz)
+            if(PBC(6).eq.3)jz = PBCREFI(jz,dimz)
+            endif
+
 
             if((jx.ge.1).and.(jx.le.dimx)) then
             if((jy.ge.1).and.(jy.le.dimy)) then
@@ -394,8 +425,8 @@ psitemp = psitemp + DOT_PRODUCT(MATMUL(TMAT,epsv),MATMUL(TMAT,psiv))
 
 ! OJO CHECK!!!!
 
-      f(ix+dimx*(iy-1)+dimx*dimy*(iz-1)+ntot)=(psitemp + &
-      qtot(ix, iy, iz)*constq)/(-2.0)
+      f(ix+dimx*(iy-1)+dimx*dimy*(iz-1)+ntot)=(psitemp + qtot(ix, iy, iz)*constq)/(-2.0)
+      if(electroflag.eq.0)f(ix+dimx*(iy-1)+dimx*dimy*(iz-1)+ntot)=0.0
 
 enddo
 enddo

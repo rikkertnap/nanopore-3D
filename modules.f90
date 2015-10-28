@@ -22,6 +22,7 @@ integer  dimy
 integer  dimz 
 integer PBC(6)
 integer vtkflag
+integer electroflag
 endmodule
 
 module s2d

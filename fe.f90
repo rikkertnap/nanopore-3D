@@ -285,14 +285,36 @@ endif
             jy = iy+ay
             jz = iz+az
 
+            if(jx.lt.1) then
             if(PBC(1).eq.1)jx = PBCSYMI(jx,dimx)
             if(PBC(1).eq.3)jx = PBCREFI(jx,dimx)
+            endif
 
+            if(jx.gt.dimx) then
+            if(PBC(2).eq.1)jx = PBCSYMI(jx,dimx)
+            if(PBC(2).eq.3)jx = PBCREFI(jx,dimx)
+            endif
+
+            if(jy.lt.1) then
             if(PBC(3).eq.1)jy = PBCSYMI(jy,dimy)
             if(PBC(3).eq.3)jy = PBCREFI(jy,dimy)
+            endif
 
+            if(jy.gt.dimy) then
+            if(PBC(4).eq.1)jy = PBCSYMI(jy,dimy)
+            if(PBC(4).eq.3)jy = PBCREFI(jy,dimy)
+            endif
+
+
+            if(jz.lt.1) then
             if(PBC(5).eq.1)jz = PBCSYMI(jz,dimz)
             if(PBC(5).eq.3)jz = PBCREFI(jz,dimz)
+            endif
+
+            if(jz.gt.dimz) then
+            if(PBC(6).eq.1)jz = PBCSYMI(jz,dimz)
+            if(PBC(6).eq.3)jz = PBCREFI(jz,dimz)
+            endif
 
             if((jx.ge.1).and.(jx.le.dimx)) then
             if((jy.ge.1).and.(jy.le.dimy)) then

@@ -164,18 +164,18 @@ do j = 1, NNN
 
  maxss = 1.0d100
 
- do i = 1, ncha1
- vvtemp = (1.0-volprot1(ix,iy,iz))*(delta**3)/vpol/vsol
- sstemp = volx1(i)/sigma(j)
- if(sstemp.eq.0.0) then
- vvtemp = 1.0d100
- else
+! do i = 1, ncha1
+! vvtemp = (1.0-volprot1(ix,iy,iz))*(delta**3)/vpol/vsol
+! sstemp = volx1(i)/sigma(j)
+! if(sstemp.eq.0.0) then
+! vvtemp = 1.0d100
+! else
 ! print*, 'ellipsoid:', ix,iy,iz,(1.0-volprot1(ix,iy,iz)),volx1(ix,iy,iz)
- vvtemp = vvtemp/sstemp
- endif
- if(vvtemp.lt.maxss)maxss=vvtemp
- enddo
- if(rank.eq.0)print*, 'ellipsoid:', 'Maxsigma for ', j,'is ', maxss
+! vvtemp = vvtemp/sstemp
+! endif
+! if(vvtemp.lt.maxss)maxss=vvtemp
+! enddo
+! if(rank.eq.0)print*, 'ellipsoid:', 'Maxsigma for ', j,'is ', maxss
 
  sumpolseg = sumpolseg + area*sigma(j)*long
 
@@ -259,17 +259,8 @@ real*8 x(3), v(3)
 integer xmin,xmax,ymin,ymax,zmin,zmax
 integer i,j
 
-integer symx, symy, symz
 logical flagsym
 real*8 voltemp
-
-! CHECK FOR REFLECTION SYMMETRY PBC
-symx=0
-symy=0
-symz=0
-if((PBC(1).eq.3).and.(PBC(2).eq.3))symx = 1
-if((PBC(3).eq.3).and.(PBC(4).eq.3))symy = 1
-if((PBC(5).eq.3).and.(PBC(6).eq.3))symz = 1
 
 volprot = 0.0
 sumvolprot = 0.0 ! total volumen, including that outside the system
@@ -390,24 +381,49 @@ if(vect.le.1.0) then           ! inside the ellipsoid
   if(flagout.eqv..true.) then
 
   flagsym = .false.
-    if ((jx.lt.1).or.(jx.gt.dimx)) then
-       if(symx.eq.0) then
+
+    if (jx.lt.1) then
+       if(PBC(1).ne.3) then
          print*, 'ellipsoid:','update_matrix: ix', ix
          stop
        else
          flagsym = .true.
        endif
     endif
-    if ((jy.lt.1).or.(jy.gt.dimy)) then
-       if(symy.eq.0) then
+    if (jy.lt.1) then
+       if(PBC(3).ne.3) then
          print*, 'ellipsoid:','update_matrix: iy', iy
          stop
        else
          flagsym = .true.
        endif
     endif
-    if ((jz.lt.1).or.(jz.gt.dimz)) then
-       if(symz.eq.0) then
+    if (jz.lt.1) then
+       if(PBC(5).ne.3) then
+         print*, 'ellipsoid:','update_matrix: iz', iz
+         stop
+       else
+         flagsym = .true.
+       endif
+    endif
+    if (jx.gt.dimx) then
+       if(PBC(2).ne.3) then
+         print*, 'ellipsoid:','update_matrix: ix', ix
+         stop
+       else
+         flagsym = .true.
+       endif
+    endif
+    if (jy.gt.dimy) then
+       if(PBC(4).ne.3) then
+         print*, 'ellipsoid:','update_matrix: iy', iy
+         stop
+       else
+         flagsym = .true.
+       endif
+    endif
+    if (jz.gt.dimz) then
+       if(PBC(6).ne.3) then
          print*, 'ellipsoid:','update_matrix: iz', iz
          stop
        else
@@ -429,24 +445,49 @@ else
   if(flagin.eqv..true.) then
 
   flagsym = .false.
-    if ((jx.lt.1).or.(jx.gt.dimx)) then
-       if(symx.eq.0) then
+
+    if (jx.lt.1) then
+       if(PBC(1).ne.3) then
          print*, 'ellipsoid:','update_matrix: ix', ix
          stop
        else
          flagsym = .true.
        endif
     endif
-    if ((jy.lt.1).or.(jy.gt.dimy)) then
-       if(symy.eq.0) then
+    if (jy.lt.1) then
+       if(PBC(3).ne.3) then
          print*, 'ellipsoid:','update_matrix: iy', iy
          stop
        else
          flagsym = .true.
        endif
     endif
-    if ((jz.lt.1).or.(jz.gt.dimz)) then
-       if(symz.eq.0) then
+    if (jz.lt.1) then
+       if(PBC(5).ne.3) then
+         print*, 'ellipsoid:','update_matrix: iz', iz
+         stop
+       else
+         flagsym = .true.
+       endif
+    endif
+    if (jx.gt.dimx) then
+       if(PBC(2).ne.3) then
+         print*, 'ellipsoid:','update_matrix: ix', ix
+         stop
+       else
+         flagsym = .true.
+       endif
+    endif
+    if (jy.gt.dimy) then
+       if(PBC(4).ne.3) then
+         print*, 'ellipsoid:','update_matrix: iy', iy
+         stop
+       else
+         flagsym = .true.
+       endif
+    endif
+    if (jz.gt.dimz) then
+       if(PBC(6).ne.3) then
          print*, 'ellipsoid:','update_matrix: iz', iz
          stop
        else
@@ -472,24 +513,49 @@ enddo
 if((flagin.eqv..true.).and.(flagout.eqv..false.)) then 
 
   flagsym = .false.
-    if ((jx.lt.1).or.(jx.gt.dimx)) then
-       if(symx.eq.0) then
+
+    if (jx.lt.1) then
+       if(PBC(1).ne.3) then
          print*, 'ellipsoid:','update_matrix: ix', ix
          stop
        else
          flagsym = .true.
        endif
     endif
-    if ((jy.lt.1).or.(jy.gt.dimy)) then
-       if(symy.eq.0) then
+    if (jy.lt.1) then
+       if(PBC(3).ne.3) then
          print*, 'ellipsoid:','update_matrix: iy', iy
          stop
        else
          flagsym = .true.
        endif
     endif
-    if ((jz.lt.1).or.(jz.gt.dimz)) then
-       if(symz.eq.0) then
+    if (jz.lt.1) then
+       if(PBC(5).ne.3) then
+         print*, 'ellipsoid:','update_matrix: iz', iz
+         stop
+       else
+         flagsym = .true.
+       endif
+    endif
+    if (jx.gt.dimx) then
+       if(PBC(2).ne.3) then
+         print*, 'ellipsoid:','update_matrix: ix', ix
+         stop
+       else
+         flagsym = .true.
+       endif
+    endif
+    if (jy.gt.dimy) then
+       if(PBC(4).ne.3) then
+         print*, 'ellipsoid:','update_matrix: iy', iy
+         stop
+       else
+         flagsym = .true.
+       endif
+    endif
+    if (jz.gt.dimz) then
+       if(PBC(6).ne.3) then
          print*, 'ellipsoid:','update_matrix: iz', iz
          stop
        else
@@ -667,6 +733,12 @@ integer ncha1 ! count for current sphere
 real*8 volx1(maxvolx)
 real*8 com1(maxvolx,3)
 real*8 volxx1(dimx,dimy,dimz)
+integer flagin
+integer dims(3), is(3), js(3)
+
+dims(1) = dimx
+dims(2) = dimy
+dims(3) = dimz
 
 indexvolx = 0
 ncha1 = 0
@@ -695,39 +767,43 @@ x(:) = x(:)*radio + Rell(:)
 ! x in real space, v in transformed space
     v = MATMUL(MAT,x)
 
-    ix=int(v(1)/delta)+1  
-    iy=int(v(2)/delta)+1  
-    iz=int(v(3)/delta)+1  
 
-! PBC and check out of boundaries
-jx=ix    
-jy=iy
-jz=iz
+! PBC 
 
-if(PBC(1).eq.1) then
- jx=mod(ix+dimx-1,dimx)+1
-endif
-if(PBC(3).eq.1) then
- jy=mod(iy+dimy-1,dimy)+1
-endif
-if(PBC(5).eq.1) then
- jz=mod(iz+dimz-1,dimz)+1
-endif
+flagin = 1
 
-if((jx.gt.dimx).or.(jx.lt.1)) then
-print*, 'Error in newintegrateg: out of boundary x'
-stop
-endif
+do j = 1,3
 
-if((jy.gt.dimy).or.(jy.lt.1)) then
-print*, 'Error in newintegrateg: out of boundary y'
-stop
-endif
+    is(j) = int(v(j)/delta)+1
+    js(j) = is(j)
 
-if((jz.gt.dimz).or.(jz.lt.1)) then
-print*, 'Error in newintegrateg: out of boundary z'
-stop
-endif
+select case (PBC((j-1)*2+1))
+  case (0 , 2)
+    if(is(j).lt.1) then
+    print*, 'Error in newintegrateg: out of boundary'
+    endif
+  case (1)
+    js(j)=mod(is(j)+dims(j)-1,dims(j))+1
+  case (3)
+    if(v(j).lt.0.0)flagin=0
+endselect
+
+select case (PBC((j-1)*2+2))
+  case (0 , 2)
+    if(is(j).gt.dims(j)) then
+    print*, 'Error in newintegrateg: out of boundary'
+    endif
+  case (1)
+    js(j)=mod(is(j)+dims(j)-1,dims(j))+1
+  case (3)
+    if(v(j).gt.float(dims(j))*delta)flagin=0
+endselect
+enddo
+jx = js(1)
+jy = js(2)
+jz = js(3)
+
+if(flagin.eq.1) then
 
 ! increase counter
 if(indexvolx(jx,jy,jz).eq.0) then
@@ -744,6 +820,7 @@ endif
 volxx1(jx,jy,jz) =  volxx1(jx,jy,jz) + 1.0
 volx1(indexvolx(jx,jy,jz)) = volx1(indexvolx(jx,jy,jz)) + 1.0
 com1(indexvolx(jx,jy,jz),:) = com1(indexvolx(jx,jy,jz),:) + x(:)
+endif
 sumvolx1 = sumvolx1 + 1.0
 
 enddo ! npoints

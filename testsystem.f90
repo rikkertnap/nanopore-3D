@@ -8,7 +8,11 @@ integer j, i
 real*8 vect
 real*8 mmmult
 real, external :: PBCSYMR, PBCREFR
+real*8 dims(3)
 
+dims(1) = delta*dimx
+dims(2) = delta*dimy
+dims(3) = delta*dimz
 
 
 maxx(1) = float(dimx)*delta
@@ -53,9 +57,16 @@ if (testsystem.eq.0) then ! saves some time
 
 v = MATMUL(MAT,x) ! to transformed space
 
+
 do i = 1, 3 ! put into cell
+if(v(i).lt.0.0) then
    if(PBC(2*i-1).eq.1)v(i) = PBCSYMR(v(i),maxx(i))
    if(PBC(2*i-1).eq.3)v(i) = PBCREFR(v(i),maxx(i))
+endif
+if(v(i).gt.dims(i)) then
+   if(PBC(2*i).eq.1)v(i) = PBCSYMR(v(i),maxx(i))
+   if(PBC(2*i).eq.3)v(i) = PBCREFR(v(i),maxx(i))
+endif
 enddo
 
 x(:) = MATMUL(IMAT,v(:)) ! back to real space

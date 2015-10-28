@@ -35,6 +35,8 @@ ndr = -1.0d10
 
 verbose = 5
 
+electroflag = 1 ! system with electrostatics?
+
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !
 ! Check validity of input
@@ -119,16 +121,7 @@ do while (ios == 0)
       print*, 'parser:', 'Error in PBC'
       stop
     endif
-    if((PBC(j).eq.3).and.(PBC(j+1).ne.3)) then
-      print*, 'parser:', 'Error in PBC'
-      stop
-    endif
-    if((PBC(j+1).eq.3).and.(PBC(j).ne.3)) then
-      print*, 'parser:', 'Error in PBC'
-      stop
-    endif
    enddo
-
 
  case ('verbose')
    read(buffer, *, iostat=ios) verbose
@@ -136,6 +129,10 @@ do while (ios == 0)
 
  case ('vtkflag')
    read(buffer, *, iostat=ios) vtkflag
+   if(rank.eq.0)print*, 'parser:','Set ',trim(label),' = ',trim(buffer)
+
+ case ('electroflag')
+   read(buffer, *, iostat=ios) electroflag
    if(rank.eq.0)print*, 'parser:','Set ',trim(label),' = ',trim(buffer)
 
  case ('randominput')
