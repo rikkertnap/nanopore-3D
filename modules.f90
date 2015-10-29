@@ -183,6 +183,7 @@ real*8, allocatable :: volq1(:,:,:)
 integer, parameter :: maxvolx = 10000
 real*8 volx(maxvolx)
 real*8 com(maxvolx,3)
+integer p0(maxvolx,3)
 end module
 
 module inputtemp

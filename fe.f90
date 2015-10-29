@@ -34,8 +34,6 @@ real*8 F_Mix_OHmin, F_Conf, F_Eq, F_vdW, F_eps, F_electro
 real*8 pro0(cuantas, maxcpp)
 real*8 entropy(dimx,dimy,dimz)
 character*5  title
-integer p1(ncha,3)
-integer p0(ncha,3)
  
 ! MPI
 integer stat(MPI_STATUS_SIZE) 
@@ -65,8 +63,6 @@ integer, external :: PBCSYMI, PBCREFI
 ! Subordinados
 
 entropy = 0.0
-p1 = 0
-p0 = 0
 q0 = 0
 q_tosend = 0
 
@@ -77,9 +73,6 @@ if(rank.ne.0) then
        do jj = 1, cpp(rank+1)
        iii = cppini(rank+1)+jj
        q_tosend(iii) = q(iii)
-       p1(iii,1) = px(1,1,jj)
-       p1(iii,2) = py(1,1,jj)
-       p1(iii,3) = pz(1,1,jj)
        enddo
 
         call MPI_REDUCE(q_tosend, q0, ncha, MPI_DOUBLE_PRECISION, MPI_SUM,0, MPI_COMM_WORLD, err)
@@ -87,7 +80,6 @@ if(rank.ne.0) then
 ! newcuantas
         call MPI_REDUCE(newcuantas, newcuantas0, ncha, MPI_INTEGER, MPI_SUM,0, MPI_COMM_WORLD, err)
 
-        call MPI_REDUCE(p1, p0, 3*ncha, MPI_INTEGER, MPI_SUM,0, MPI_COMM_WORLD, err)
 ! Envia pro
         CALL MPI_SEND(pro, cuantas*cpp(rank+1) , MPI_DOUBLE_PRECISION, dest, tag, MPI_COMM_WORLD,err)
 
@@ -212,17 +204,12 @@ endif
        do jj = 1, cpp(rank+1)
        iii = jj
        q_tosend(iii) = q(iii)
-       p1(iii,1) = px(1,1,jj)
-       p1(iii,2) = py(1,1,jj)
-       p1(iii,3) = pz(1,1,jj)
        enddo
 
         call MPI_REDUCE(q_tosend, q0, ncha, &
         MPI_DOUBLE_PRECISION, MPI_SUM,0, MPI_COMM_WORLD, err)
 
         call MPI_REDUCE(newcuantas, newcuantas0, ncha, MPI_INTEGER, MPI_SUM,0, MPI_COMM_WORLD, err)
-
-        call MPI_REDUCE(p1, p0, 3*ncha, MPI_INTEGER, MPI_SUM,0, MPI_COMM_WORLD, err)
 
        do jj = 1, cpp(rank+1)
        do i = 1, newcuantas0(jj)

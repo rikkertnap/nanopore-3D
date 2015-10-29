@@ -86,6 +86,7 @@ real*8 sumvoleps1, sumvolprot1, sumvolq1, sumvolx1
 integer ncha1
 real*8 volx1(maxvolx)
 real*8 com1(maxvolx,3)
+integer p1(maxvolx,3)
 integer i
 real*8 volxx1(dimx,dimy,dimz)
 real*8 volxx(dimx,dimy,dimz)
@@ -129,7 +130,7 @@ do j = 1, NNN
  call integrate(AAAS(:,:,j),AellS(:,j), Rell(:,j),npoints, volq1, sumvolq1, flag)
 
  npoints = 100000000
- call newintegrateg(Aell(:,j),Rell(:,j),npoints,volx1,sumvolx1, com1, ncha1, volxx1)
+ call newintegrateg(Aell(:,j),Rell(:,j),npoints,volx1,sumvolx1, com1, p1, ncha1, volxx1)
 
 !! volume
  temp = 4.0/3.0*pi*Aell(1,j)*Aell(2,j)*Aell(3,j)/(sumvolprot1*delta**3) ! rescales volume
@@ -201,6 +202,7 @@ do i = 1, ncha1
 ncha = ncha+1
 volx(ncha)=volx1(i)
 com(ncha,:)=com1(i,:)
+p0(ncha,:)=p1(i,:)
 enddo
 
 enddo
@@ -708,7 +710,7 @@ com(:) =com(:)/float(cc)
 end
 
 
-subroutine newintegrateg(Aell,Rell, npoints,volx1,sumvolx1,com1,ncha1,volxx1)
+subroutine newintegrateg(Aell,Rell, npoints,volx1,sumvolx1,com1,p1,ncha1,volxx1)
 use system
 use transform
 use chainsdat
@@ -719,6 +721,7 @@ real*8 sumvolx1
 integer npoints
 !real*8 AAA(3,3), AAAX(3,3)
 integer indexvolx(dimx,dimy,dimz)
+integer listvolx(ncha,3)
 real*8 Rell(3), Aell(3)
 real*8 radio
 real*8 phi, dphi, tetha,dtetha, as, ds
@@ -732,6 +735,7 @@ real*8 comshift ! how far from the surface of the sphere the grafting point is
 integer ncha1 ! count for current sphere
 real*8 volx1(maxvolx)
 real*8 com1(maxvolx,3)
+integer p1(maxvolx,3)
 real*8 volxx1(dimx,dimy,dimz)
 integer flagin
 integer dims(3), is(3), js(3)
@@ -746,6 +750,7 @@ comshift = 1.0+lseg*1.5
 volx1 = 0.0
 sumvolx1 = 0.0 ! total volumen, including that outside system
 com1 = 0.0
+p1 = 0
 volxx1 = 0.0
 
 ! This routine determines the surface coverage and grafting positions only for spheres
@@ -815,6 +820,9 @@ if(indexvolx(jx,jy,jz).eq.0) then
 
  ncha1 = ncha1 + 1
  indexvolx(jx,jy,jz) = ncha1
+ p1(ncha1,1)=jx
+ p1(ncha1,2)=jy
+ p1(ncha1,3)=jz
 endif
 
 volxx1(jx,jy,jz) =  volxx1(jx,jy,jz) + 1.0
