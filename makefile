@@ -1,4 +1,4 @@
-TARGET = 3D
+TARGET = 3D-entropy
 
 #SRC = modules.f90 SPmain.f90 parser.f90 init.f90 allocation.f90 allocateell.f90 3D.f90 cadenas.f90 cadenasMK.f90 fe.f90  fkfun.f90  kai.f90  kinsol.f90  pxs.f90  savetodisk.f90 rands.f90 ellipsoid.f90 dielectric.f90 monomers.definitions-onck.f90 chains.definitions.f90 sphere.f90 kapfromfile.f90
 
@@ -10,7 +10,7 @@ $(info HOST is ${HOST})
 
 # some definitions
 SHELL = /bin/bash
-FFLAGS= -O3 #-fbacktrace -fbounds-check # -O3
+FFLAGS= -fbacktrace -fbounds-check # -O3
 
 ifeq ($(HOST),piluso.rosario-conicet.gov.ar)
 LFLAGS = -L/home/mtagliazucchi.inquimae/software/kinsol/lib -lsundials_fkinsol -lsundials_kinsol -lsundials_fnvecserial -lsundials_nvecserial -lm -L/usr/lib/gcc/x86_64-redhat-linux/4.4.7 -L/usr/lib/gcc/x86_64-redhat-linux/4.4.7/../../../../lib64 -L/lib/../lib64 -L/usr/lib/../lib64 -L/usr/lib/gcc/x86_64-redhat-linux/4.4.7/../../.. -lgfortranbegin -lgfortran -lm -lgcc_s

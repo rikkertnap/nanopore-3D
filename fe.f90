@@ -19,6 +19,7 @@ use montecarlo
 use ellipsoid
 use transform
 use kaist
+use conformations
 implicit none
 
 integer looped
@@ -31,6 +32,10 @@ real*8 Free_energy2, sumpi, sumrho, sumel, sumdiel, suma, mupol
 real*8 temp
 real*8 F_Mix_OHmin, F_Conf, F_Eq, F_vdW, F_eps, F_electro
 real*8 pro0(cuantas, maxcpp)
+real*8 entropy(dimx,dimy,dimz)
+character*5  title
+integer p1(ncha,3)
+integer p0(ncha,3)
  
 ! MPI
 integer stat(MPI_STATUS_SIZE) 
@@ -59,6 +64,9 @@ integer, external :: PBCSYMI, PBCREFI
 
 ! Subordinados
 
+entropy = 0.0
+p1 = 0
+p0 = 0
 q0 = 0
 q_tosend = 0
 
@@ -68,7 +76,10 @@ if(rank.ne.0) then
 
        do jj = 1, cpp(rank+1)
        iii = cppini(rank+1)+jj
-       q_tosend(iii) = q(iii) 
+       q_tosend(iii) = q(iii)
+       p1(iii,1) = px(1,1,jj)
+       p1(iii,2) = py(1,1,jj)
+       p1(iii,3) = pz(1,1,jj)
        enddo
 
         call MPI_REDUCE(q_tosend, q0, ncha, MPI_DOUBLE_PRECISION, MPI_SUM,0, MPI_COMM_WORLD, err)
@@ -76,8 +87,12 @@ if(rank.ne.0) then
 ! newcuantas
         call MPI_REDUCE(newcuantas, newcuantas0, ncha, MPI_INTEGER, MPI_SUM,0, MPI_COMM_WORLD, err)
 
+        call MPI_REDUCE(p1, p0, 3*ncha, MPI_INTEGER, MPI_SUM,0, MPI_COMM_WORLD, err)
 ! Envia pro
         CALL MPI_SEND(pro, cuantas*cpp(rank+1) , MPI_DOUBLE_PRECISION, dest, tag, MPI_COMM_WORLD,err)
+
+! first segment
+
       goto 888
 endif
 
@@ -196,22 +211,28 @@ endif
 
        do jj = 1, cpp(rank+1)
        iii = jj
-       q_tosend(iii) = q(iii) 
+       q_tosend(iii) = q(iii)
+       p1(iii,1) = px(1,1,jj)
+       p1(iii,2) = py(1,1,jj)
+       p1(iii,3) = pz(1,1,jj)
        enddo
 
         call MPI_REDUCE(q_tosend, q0, ncha, &
         MPI_DOUBLE_PRECISION, MPI_SUM,0, MPI_COMM_WORLD, err)
 
-
         call MPI_REDUCE(newcuantas, newcuantas0, ncha, MPI_INTEGER, MPI_SUM,0, MPI_COMM_WORLD, err)
+
+        call MPI_REDUCE(p1, p0, 3*ncha, MPI_INTEGER, MPI_SUM,0, MPI_COMM_WORLD, err)
 
        do jj = 1, cpp(rank+1)
        do i = 1, newcuantas0(jj)
        iii = jj
       
- 
          F_Conf = F_Conf + (pro(i, jj)/q0(iii)) &
       *dlog((pro(i, jj))/q0(iii))*ngpol(iii)
+
+       entropy(p0(iii,1),p0(iii,2),p0(iii,3)) = entropy(p0(iii,1),p0(iii,2),p0(iii,3)) &
+      +  (pro(i, jj)/q0(iii))*dlog((pro(i, jj))/q0(iii))
 
        enddo
        enddo 
@@ -223,12 +244,16 @@ endif
         call MPI_RECV(pro0, cuantas*cpp(ii), &
         MPI_DOUBLE_PRECISION, source, tag, MPI_COMM_WORLD,stat, err)
 
+
        do jj = 1, cpp(ii)
 !       print*, ii, jj, pro0(10,jj)
        iii = cppini(ii)+jj
        do i = 1, newcuantas0(iii)
 
          F_Conf = F_Conf + (pro0(i, jj)/q0(iii))*dlog((pro0(i, jj))/q0(iii))*ngpol(iii)
+
+       entropy(p0(iii,1),p0(iii,2),p0(iii,3)) = entropy(p0(iii,1),p0(iii,2),p0(iii,3)) &
+      +  (pro0(i, jj)/q0(iii))*dlog((pro0(i, jj))/q0(iii))
 
        enddo
        enddo
@@ -238,6 +263,10 @@ endif
        endif ! rank
 
       Free_Energy = Free_Energy + F_Conf
+
+      title = 'entpy'
+      call savetodisk(entropy, title, looped)
+
 
 ! 7. Chemical Equilibrium
       F_Eq = 0.0 
