@@ -251,8 +251,15 @@ endif
 
       Free_Energy = Free_Energy + F_Conf
 
+if(rank.eq.0) then
       title = 'entpy'
       call savetodisk(entropy, title, looped)
+ 
+      open (unit=8, file='entropy.out', form='unformatted')
+      write(8)dimx,dimy,dimz
+      write(8)entropy
+      close(8)
+endif
 
 
 ! 7. Chemical Equilibrium

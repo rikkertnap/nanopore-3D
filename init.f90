@@ -163,8 +163,8 @@ if(rank.eq.0) then ! solo el jefe escribe a disco....
   call savetodisk(temp, title, cccc)
 
 ! Solvente
-!  title = 'avsol'
-!  call savetodisk(xh, title, cccc)
+  title = 'avsol'
+  call savetodisk(xh, title, cccc)
 ! Cationes
 !  title = 'avpos'
 !  call savetodisk(xpos, title, cccc)
