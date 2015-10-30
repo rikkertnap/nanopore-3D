@@ -163,8 +163,10 @@ if(rank.eq.0) then ! solo el jefe escribe a disco....
   call savetodisk(temp, title, cccc)
 
 ! Solvente
+  temp(:,:,:) = xh(:,:,:)*(1.0 - volprot(:,:,:))
+
   title = 'avsol'
-  call savetodisk(xh, title, cccc)
+  call savetodisk(temp, title, cccc)
 ! Cationes
 !  title = 'avpos'
 !  call savetodisk(xpos, title, cccc)
