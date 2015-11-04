@@ -218,9 +218,7 @@ endif
          F_Conf = F_Conf + (pro(i, jj)/q0(iii)) &
       *dlog((pro(i, jj))/q0(iii))*ngpol(iii)
 
-       entropy(p0(iii,1),p0(iii,2),p0(iii,3)) = entropy(p0(iii,1),p0(iii,2),p0(iii,3)) &
-      +  (pro(i, jj)/q0(iii))*dlog((pro(i, jj))/q0(iii))
-
+       entropy(p0(iii,1),p0(iii,2),p0(iii,3)) =  - dlog(q0(iii)/shift) 
        enddo
        enddo 
 
@@ -239,8 +237,7 @@ endif
 
          F_Conf = F_Conf + (pro0(i, jj)/q0(iii))*dlog((pro0(i, jj))/q0(iii))*ngpol(iii)
 
-       entropy(p0(iii,1),p0(iii,2),p0(iii,3)) = entropy(p0(iii,1),p0(iii,2),p0(iii,3)) &
-      +  (pro0(i, jj)/q0(iii))*dlog((pro0(i, jj))/q0(iii))
+       entropy(p0(iii,1),p0(iii,2),p0(iii,3)) =  - dlog(q0(iii)/shift) 
 
        enddo
        enddo

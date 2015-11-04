@@ -779,7 +779,7 @@ flagin = 1
 
 do j = 1,3
 
-    is(j) = int(v(j)/delta)+1
+    is(j) = floor(v(j)/delta)+1
     js(j) = is(j)
 
 select case (PBC((j-1)*2+1))
