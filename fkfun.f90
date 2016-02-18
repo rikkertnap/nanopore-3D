@@ -314,7 +314,7 @@ do jj = 1, cpp(rank+1)
    enddo
  enddo
 q(ii) = q_tosend ! no la envia ahora
-sumgauche(ii) = sumgauche_tosend
+sumgauche(ii) = sumgauche_tosend/q_tosend
 
 !print*, rank+1,jj,ii,q(ii)
 enddo ! jj

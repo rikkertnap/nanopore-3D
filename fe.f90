@@ -284,7 +284,7 @@ endif
         MPI_DOUBLE_PRECISION, MPI_SUM,0, MPI_COMM_WORLD, err)
 
        do ii = 1, ncha
-       F_gauche = F_gauche + sumgauche0(ii)*ngpol(ii)
+       F_gauche = F_gauche + sumgauche0(ii)*ngpol(ii)*benergy
        enddo  
 
        endif ! rank
@@ -519,12 +519,12 @@ endif
          write(304,*)looped, F_Mix_neg
          write(305,*)looped, F_Mix_Hplus
          write(306,*)looped, F_Mix_OHmin
+	 write(3071,*)looped, F_gauche
          write(307,*)looped, F_Conf
          write(308,*)looped, F_Eq
          write(309,*)looped, F_vdW
          write(410,*)looped, F_eps
          write(311,*)looped, F_electro
-         write(314,*)looped, F_gauche
 
          write(312,*)looped, Free_energy2
 
