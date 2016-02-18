@@ -7,6 +7,5 @@ implicit none
 ALLOCATE(px(cuantas, long, maxcpp))
 ALLOCATE(py(cuantas, long, maxcpp))
 ALLOCATE(pz(cuantas, long, maxcpp))
-ALLOCATE(ngauche(cuantas,maxcpp))
 ALLOCATE(pro(cuantas, maxcpp))
 end subroutine
