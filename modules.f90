@@ -43,6 +43,7 @@ integer, allocatable :: newcuantas(:)
 integer long 
 integer ncha 
 real*8, ALLOCATABLE :: in1(:,:)  ! segment positions 
+integer ing ! number of gauches in current chain
 real*8, ALLOCATABLE :: posicion(:,:) ! posicion graft de la cadena ncha
 real*8, ALLOCATABLE :: ngpol(:) ! posicion graft de la cadena ncha
 integer, ALLOCATABLE :: cpp(:)
@@ -60,6 +61,7 @@ real*8 vpol0
 real*8 vsol0
 real*8 vsalt
 real*8 zpos,zneg, zpol
+real*8 benergy
 endmodule
 
 module kaist
@@ -79,6 +81,7 @@ use chainsdat
 real*8, allocatable :: xtotal(:, :, :) ! xtotal para poor solvent
 real*8, allocatable :: psi(:, :, :) 
 real*8, allocatable :: q(:)
+real*8, allocatable :: sumgauche(:)
 real*8, allocatable :: pro(:,:)
 real*8, allocatable :: xh(:, :, :)
 real*8 shift
@@ -88,6 +91,7 @@ module conformations
 integer*1, allocatable :: px(:,:,:)
 integer*1, allocatable :: py(:,:,:)
 integer*1, allocatable :: pz(:,:,:)
+integer*1, allocatable :: ngauche(:,:)
 endmodule
 
 module MPI

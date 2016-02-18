@@ -41,7 +41,7 @@ parameter(tag = 0)
 integer err
 real*8 avpol_tosend(dimx,dimy,dimz)
 real*8 avpol_temp(dimx,dimy,dimz)
-real*8 q_tosend
+real*8 q_tosend, sumgauche_tosend
 real*8 gradpsi2
 real*8 fv
 
@@ -213,13 +213,6 @@ do ix=1,dimx
 
      xpot(ix,iy,iz) = xpot(ix,iy,iz)*exp(Depsfcn(ix,iy,iz)*(gradpsi2)/constq/2.0*vpol/fv)
 
-! Bjerumm OJO 
-!     if(rank.eq.0) then
-!     print*, 'Bjerumm', 1.0/4.0/pi/dielW/diel0
-!     stop
-!     endif     
-!
-
      protemp=0.0
 
      do ax = -Xulimit,Xulimit 
@@ -282,12 +275,14 @@ do ix=1,dimx
 enddo
 
 avpol_tosend = 0.0
-q = 0
+q = 0.0
+sumgauche = 0.0
 
 do jj = 1, cpp(rank+1)
    ii = cppini(rank+1)+jj
 
    q_tosend=0.0
+   sumgauche_tosend = 0.0
    avpol_temp = 0.0
 
  do i=1,newcuantas(ii)
@@ -298,6 +293,7 @@ do jj = 1, cpp(rank+1)
     az = pz(i, j, jj)         
     pro(i, jj) = pro(i, jj) * xpot(ax, ay, az)
    enddo
+    pro(i,jj) = pro(i,jj)*exp(-benergy*ngauche(i,ii)) ! energy of gauche bonds
    do j=1,long
    fv = (1.0-volprot(px(i,j, jj),py(i,j, jj),pz(i,j, jj)))
     avpol_temp(px(i,j, jj),py(i,j, jj),pz(i,j, jj))= &
@@ -306,6 +302,8 @@ do jj = 1, cpp(rank+1)
    enddo
 
    q_tosend=q_tosend+pro(i, jj)
+   sumgauche_tosend = sumgauche_tosend+ngauche(i, ii)*pro(i,jj)
+
  enddo ! i
 ! norma 
  do ix=1,dimx
@@ -316,6 +314,8 @@ do jj = 1, cpp(rank+1)
    enddo
  enddo
 q(ii) = q_tosend ! no la envia ahora
+sumgauche(ii) = sumgauche_tosend
+
 !print*, rank+1,jj,ii,q(ii)
 enddo ! jj
 

@@ -9,7 +9,7 @@ implicit none
 integer i,il,ll
 integer j
 real*8 indax, inday, indaz
-real*8 chains(3,200,100)
+real*8 chains(3,200,100), gauches(100)
 real*8 altx,alty,altz,x(200),y(200),xp(200),yp(200)
 real*8 theta,theta1
 integer iglobal
@@ -47,11 +47,12 @@ iglobal=1
 
 do while (il.lt.cuantas)
 
-  call cadenas72mr(chains,nchas)
+  call cadenas72mr(chains,nchas,gauches)
 
   do i=1,nchas
       il=il+1
       if(il.gt.cuantas) goto 100
+      ing = gauches(i)
       do j=1,long
          in1(j,2)=chains(2,j,i)
          in1(j,3)=chains(3,j,i)
@@ -72,11 +73,11 @@ enddo
 
 end
 
-subroutine cadenas72mr(chains,nchas)
+subroutine cadenas72mr(chains,nchas,gauches)
 use chainsdat
 use const     
 implicit none
-real*8 chains(3,200,100)
+real*8 chains(3,200,100), gauches(100)
 integer i,state,ii,j,ive,jve
 real*8 rn,state1,sitheta,cotheta,dista
 real*8 siphip,cophip
@@ -85,6 +86,7 @@ real*8 m(3,3),mm(3,3),tt(3,3),tp(3,3),tm(3,3)
 real*8 x(3),xend(3,200),xendr(3,200)
 integer nchas
 real*8 rands
+integer ng
 
 sitheta=sin(68.0*pi/180.0)
 cotheta=cos(68.0*pi/180.0)
@@ -155,6 +157,8 @@ do while (nchas.eq.0)
  xend(2,2)=x(2)
  xend(3,2)=x(3)
       
+ ng = 0 ! number of trans-bonds
+
  do i=3,long
          rn=rands(seed)
          state=int(rn*3)
@@ -162,13 +166,14 @@ do while (nchas.eq.0)
             state=2
          endif
 
-         if (state.eq.0) then
+         if (state.eq.0) then ! trans
             call mrrrr(m,tt,mm)
           do ii=1,3
           do j=1,3
              m(ii,j)=mm(ii,j)
           enddo
           enddo
+            ng = ng + 1
          elseif (state.eq.1) then
             call mrrrr(m,tp,mm)
           do ii=1,3
@@ -218,6 +223,7 @@ do while (nchas.eq.0)
             chains(2,j,nchas)=xendr(2,j)
             chains(3,j,nchas)=xendr(3,j)
          enddo
+            gauches(nchas) = ng
          if (nchas.eq.25)exit
  enddo   
 enddo

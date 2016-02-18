@@ -72,6 +72,7 @@ pKa = ndr
 vpol0 = ndr
 vsol0 = ndr
 gama0 = ndr
+benergy = ndr
 
 nsc = 1
 scs(1) = 1.0
@@ -222,6 +223,11 @@ do while (ios == 0)
    read(buffer, *, iostat=ios) vsol0
    if(rank.eq.0)print*, 'parser:','Set ',trim(label),' = ',trim(buffer)
 
+ case ('benergy')
+   read(buffer, *, iostat=ios) benergy
+   if(rank.eq.0)print*, 'parser:','Set ',trim(label),' = ',trim(buffer)
+
+
  case ('vpol')
    read(buffer, *, iostat=ios) vpol0
    if(rank.eq.0)print*, 'parser:','Set ',trim(label),' = ',trim(buffer)
@@ -361,6 +367,7 @@ if(pHbulk.eq.ndr)call stopundef('pHbulk')
 if(zpol.eq.ndr)call stopundef('zpol')
 if(vpol0.eq.ndr)call stopundef('vpol')
 if(vsol0.eq.ndr)call stopundef('vsol')
+if(benergy.eq.ndr)call stopundef('benergy')
 if(gama0.eq.ndr)call stopundef('gama')
 if(pKa.eq.ndr)call stopundef('pKa')
 

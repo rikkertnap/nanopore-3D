@@ -23,14 +23,14 @@ use conformations
 implicit none
 
 integer looped
-real*8  q_tosend(ncha)
-real*8  q0(ncha)
+real*8  q_tosend(ncha), sumgauche_tosend(ncha)
+real*8  q0(ncha), sumgauche0(ncha)
 integer newcuantas0(ncha)
 real*8 F_Mix_s, F_Mix_pos
 real*8 F_Mix_neg, F_Mix_Hplus
 real*8 Free_energy2, sumpi, sumrho, sumel, sumdiel, suma, mupol
 real*8 temp
-real*8 F_Mix_OHmin, F_Conf, F_Eq, F_vdW, F_eps, F_electro
+real*8 F_Mix_OHmin, F_gauche, F_Conf, F_Eq, F_vdW, F_eps, F_electro
 real*8 pro0(cuantas, maxcpp)
 real*8 entropy(dimx,dimy,dimz)
 character*5  title
@@ -63,8 +63,9 @@ integer, external :: PBCSYMI, PBCREFI
 ! Subordinados
 
 entropy = 0.0
-q0 = 0
-q_tosend = 0
+q0 = 0.0
+q_tosend = 0.0
+sumgauche_tosend = 0.0
 
 if(rank.ne.0) then
        dest = 0
@@ -83,7 +84,15 @@ if(rank.ne.0) then
 ! Envia pro
         CALL MPI_SEND(pro, cuantas*cpp(rank+1) , MPI_DOUBLE_PRECISION, dest, tag, MPI_COMM_WORLD,err)
 
-! first segment
+! sum gauche
+
+       do jj = 1, cpp(rank+1)
+       iii = cppini(rank+1)+jj
+       sumgauche_tosend(iii) = sumgauche(iii)
+       enddo
+
+        call MPI_REDUCE(sumgauche_tosend, sumgauche0, ncha, MPI_DOUBLE_PRECISION, MPI_SUM,0, MPI_COMM_WORLD, err)
+
 
       goto 888
 endif
@@ -258,6 +267,41 @@ if(rank.eq.0) then
       close(8)
 endif
 
+! 6.5 Energy of gauche bonds
+
+      F_gauche = 0.0
+
+! Jefe
+
+       if (rank.eq.0) then ! Igual tiene que serlo, ver arriba
+
+       do jj = 1, cpp(rank+1) ! sumgauche in rank 0
+       iii = jj
+       sumgauche_tosend(iii) = sumgauche(iii)
+       enddo
+
+        call MPI_REDUCE(sumgauche_tosend, sumgauche0, ncha, &
+        MPI_DOUBLE_PRECISION, MPI_SUM,0, MPI_COMM_WORLD, err)
+
+       do ii = 1, ncha
+       F_gauche = F_gauche + sumgauche0(ii)*ngpol(ii)
+       enddo  
+
+       endif ! rank
+
+      Free_Energy = Free_Energy + F_gauche
+
+if(rank.eq.0) then
+      title = 'entpy'
+      call savetodisk(entropy, title, looped)
+ 
+      open (unit=8, file='entropy.out', form='unformatted')
+      write(8)dimx,dimy,dimz
+      write(8)entropy
+      close(8)
+endif
+
+     
 
 ! 7. Chemical Equilibrium
       F_Eq = 0.0 
@@ -480,6 +524,7 @@ endif
          write(309,*)looped, F_vdW
          write(410,*)looped, F_eps
          write(311,*)looped, F_electro
+         write(314,*)looped, F_gauche
 
          write(312,*)looped, Free_energy2
 

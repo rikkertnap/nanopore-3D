@@ -55,7 +55,10 @@ do jj = 1, cpp(rank+1)
     enddo ! j
 
     if(flag.eq.0) then
+
     newcuantas(ii) = newcuantas(ii)+1
+    ngauche(newcuantas(ii),ii) = ing
+
             do j = 1, long
             aa = floor(pxtemp(1,j)/delta) + 1
             px(newcuantas(ii),j,jj) = aa

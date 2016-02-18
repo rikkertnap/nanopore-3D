@@ -6,7 +6,7 @@ implicit none
 
 ! fields_fkfun
 ALLOCATE(q(ncha))
-
+ALLOCATE(sumgauche(ncha))
 
 ! chainsdat
 allocate(posicion(ncha,3))
