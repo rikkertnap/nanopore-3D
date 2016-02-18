@@ -173,7 +173,6 @@ do while (nchas.eq.0)
              m(ii,j)=mm(ii,j)
           enddo
           enddo
-            ng = ng + 1
          elseif (state.eq.1) then
             call mrrrr(m,tp,mm)
           do ii=1,3
@@ -181,6 +180,7 @@ do while (nchas.eq.0)
              m(ii,j)=mm(ii,j)
           enddo
           enddo
+            ng = ng + 1
          elseif (state.eq.2) then
             call mrrrr(m,tm,mm)
           do ii=1,3
@@ -188,6 +188,7 @@ do while (nchas.eq.0)
             m(ii,j)=mm(ii,j)
           enddo
           enddo
+            ng = ng + 1
          endif
          
          x(1)=m(1,1)*lseg
