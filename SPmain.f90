@@ -45,17 +45,18 @@ call allocation
 
 !!! General files
 
-do j = 1, NNN
-write(filename,'(A3,I3.3, A4)')'pos',j,'.dat'
-open(file=filename, unit=5000+j)
-write(filename,'(A3,I3.3, A4)')'orn',j,'.dat'
-open(file=filename, unit=6000+j)
-write(filename,'(A3,I3.3, A4)')'rot',j,'.dat'
-open(file=filename, unit=7000+j)
-enddo
+if(systemtype.eq.1) then
+ do j = 1, NNN
+ write(filename,'(A3,I3.3, A4)')'pos',j,'.dat'
+ open(file=filename, unit=5000+j)
+ write(filename,'(A3,I3.3, A4)')'orn',j,'.dat'
+ open(file=filename, unit=6000+j)
+ write(filename,'(A3,I3.3, A4)')'rot',j,'.dat'
+ open(file=filename, unit=7000+j)
+ enddo
+endif
 
 open(file='free_energy.dat', unit=9000)
-open(file='acceptance.dat', unit=9001)
 
 call kais
 if(rank.eq.0)print*, 'Kai OK'

@@ -46,7 +46,7 @@ scx = ndi
 scy = ndi
 scz = ndi
 vtkflag = ndi
-kaptype = ndi
+systemtype = ndi
 dimx = ndi
 dimy = ndi
 dimz = ndi
@@ -271,11 +271,19 @@ do while (ios == 0)
    read(buffer, *, iostat=ios) cutoff
    if(rank.eq.0)print*, 'parser:','Set ',trim(label),' = ',trim(buffer)
 
- case ('kaptype')
-   read(buffer, *, iostat=ios) kaptype
+ case ('systemtype')
+   read(buffer, *, iostat=ios) systemtype
    if(rank.eq.0)print*, 'parser:','Set ',trim(label),' = ',trim(buffer)
 
-   select case (kaptype)
+   select case (systemtype) ! TYPE OF SYSTEM
+                            ! TYPE = 1 is nanoparticle crystal
+                            ! TYPE = 2 is 3D channel
+
+    case(2)
+     read(fh, *) basura
+     read(fh, *)rchannel
+
+
     case(1) 
      read(fh, *) basura
      read(fh, *)NNN
@@ -351,7 +359,7 @@ if(infile.eq.ndi)call stopundef('infile')
 if(randominput.eq.ndi)call stopundef('randominput')
 if(cutoff.eq.ndr)call stopundef('Xucutoff')
 if(readchains.eq.ndi)call stopundef('readchains')
-if(kaptype.eq.ndi)call stopundef('kaptype')
+if(systemtype.eq.ndi)call stopundef('systemtype')
 if(nst.eq.ndi)call stopundef('nst')
 
 if(delta.eq.ndr)call stopundef('delta')

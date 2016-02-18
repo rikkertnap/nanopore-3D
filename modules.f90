@@ -13,6 +13,10 @@
 !
 
 
+module channel
+real*8 rchannel
+endmodule
+
 module system 
 real*8 delta
 real*8 dx,dy,dz
@@ -156,7 +160,7 @@ endmodule
 
 
 module ellipsoid
-integer kaptype
+integer systemtype
 integer NNN
 real*8, allocatable :: rotmatrix(:,:,:)
 real*8, allocatable :: Aell(:,:)
