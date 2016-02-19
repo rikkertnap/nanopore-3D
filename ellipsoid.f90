@@ -660,56 +660,6 @@ A = MATMUL(B, A)
 end subroutine
 
 
-subroutine intcellg(AAA,AAAX,Rell,ix,iy,iz,n,vp,com)
-use system
-use transform
-
-implicit none
-real*8 AAA(3,3)
-real*8 AAAX(3,3)
-real*8 Rell(3)
-integer ix,iy,iz,ax,ay,az
-integer cc
-real*8 vect, vectX
-integer n
-real*8 mmmult
-real*8 dr(3), dxr(3)
-real*8 vp
-real*8 com(3)
-
-com = 0.0
-cc = 0
-
-do ax = 1, n
-do ay = 1, n
-do az = 1, n
-
-dr(1) = ix*delta-(ax)*delta/float(n) 
-dr(2) = iy*delta-(ay)*delta/float(n) 
-dr(3) = iz*delta-(az)*delta/float(n) 
-
-! dr in transformed space
-dxr = MATMUL(IMAT, dr) - Rell
-vect = mmmult(dxr,AAA)
-vectx = mmmult(dxr,AAAX)
-
-if((vect.ge.1.0).and.(vectx.le.1.0)) then
-cc=cc+1
-
-dxr = MATMUL(IMAT, dr) 
-com(:) = com(:) + dxr(:)
-endif
-
-
-enddo
-enddo
-enddo
-
-vp = float(cc)/(float(n)**3)
-com(:) =com(:)/float(cc)
-end
-
-
 subroutine newintegrateg(Aell,Rell, npoints,volx1,sumvolx1,com1,p1,ncha1,volxx1)
 use system
 use transform
@@ -746,7 +696,6 @@ dims(3) = dimz
 
 indexvolx = 0
 ncha1 = 0
-comshift = 1.0+lseg*1.5
 volx1 = 0.0
 sumvolx1 = 0.0 ! total volumen, including that outside system
 com1 = 0.0
@@ -835,8 +784,8 @@ enddo ! npoints
 
 do i = 1, ncha1
 com1(i,:) = com1(i,:)/volx1(i)
-com1(i,:) = ((com1(i,:)-Rell(:)))*comshift + Rell(:)
-!print*,i,com1(i,:),com1(i,1)**2+com1(i,2)**2+com1(i,3)**2
+! Moves the position of the first segment lseg/2 away from the surface to prevent collision due to round errors.
+com1(i,:) = com1(i,:) + 1.5*lseg*((com1(i,:)-Rell(:)))/Aell(:)
 enddo
 
 end
