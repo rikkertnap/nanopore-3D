@@ -300,7 +300,6 @@ rchannel = sqrt(rchannel2)
 
 indexvolx = 0
 ncha1 = 0
-comshift = 1.0+lseg*1.5
 volx1 = 0.0
 sumvolx1 = 0.0 ! total volumen, including that outside system
 com1 = 0.0
@@ -356,12 +355,12 @@ enddo ! jjjz
 
 do i = 1, ncha1
 com1(i,:) = com1(i,:)/volx1(i)
-com1(i,1) = -((com1(i,1)-originc(1)))*comshift + originc(1)
-com1(i,2) = -((com1(i,2)-originc(2)))*comshift + originc(2)
 
-!print*,i,com1(i,:),com1(i,1)**2+com1(i,2)**2+com1(i,3)**2
+! Moves the position of the first segment lseg/2 away from the surface to prevent collision due to round errors.
+
+com1(i,1) = com1(i,1) - lseg/2.0*((com1(i,1)-originc(1)))/rchannel 
+com1(i,2) = com1(i,2) - lseg/2.0*((com1(i,2)-originc(2)))/rchannel 
 enddo
-
 end
 
 
