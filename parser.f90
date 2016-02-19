@@ -12,6 +12,7 @@ use system
 use kai
 use kaist
 use s2d
+use channel
 implicit none
 
 ! Input related variables
@@ -281,8 +282,14 @@ do while (ios == 0)
 
     case(2)
      read(fh, *) basura
-     read(fh, *)rchannel
-
+     read(fh, *) rchannel
+     read(fh, *) basura
+     read(fh, *) sigmac
+     read(fh, *) basura
+     read(fh, *) echargec
+     read(fh, *) basura
+     read(fh, *) eepsc
+  
 
     case(1) 
      read(fh, *) basura
