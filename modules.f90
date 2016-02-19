@@ -15,6 +15,7 @@
 
 module channel
 real*8 rchannel
+real*8 originc(2)
 endmodule
 
 module system 
