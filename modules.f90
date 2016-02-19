@@ -20,6 +20,7 @@ real*8 echargec, sigmac, eepsc
 endmodule
 
 module system 
+integer systemtype
 real*8 delta
 real*8 dx,dy,dz
 real*8 cdiva
@@ -162,7 +163,6 @@ endmodule
 
 
 module ellipsoid
-integer systemtype
 integer NNN
 real*8, allocatable :: rotmatrix(:,:,:)
 real*8, allocatable :: Aell(:,:)

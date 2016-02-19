@@ -17,6 +17,7 @@ real*8 xx(3)
 real*8 x(3)
 real*8 v(3)
 integer testsystem
+integer testsystemc
 real*8 maxx(3)
 integer flag
 integer aa
@@ -40,6 +41,9 @@ do jj = 1, cpp(rank+1)
        v = MATMUL(MAT,x)
        pxtemp(:,j) = v(:)
 
+select case (systemtype)
+
+case (1)
  
        if(testsystem(x).eq.-1) then ! if testsystem = -1,  there is a collision with all or particle 
          flag = -1
@@ -50,6 +54,23 @@ do jj = 1, cpp(rank+1)
          print*, 'pxs: out-of-system'
          stop
        endif
+
+case (2)
+
+
+       if(testsystemc(x).eq.-1) then ! if testsystem = -1,  there is a collision with all or particle 
+         flag = -1
+         exit
+       endif
+
+       if(testsystemc(x).eq.-2) then ! if testsystem = -2, the polymer goes out-of-system
+         print*, 'pxs: out-of-system'
+         stop
+       endif
+
+endselect
+
+
 
 
     enddo ! j
