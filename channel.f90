@@ -97,8 +97,8 @@ ncha = 0
 
  do i = 1, ncha
  volx1(i) = volx1(i)/sumvolx1*area*(sigmac+sigmar*(rands(seed)-0.5))
- volxx1(p0(i,1),p0(i,2),p0(i,3)) = & 
-     volxx1(p0(i,1),p0(i,2),p0(i,3))/sumvolx1*area*(sigmac+sigmar*(rands(seed)-0.5))
+ volxx1(p1(i,1),p1(i,2),p1(i,3)) = & 
+     volxx1(p1(i,1),p1(i,2),p1(i,3))/sumvolx1*area*(sigmac+sigmar*(rands(seed)-0.5))
  enddo
 
  maxss = 1.0d100
