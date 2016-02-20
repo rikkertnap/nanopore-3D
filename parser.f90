@@ -39,6 +39,8 @@ stdout = 6
 
 electroflag = 1 ! system with electrostatics?
 
+sigmar = 0.0 ! random sigma
+
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !
 ! Check validity of input
@@ -237,6 +239,11 @@ do while (ios == 0)
  case ('vpol')
    read(buffer, *, iostat=ios) vpol0
    if(rank.eq.0)write(stdout,*) 'parser:','Set ',trim(label),' = ',trim(buffer)
+
+ case ('sigmar')
+   read(buffer, *, iostat=ios) sigmar
+   if(rank.eq.0)write(stdout,*) 'parser:','Set ',trim(label),' = ',trim(buffer)
+
 
  case ('pKa')
    read(buffer, *, iostat=ios) pKa

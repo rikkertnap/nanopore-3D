@@ -10,7 +10,7 @@ use molecules
 implicit none
 
 real*8 rchannel2, rchannelL2, rchannelS2
-
+real*8, external :: rands
 integer npoints ! points per cell for numerical integration 
 integer counter
 character*5 title
@@ -93,8 +93,13 @@ ncha = 0
  volx1 = 0.0
  end where 
 
- volx1 = volx1/sumvolx1*area*sigmac
- volxx1 = volxx1/sumvolx1*area*sigmac
+ 
+
+ do i = 1, ncha
+ volx1(i) = volx1(i)/sumvolx1*area*(sigmac+sigmar*(rands(seed)-0.5))
+ volxx1(p0(i,1),p0(i,2),p0(i,3)) = & 
+     volxx1(p0(i,1),p0(i,2),p0(i,3))/sumvolx1*area*(sigmac+sigmar*(rands(seed)-0.5))
+ enddo
 
  maxss = 1.0d100
  sumpolseg = sumpolseg + area*sigmac*long
@@ -329,7 +334,7 @@ jy = js(2)
 jz = js(3)
 
 ! increase counter
-if(indexvolx(jx,jy,jz).eq.0.0) then
+if(indexvolx(jx,jy,jz).eq.0) then
 
  if(ncha1.eq.maxvolx) then
    write(stdout,*) 'channel: increase maxvolx'

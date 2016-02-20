@@ -16,7 +16,7 @@
 module channel
 real*8 rchannel
 real*8 originc(2)
-real*8 echargec, sigmac, eepsc
+real*8 echargec, sigmac, eepsc, sigmar
 endmodule
 
 module system 
