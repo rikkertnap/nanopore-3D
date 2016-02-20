@@ -82,6 +82,7 @@ end
 
 subroutine call_kinsol(x1_old, xg1_old, ier)
 use system
+use const
 implicit none
 integer i
 real*8 x1(2*dimx*dimy*dimz), xg1(2*dimx*dimy*dimz)

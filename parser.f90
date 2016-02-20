@@ -404,6 +404,7 @@ if(pKa.eq.ndr)call stopundef('pKa')
 end subroutine
 
 subroutine stopundef(namevar)
+use const
 character(len=*) :: namevar
 write(stdout,*) 'parser:', 'Variable ', namevar, ' is undefined '
 call MPI_FINALIZE(ierr) ! finaliza MPI

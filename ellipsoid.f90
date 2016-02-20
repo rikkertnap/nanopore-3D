@@ -238,7 +238,7 @@ end subroutine
 subroutine integrate(AAA,Aell, Rell, npoints,volprot,sumvolprot, flag)
 use system
 use transform
-
+use const
 implicit none
 real*8 sumvolprot
 integer npoints
@@ -665,7 +665,7 @@ use system
 use transform
 use chainsdat
 use ematrix
-
+use const
 implicit none
 real*8 sumvolx1
 integer npoints
@@ -680,7 +680,6 @@ integer ix,iy,iz,jx,jy,jz
 real*8 x(3), v(3)
 integer i,j
 integer ncount
-real*8 pi
 real*8 comshift ! how far from the surface of the sphere the grafting point is
 integer ncha1 ! count for current sphere
 real*8 volx1(maxvolx)
@@ -689,6 +688,8 @@ integer p1(maxvolx,3)
 real*8 volxx1(dimx,dimy,dimz)
 integer flagin
 integer dims(3), is(3), js(3)
+
+pi=acos(-1.0)
 
 dims(1) = dimx
 dims(2) = dimy
