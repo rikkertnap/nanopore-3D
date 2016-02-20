@@ -66,8 +66,8 @@ call cross_product(vect2,vect3,vectc)
 
 vol = DOT_PRODUCT(vect1,vectc)
 
-if(rank.eq.0)print*, 'transform:', 'Volume of a lattice cell in real space', vol, 'nm^3'
-if(rank.eq.0)print*, 'transform:', 'Volume of a lattice cell in transformed space', delta**3, 'nm^3'
+if(rank.eq.0)write(stdout,*) 'transform:', 'Volume of a lattice cell in real space', vol, 'nm^3'
+if(rank.eq.0)write(stdout,*) 'transform:', 'Volume of a lattice cell in transformed space', delta**3, 'nm^3'
 
 xx(1) = delta*dfloat(dimx)
 xx(2) = 0.0
@@ -94,13 +94,13 @@ call cross_product(vect2,vect3,vectc)
 
 vol = DOT_PRODUCT(vect1,vectc)
 
-if(rank.eq.0)print*, 'transform:', 'a / nm ', NORMA(vect1)
-if(rank.eq.0)print*, 'transform:', 'b / nm ', NORMA(vect2)
-if(rank.eq.0)print*, 'transform:', 'c / nm ', NORMA(vect3)
-if(rank.eq.0)print*, 'transform:', 'gama ', gama0*180/3.14159 
-if(rank.eq.0)print*, 'transform:', 'c/a', NORMA(vect3)/NORMA(vect1)
-if(rank.eq.0)print*, 'transform:', 'c/b', NORMA(vect3)/NORMA(vect2)
-if(rank.eq.0)print*, 'transform:', 'cell volume ', vol, 'nm^3'
+if(rank.eq.0)write(stdout,*) 'transform:', 'a / nm ', NORMA(vect1)
+if(rank.eq.0)write(stdout,*) 'transform:', 'b / nm ', NORMA(vect2)
+if(rank.eq.0)write(stdout,*) 'transform:', 'c / nm ', NORMA(vect3)
+if(rank.eq.0)write(stdout,*) 'transform:', 'gama ', gama0*180/3.14159 
+if(rank.eq.0)write(stdout,*) 'transform:', 'c/a', NORMA(vect3)/NORMA(vect1)
+if(rank.eq.0)write(stdout,*) 'transform:', 'c/b', NORMA(vect3)/NORMA(vect2)
+if(rank.eq.0)write(stdout,*) 'transform:', 'cell volume ', vol, 'nm^3'
 
 end subroutine
 
@@ -128,7 +128,7 @@ vect(3) = Rellf(3,j)*delta*dfloat(dimz) + dz*delta
 vect2 = MATMUL(IMAT,vect)
 Rell(:,j) = vect2(:)
 
-if(rank.eq.0)print*, 'transform:','Coordinates of particle',j,' in real space ', Rell(:,j)
+if(rank.eq.0)write(stdout,*) 'transform:','Coordinates of particle',j,' in real space ', Rell(:,j)
 enddo
 
 

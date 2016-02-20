@@ -30,7 +30,7 @@ dz = z1-z2
 dd = sqrt(dx**2 + dy**2)
 !dd = sqrt(dx**2 + dy**2 + dz**2)
 
-print*, dd
+write(stdout,*) dd
 
 write(999,*)n,dd
 flush(999)

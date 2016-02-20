@@ -35,6 +35,7 @@ ndi = -1e5
 ndr = -1.0d10
 
 verbose = 5
+stdout = 6
 
 electroflag = 1 ! system with electrostatics?
 
@@ -88,7 +89,7 @@ ios = 0
 
 open(fh, file=filename)
 
-if(rank.eq.0)print*, 'parser:', 'Reading parameters from ', filename
+if(rank.eq.0)write(stdout,*) 'parser:', 'Reading parameters from ', filename
 
 ! ios is negative  if an end of record condition is encountered or if
 ! an endfile condition was detected.  It is positive  if an error was
@@ -112,146 +113,150 @@ do while (ios == 0)
 
  case ('PBC')
    read(buffer, *, iostat=ios) PBC(1),PBC(2),PBC(3),PBC(4),PBC(5),PBC(6)
-   if(rank.eq.0)print*, 'parser:','Set ',trim(label),' = ',trim(buffer)
+   if(rank.eq.0)write(stdout,*) 'parser:','Set ',trim(label),' = ',trim(buffer)
 
    do j = 1,5,2
     if((PBC(j).eq.1).and.(PBC(j+1).ne.1)) then 
-      print*, 'parser:', 'Error in PBC'
+      write(stdout,*) 'parser:', 'Error in PBC'
       stop
     endif
     if((PBC(j+1).eq.1).and.(PBC(j).ne.1)) then
-      print*, 'parser:', 'Error in PBC'
+      write(stdout,*) 'parser:', 'Error in PBC'
       stop
     endif
    enddo
 
  case ('verbose')
    read(buffer, *, iostat=ios) verbose
-   if(rank.eq.0)print*, 'parser:','Set ',trim(label),' = ',trim(buffer)
+   if(rank.eq.0)write(stdout,*) 'parser:','Set ',trim(label),' = ',trim(buffer)
+
+ case ('stdout')
+   read(buffer, *, iostat=ios) stdout
+   if(rank.eq.0)write(stdout,*) 'parser:','Set ',trim(label),' = ',trim(buffer)
 
  case ('vtkflag')
    read(buffer, *, iostat=ios) vtkflag
-   if(rank.eq.0)print*, 'parser:','Set ',trim(label),' = ',trim(buffer)
+   if(rank.eq.0)write(stdout,*) 'parser:','Set ',trim(label),' = ',trim(buffer)
 
  case ('electroflag')
    read(buffer, *, iostat=ios) electroflag
-   if(rank.eq.0)print*, 'parser:','Set ',trim(label),' = ',trim(buffer)
+   if(rank.eq.0)write(stdout,*) 'parser:','Set ',trim(label),' = ',trim(buffer)
 
  case ('randominput')
    read(buffer, *, iostat=ios) randominput
-   if(rank.eq.0)print*, 'parser:','Set ',trim(label),' = ',trim(buffer)
+   if(rank.eq.0)write(stdout,*) 'parser:','Set ',trim(label),' = ',trim(buffer)
 
  case ('readchains')
    read(buffer, *, iostat=ios) readchains
-   if(rank.eq.0)print*, 'parser:','Set ',trim(label),' = ',trim(buffer)
+   if(rank.eq.0)write(stdout,*) 'parser:','Set ',trim(label),' = ',trim(buffer)
 
  case ('dimx')
    read(buffer, *, iostat=ios) dimx
-   if(rank.eq.0)print*, 'parser:','Set ',trim(label),' = ',trim(buffer)
+   if(rank.eq.0)write(stdout,*) 'parser:','Set ',trim(label),' = ',trim(buffer)
 
  case ('scx')
    read(buffer, *, iostat=ios) scx
-   if(rank.eq.0)print*, 'parser:','Set ',trim(label),' = ',trim(buffer)
+   if(rank.eq.0)write(stdout,*) 'parser:','Set ',trim(label),' = ',trim(buffer)
 
  case ('scy')
    read(buffer, *, iostat=ios) scy
-   if(rank.eq.0)print*, 'parser:','Set ',trim(label),' = ',trim(buffer)
+   if(rank.eq.0)write(stdout,*) 'parser:','Set ',trim(label),' = ',trim(buffer)
 
  case ('scz')
    read(buffer, *, iostat=ios) scz
-   if(rank.eq.0)print*, 'parser:','Set ',trim(label),' = ',trim(buffer)
+   if(rank.eq.0)write(stdout,*) 'parser:','Set ',trim(label),' = ',trim(buffer)
 
 
  case ('delta')
    read(buffer, *, iostat=ios) delta
-   if(rank.eq.0)print*, 'parser:','Set ',trim(label),' = ',trim(buffer)
+   if(rank.eq.0)write(stdout,*) 'parser:','Set ',trim(label),' = ',trim(buffer)
 
  case ('dx')
    read(buffer, *, iostat=ios) dx
-   if(rank.eq.0)print*, 'parser:','Set ',trim(label),' = ',trim(buffer)
+   if(rank.eq.0)write(stdout,*) 'parser:','Set ',trim(label),' = ',trim(buffer)
 
  case ('dy')
    read(buffer, *, iostat=ios) dy
-   if(rank.eq.0)print*, 'parser:','Set ',trim(label),' = ',trim(buffer)
+   if(rank.eq.0)write(stdout,*) 'parser:','Set ',trim(label),' = ',trim(buffer)
 
  case ('dz')
    read(buffer, *, iostat=ios) dz
-   if(rank.eq.0)print*, 'parser:','Set ',trim(label),' = ',trim(buffer)
+   if(rank.eq.0)write(stdout,*) 'parser:','Set ',trim(label),' = ',trim(buffer)
 
  case ('cdiva')
    read(buffer, *, iostat=ios) cdiva
-   if(rank.eq.0)print*, 'parser:','Set ',trim(label),' = ',trim(buffer)
+   if(rank.eq.0)write(stdout,*) 'parser:','Set ',trim(label),' = ',trim(buffer)
 
 
  case ('dimy')
    read(buffer, *, iostat=ios) dimy
-   if(rank.eq.0)print*, 'parser:','Set ',trim(label),' = ',trim(buffer)
+   if(rank.eq.0)write(stdout,*) 'parser:','Set ',trim(label),' = ',trim(buffer)
 
  case ('dimz')
    read(buffer, *, iostat=ios) dimz
-   if(rank.eq.0)print*, 'parser:','Set ',trim(label),' = ',trim(buffer)
+   if(rank.eq.0)write(stdout,*) 'parser:','Set ',trim(label),' = ',trim(buffer)
 
  case ('long')
    read(buffer, *, iostat=ios) long
-   if(rank.eq.0)print*, 'parser:','Set ',trim(label),' = ',trim(buffer)
+   if(rank.eq.0)write(stdout,*) 'parser:','Set ',trim(label),' = ',trim(buffer)
 
  case ('cuantas')
    read(buffer, *, iostat=ios) cuantas
-   if(rank.eq.0)print*, 'parser:','Set ',trim(label),' = ',trim(buffer)
+   if(rank.eq.0)write(stdout,*) 'parser:','Set ',trim(label),' = ',trim(buffer)
 
  case ('lseg')
    read(buffer, *, iostat=ios) lseg
-   if(rank.eq.0)print*, 'parser:','Set ',trim(label),' = ',trim(buffer)
+   if(rank.eq.0)write(stdout,*) 'parser:','Set ',trim(label),' = ',trim(buffer)
 
 
  case ('dielP')
    read(buffer, *, iostat=ios) dielP
-   if(rank.eq.0)print*, 'parser:','Set ',trim(label),' = ',trim(buffer)
+   if(rank.eq.0)write(stdout,*) 'parser:','Set ',trim(label),' = ',trim(buffer)
 
  case ('dielS')
    read(buffer, *, iostat=ios) dielS
-   if(rank.eq.0)print*, 'parser:','Set ',trim(label),' = ',trim(buffer)
+   if(rank.eq.0)write(stdout,*) 'parser:','Set ',trim(label),' = ',trim(buffer)
 
  case ('csalt')
    read(buffer, *, iostat=ios) csalt
-   if(rank.eq.0)print*, 'parser:','Set ',trim(label),' = ',trim(buffer)
+   if(rank.eq.0)write(stdout,*) 'parser:','Set ',trim(label),' = ',trim(buffer)
 
  case ('zpol')
    read(buffer, *, iostat=ios) zpol
-   if(rank.eq.0)print*, 'parser:','Set ',trim(label),' = ',trim(buffer)
+   if(rank.eq.0)write(stdout,*) 'parser:','Set ',trim(label),' = ',trim(buffer)
 
  case ('vsol')
    read(buffer, *, iostat=ios) vsol0
-   if(rank.eq.0)print*, 'parser:','Set ',trim(label),' = ',trim(buffer)
+   if(rank.eq.0)write(stdout,*) 'parser:','Set ',trim(label),' = ',trim(buffer)
 
  case ('benergy')
    read(buffer, *, iostat=ios) benergy
-   if(rank.eq.0)print*, 'parser:','Set ',trim(label),' = ',trim(buffer)
+   if(rank.eq.0)write(stdout,*) 'parser:','Set ',trim(label),' = ',trim(buffer)
 
 
  case ('vpol')
    read(buffer, *, iostat=ios) vpol0
-   if(rank.eq.0)print*, 'parser:','Set ',trim(label),' = ',trim(buffer)
+   if(rank.eq.0)write(stdout,*) 'parser:','Set ',trim(label),' = ',trim(buffer)
 
  case ('pKa')
    read(buffer, *, iostat=ios) pKa
-   if(rank.eq.0)print*, 'parser:','Set ',trim(label),' = ',trim(buffer)
+   if(rank.eq.0)write(stdout,*) 'parser:','Set ',trim(label),' = ',trim(buffer)
 
  case ('gama')
    read(buffer, *, iostat=ios) gama0
-   if(rank.eq.0)print*, 'parser:','Set ',trim(label),' = ',trim(buffer)
+   if(rank.eq.0)write(stdout,*) 'parser:','Set ',trim(label),' = ',trim(buffer)
 
  case ('pHbulk')
    read(buffer, *, iostat=ios) pHbulk
-   if(rank.eq.0)print*, 'parser:','Set ',trim(label),' = ',trim(buffer)
+   if(rank.eq.0)write(stdout,*) 'parser:','Set ',trim(label),' = ',trim(buffer)
 
  case ('infile')
    read(buffer, *, iostat=ios) infile
-   if(rank.eq.0)print*, 'parser:','Set ',trim(label),' = ',trim(buffer)
+   if(rank.eq.0)write(stdout,*) 'parser:','Set ',trim(label),' = ',trim(buffer)
 
  case ('nst')
    read(buffer, *, iostat=ios) nst
-   if(rank.eq.0)print*, 'parser:','Set ',trim(label),' = ',trim(buffer)
+   if(rank.eq.0)write(stdout,*) 'parser:','Set ',trim(label),' = ',trim(buffer)
   
    do i = 1, nst
    read(fh,*)sts(i)
@@ -260,7 +265,7 @@ do while (ios == 0)
 
  case ('nsc')
    read(buffer, *, iostat=ios) nsc
-   if(rank.eq.0)print*, 'parser:','Set ',trim(label),' = ',trim(buffer)
+   if(rank.eq.0)write(stdout,*) 'parser:','Set ',trim(label),' = ',trim(buffer)
   
    do i = 1, nsc
    read(fh,*)scs(i)
@@ -270,11 +275,11 @@ do while (ios == 0)
 
  case ('Xucutoff')
    read(buffer, *, iostat=ios) cutoff
-   if(rank.eq.0)print*, 'parser:','Set ',trim(label),' = ',trim(buffer)
+   if(rank.eq.0)write(stdout,*) 'parser:','Set ',trim(label),' = ',trim(buffer)
 
  case ('systemtype')
    read(buffer, *, iostat=ios) systemtype
-   if(rank.eq.0)print*, 'parser:','Set ',trim(label),' = ',trim(buffer)
+   if(rank.eq.0)write(stdout,*) 'parser:','Set ',trim(label),' = ',trim(buffer)
 
    select case (systemtype) ! TYPE OF SYSTEM
                             ! TYPE = 1 is nanoparticle crystal
@@ -301,12 +306,12 @@ do while (ios == 0)
      read(fh, *), basura
      do j = 1, NNN
      read(fh, *), Rellf(1,j), Rellf(2,j), Rellf(3,j)
-     if(rank.eq.0)print*, 'parser:','Set particle',j,'pos to',  Rellf(1,j), Rellf(2,j), Rellf(3,j)
+     if(rank.eq.0)write(stdout,*) 'parser:','Set particle',j,'pos to',  Rellf(1,j), Rellf(2,j), Rellf(3,j)
      enddo
      read(fh, *), basura
      do j = 1, NNN
      read(fh, *), Aell(1,j), Aell(2,j), Aell(3,j)
-     if(rank.eq.0)print*, 'parser:','Set particle',j,'axis to',  Aell(1,j), Aell(2,j), Aell(3,j)
+     if(rank.eq.0)write(stdout,*) 'parser:','Set particle',j,'axis to',  Aell(1,j), Aell(2,j), Aell(3,j)
      enddo
      read(fh, *), basura
      do j = 1, NNN
@@ -314,28 +319,28 @@ do while (ios == 0)
      read(fh, *), rotmatrix(2,1,j), rotmatrix(2,2,j), rotmatrix(2,3,j)
      read(fh, *), rotmatrix(3,1,j), rotmatrix(3,2,j), rotmatrix(3,3,j)
      if(rank.eq.0) then
-         print*, 'parser:','Set particle',j,'rotation to:'
-         print*, 'parser:', rotmatrix(1,1,j), rotmatrix(1,2,j), rotmatrix(1,3,j)
-         print*, 'parser:', rotmatrix(2,1,j), rotmatrix(2,2,j), rotmatrix(2,3,j)
-         print*, 'parser:', rotmatrix(3,1,j), rotmatrix(3,2,j), rotmatrix(3,3,j)
+         write(stdout,*) 'parser:','Set particle',j,'rotation to:'
+         write(stdout,*) 'parser:', rotmatrix(1,1,j), rotmatrix(1,2,j), rotmatrix(1,3,j)
+         write(stdout,*) 'parser:', rotmatrix(2,1,j), rotmatrix(2,2,j), rotmatrix(2,3,j)
+         write(stdout,*) 'parser:', rotmatrix(3,1,j), rotmatrix(3,2,j), rotmatrix(3,3,j)
      endif
      enddo
 
      read(fh, *), basura
      do j = 1, NNN
      read(fh, *), sigma(j)
-     if(rank.eq.0)print*, 'parser:','Set particle',j,'surface coverage to', sigma(j)
+     if(rank.eq.0)write(stdout,*) 'parser:','Set particle',j,'surface coverage to', sigma(j)
      enddo
 
      read(fh, *), basura
      do j = 1, NNN
      read(fh, *), echarge(j)
-     if(rank.eq.0)print*, 'parser:','Set particle',j,'charge to', echarge(j)
+     if(rank.eq.0)write(stdout,*) 'parser:','Set particle',j,'charge to', echarge(j)
      enddo
      read(fh, *), basura
      do j = 1, NNN
      read(fh, *), eeps(j)
-     if(rank.eq.0)print*, 'parser:','Set particle',j,'hydrophobicity to', eeps(j)
+     if(rank.eq.0)write(stdout,*) 'parser:','Set particle',j,'hydrophobicity to', eeps(j)
      enddo
 
      endif ! NNN
@@ -353,7 +358,7 @@ enddo
 
 if(systemtype.eq.2) then
  if((cdiva.ne.1.0).or.(gama0.ne.90.0)) then
-  print*, 'Channel works only for cdiva = 1 and gama0 = 90.0... ending'
+  write(stdout,*) 'Channel works only for cdiva = 1 and gama0 = 90.0... ending'
   call MPI_FINALIZE(ierr) ! finaliza MPI
   stop
  endif
@@ -400,7 +405,7 @@ end subroutine
 
 subroutine stopundef(namevar)
 character(len=*) :: namevar
-print*, 'parser:', 'Variable ', namevar, ' is undefined '
+write(stdout,*) 'parser:', 'Variable ', namevar, ' is undefined '
 call MPI_FINALIZE(ierr) ! finaliza MPI
 stop
 end

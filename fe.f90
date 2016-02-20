@@ -240,7 +240,7 @@ endif
 
 
        do jj = 1, cpp(ii)
-!       print*, ii, jj, pro0(10,jj)
+!       write(stdout,*) ii, jj, pro0(10,jj)
        iii = cppini(ii)+jj
        do i = 1, newcuantas0(iii)
 
@@ -436,7 +436,7 @@ endif
       Free_Energy = Free_Energy + F_eps
 
       if (verbose.ge.1) then
-      print*, 'Free_Energy_Calc: Free energy(1) = ', Free_energy
+      write(stdout,*) 'Free_Energy_Calc: Free energy(1) = ', Free_energy
       endif
 
 ! minimal F
@@ -496,7 +496,7 @@ endif
          Free_Energy2 = Free_Energy2 + suma - F_vdW
 
       if (verbose.ge.1) then
-      print*, 'Free_Energy_Calc: Free energy(2) = ', Free_energy2, sumdiel
+      write(stdout,*) 'Free_Energy_Calc: Free energy(2) = ', Free_energy2, sumdiel
       endif
 
 ! Guarda energia libre

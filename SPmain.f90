@@ -24,6 +24,7 @@ logical flag
 character*10 filename
 integer j, i, ii, iii
 
+stdout = 6
 
 !!!!!!!!!!!! global parameters ... !!!!!!
 saveevery = 1
@@ -32,9 +33,9 @@ counter = 0
 counterr = 1
 
 call initmpi
-if(rank.eq.0)print*, 'Program Crystal'
-if(rank.eq.0)print*, 'GIT Version: ', _VERSION
-if(rank.eq.0)print*, 'MPI OK'
+if(rank.eq.0)write(stdout,*) 'Program Crystal'
+if(rank.eq.0)write(stdout,*) 'GIT Version: ', _VERSION
+if(rank.eq.0)write(stdout,*) 'MPI OK'
 call readinput
 
 call initconst
@@ -59,7 +60,7 @@ endif
 open(file='free_energy.dat', unit=9000)
 
 call kais
-if(rank.eq.0)print*, 'Kai OK'
+if(rank.eq.0)write(stdout,*) 'Kai OK'
 
 if (systemtype.eq.1) then
 call update_matrix(flag) ! updates 'the matrix'
@@ -68,28 +69,28 @@ call update_matrix_channel(flag) ! updates 'the matrix'
 endif
 
   if(flag.eqv..true.) then
-    print*, 'Initial position of particle does not fit in z'
-    print*, 'or particles collide'
+    write(stdout,*) 'Initial position of particle does not fit in z'
+    write(stdout,*) 'or particles collide'
     stop
   else
-    if(rank.eq.0)print*, 'Particle OK'
+    if(rank.eq.0)write(stdout,*) 'Particle OK'
   endif
 
 call  graftpoints
-if(rank.eq.0)print*, 'Graftpoints OK'
+if(rank.eq.0)write(stdout,*) 'Graftpoints OK'
 
 call creador ! Genera cadenas
-if(rank.eq.0)print*, 'Creador OK'
+if(rank.eq.0)write(stdout,*) 'Creador OK'
 
 if(infile.ne.0) then
    call retrivefromdisk(counter)
-   if(rank.eq.0)print*, 'Load input from file'
-   if(rank.eq.0)print*, 'Free energy', free_energy
+   if(rank.eq.0)write(stdout,*) 'Load input from file'
+   if(rank.eq.0)write(stdout,*) 'Free energy', free_energy
    if(infile.ne.-1)infile = 2
 !   call update_matrix(flag)
    if(flag.eqv..true.) then
-    print*, 'Initial position of particle does not fit in z'
-    print*, 'or particles collide'
+    write(stdout,*) 'Initial position of particle does not fit in z'
+    write(stdout,*) 'or particles collide'
     stop
    endif
 
@@ -97,17 +98,17 @@ endif
 
 do i = 1, nst
  st = sts(i)
- if(rank.eq.0)print*,'Switch to st = ', st
+ if(rank.eq.0)write(stdout,*)'Switch to st = ', st
 do ii = 1, nsc
  sc = scs(ii)
- if(rank.eq.0)print*,'Switch to sc = ', sc
+ if(rank.eq.0)write(stdout,*)'Switch to sc = ', sc
 
  call solve
  counterr = counter + i + ii  - 1
  call Free_Energy_Calc(counterr)
- if(rank.eq.0)print*, 'Free energy after solving', free_energy
+ if(rank.eq.0)write(stdout,*) 'Free energy after solving', free_energy
  call savedata(counterr)
- if(rank.eq.0)print*, 'Save OK'
+ if(rank.eq.0)write(stdout,*) 'Save OK'
  call store2disk(counterr)
 
 enddo

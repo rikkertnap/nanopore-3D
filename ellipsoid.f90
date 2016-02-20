@@ -171,12 +171,12 @@ do j = 1, NNN
 ! if(sstemp.eq.0.0) then
 ! vvtemp = 1.0d100
 ! else
-! print*, 'ellipsoid:', ix,iy,iz,(1.0-volprot1(ix,iy,iz)),volx1(ix,iy,iz)
+! write(stdout,*) 'ellipsoid:', ix,iy,iz,(1.0-volprot1(ix,iy,iz)),volx1(ix,iy,iz)
 ! vvtemp = vvtemp/sstemp
 ! endif
 ! if(vvtemp.lt.maxss)maxss=vvtemp
 ! enddo
-! if(rank.eq.0)print*, 'ellipsoid:', 'Maxsigma for ', j,'is ', maxss
+! if(rank.eq.0)write(stdout,*) 'ellipsoid:', 'Maxsigma for ', j,'is ', maxss
 
  sumpolseg = sumpolseg + area*sigma(j)*long
 
@@ -216,9 +216,9 @@ do j = 1, NNN
 temp = temp + 4.0/3.0*pi*Aell(1,j)*Aell(2,j)*Aell(3,j)
 enddo
 if (rank.eq.0) then
-print*, 'ellipsoid:', 'update_matrix: Total volumen real space= ', temp
-print*, 'ellipsoid:', 'update_matrix: Total discretized volumen =', sum(volprot)*delta**3
-print*, 'ellipsoid:', 'number of monomers in system =', sumpolseg 
+write(stdout,*) 'ellipsoid:', 'update_matrix: Total volumen real space= ', temp
+write(stdout,*) 'ellipsoid:', 'update_matrix: Total discretized volumen =', sum(volprot)*delta**3
+write(stdout,*) 'ellipsoid:', 'number of monomers in system =', sumpolseg 
 endif
 endif
 
@@ -386,7 +386,7 @@ if(vect.le.1.0) then           ! inside the ellipsoid
 
     if (jx.lt.1) then
        if(PBC(1).ne.3) then
-         print*, 'ellipsoid:','update_matrix: ix', ix
+         write(stdout,*) 'ellipsoid:','update_matrix: ix', ix
          stop
        else
          flagsym = .true.
@@ -394,7 +394,7 @@ if(vect.le.1.0) then           ! inside the ellipsoid
     endif
     if (jy.lt.1) then
        if(PBC(3).ne.3) then
-         print*, 'ellipsoid:','update_matrix: iy', iy
+         write(stdout,*) 'ellipsoid:','update_matrix: iy', iy
          stop
        else
          flagsym = .true.
@@ -402,7 +402,7 @@ if(vect.le.1.0) then           ! inside the ellipsoid
     endif
     if (jz.lt.1) then
        if(PBC(5).ne.3) then
-         print*, 'ellipsoid:','update_matrix: iz', iz
+         write(stdout,*) 'ellipsoid:','update_matrix: iz', iz
          stop
        else
          flagsym = .true.
@@ -410,7 +410,7 @@ if(vect.le.1.0) then           ! inside the ellipsoid
     endif
     if (jx.gt.dimx) then
        if(PBC(2).ne.3) then
-         print*, 'ellipsoid:','update_matrix: ix', ix
+         write(stdout,*) 'ellipsoid:','update_matrix: ix', ix
          stop
        else
          flagsym = .true.
@@ -418,7 +418,7 @@ if(vect.le.1.0) then           ! inside the ellipsoid
     endif
     if (jy.gt.dimy) then
        if(PBC(4).ne.3) then
-         print*, 'ellipsoid:','update_matrix: iy', iy
+         write(stdout,*) 'ellipsoid:','update_matrix: iy', iy
          stop
        else
          flagsym = .true.
@@ -426,7 +426,7 @@ if(vect.le.1.0) then           ! inside the ellipsoid
     endif
     if (jz.gt.dimz) then
        if(PBC(6).ne.3) then
-         print*, 'ellipsoid:','update_matrix: iz', iz
+         write(stdout,*) 'ellipsoid:','update_matrix: iz', iz
          stop
        else
          flagsym = .true.
@@ -450,7 +450,7 @@ else
 
     if (jx.lt.1) then
        if(PBC(1).ne.3) then
-         print*, 'ellipsoid:','update_matrix: ix', ix
+         write(stdout,*) 'ellipsoid:','update_matrix: ix', ix
          stop
        else
          flagsym = .true.
@@ -458,7 +458,7 @@ else
     endif
     if (jy.lt.1) then
        if(PBC(3).ne.3) then
-         print*, 'ellipsoid:','update_matrix: iy', iy
+         write(stdout,*) 'ellipsoid:','update_matrix: iy', iy
          stop
        else
          flagsym = .true.
@@ -466,7 +466,7 @@ else
     endif
     if (jz.lt.1) then
        if(PBC(5).ne.3) then
-         print*, 'ellipsoid:','update_matrix: iz', iz
+         write(stdout,*) 'ellipsoid:','update_matrix: iz', iz
          stop
        else
          flagsym = .true.
@@ -474,7 +474,7 @@ else
     endif
     if (jx.gt.dimx) then
        if(PBC(2).ne.3) then
-         print*, 'ellipsoid:','update_matrix: ix', ix
+         write(stdout,*) 'ellipsoid:','update_matrix: ix', ix
          stop
        else
          flagsym = .true.
@@ -482,7 +482,7 @@ else
     endif
     if (jy.gt.dimy) then
        if(PBC(4).ne.3) then
-         print*, 'ellipsoid:','update_matrix: iy', iy
+         write(stdout,*) 'ellipsoid:','update_matrix: iy', iy
          stop
        else
          flagsym = .true.
@@ -490,7 +490,7 @@ else
     endif
     if (jz.gt.dimz) then
        if(PBC(6).ne.3) then
-         print*, 'ellipsoid:','update_matrix: iz', iz
+         write(stdout,*) 'ellipsoid:','update_matrix: iz', iz
          stop
        else
          flagsym = .true.
@@ -518,7 +518,7 @@ if((flagin.eqv..true.).and.(flagout.eqv..false.)) then
 
     if (jx.lt.1) then
        if(PBC(1).ne.3) then
-         print*, 'ellipsoid:','update_matrix: ix', ix
+         write(stdout,*) 'ellipsoid:','update_matrix: ix', ix
          stop
        else
          flagsym = .true.
@@ -526,7 +526,7 @@ if((flagin.eqv..true.).and.(flagout.eqv..false.)) then
     endif
     if (jy.lt.1) then
        if(PBC(3).ne.3) then
-         print*, 'ellipsoid:','update_matrix: iy', iy
+         write(stdout,*) 'ellipsoid:','update_matrix: iy', iy
          stop
        else
          flagsym = .true.
@@ -534,7 +534,7 @@ if((flagin.eqv..true.).and.(flagout.eqv..false.)) then
     endif
     if (jz.lt.1) then
        if(PBC(5).ne.3) then
-         print*, 'ellipsoid:','update_matrix: iz', iz
+         write(stdout,*) 'ellipsoid:','update_matrix: iz', iz
          stop
        else
          flagsym = .true.
@@ -542,7 +542,7 @@ if((flagin.eqv..true.).and.(flagout.eqv..false.)) then
     endif
     if (jx.gt.dimx) then
        if(PBC(2).ne.3) then
-         print*, 'ellipsoid:','update_matrix: ix', ix
+         write(stdout,*) 'ellipsoid:','update_matrix: ix', ix
          stop
        else
          flagsym = .true.
@@ -550,7 +550,7 @@ if((flagin.eqv..true.).and.(flagout.eqv..false.)) then
     endif
     if (jy.gt.dimy) then
        if(PBC(4).ne.3) then
-         print*, 'ellipsoid:','update_matrix: iy', iy
+         write(stdout,*) 'ellipsoid:','update_matrix: iy', iy
          stop
        else
          flagsym = .true.
@@ -558,7 +558,7 @@ if((flagin.eqv..true.).and.(flagout.eqv..false.)) then
     endif
     if (jz.gt.dimz) then
        if(PBC(6).ne.3) then
-         print*, 'ellipsoid:','update_matrix: iz', iz
+         write(stdout,*) 'ellipsoid:','update_matrix: iz', iz
          stop
        else
          flagsym = .true.
@@ -709,7 +709,7 @@ volxx1 = 0.0
 
 radio=Aell(1)
 if((radio.ne.Aell(2)).or.(radio.ne.Aell(3))) then 
-print*, 'newintegrateg: needs spherical particle... stop'
+write(stdout,*) 'newintegrateg: needs spherical particle... stop'
 stop
 endif
 
@@ -734,7 +734,7 @@ do j = 1,3
 select case (PBC((j-1)*2+1))
   case (0 , 2)
     if(is(j).lt.1) then
-    print*, 'Error in newintegrateg: out of boundary'
+    write(stdout,*) 'Error in newintegrateg: out of boundary'
     endif
   case (1)
     js(j)=mod(is(j)+dims(j)-1,dims(j))+1
@@ -745,7 +745,7 @@ endselect
 select case (PBC((j-1)*2+2))
   case (0 , 2)
     if(is(j).gt.dims(j)) then
-    print*, 'Error in newintegrateg: out of boundary'
+    write(stdout,*) 'Error in newintegrateg: out of boundary'
     endif
   case (1)
     js(j)=mod(is(j)+dims(j)-1,dims(j))+1
@@ -763,7 +763,7 @@ if(flagin.eq.1) then
 if(indexvolx(jx,jy,jz).eq.0) then
 
  if(ncha1.eq.maxvolx) then
-   print*, 'ellipsoid: increase maxvolx'
+   write(stdout,*) 'ellipsoid: increase maxvolx'
    stop
  endif
 

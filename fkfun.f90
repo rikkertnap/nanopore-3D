@@ -63,7 +63,7 @@ endif
 ! DEBUG
 !      if(iter.gt.2000) then
 !      do i = 1, n
-!      print*,i, x(i)
+!      write(stdout,*)i, x(i)
 !      enddo
 !      endif
 
@@ -316,7 +316,7 @@ do jj = 1, cpp(rank+1)
 q(ii) = q_tosend ! no la envia ahora
 sumgauche(ii) = sumgauche_tosend/q_tosend
 
-!print*, rank+1,jj,ii,q(ii)
+!write(stdout,*) rank+1,jj,ii,q(ii)
 enddo ! jj
 
 !------------------ MPI ----------------------------------------------
@@ -440,7 +440,7 @@ enddo
 
 iter = iter + 1
 if(verbose.ge.3) then
-if(rank.eq.0)print*,'fkfun:', iter, norma, q(1)
+if(rank.eq.0)write(stdout,*)'fkfun:', iter, norma, q(1)
 endif
 
 3333 continue

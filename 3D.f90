@@ -64,7 +64,7 @@ endif
 ! JEFE
 if(rank.eq.0) then ! solo el jefe llama al solver
    iter = 0
-   print*, 'solve: Enter solver ', 2*n, ' eqs'
+   write(stdout,*) 'solve: Enter solver ', 2*n, ' eqs'
 
    if(infile.ge.0) then
     call call_kinsol(x1, xg1, ier)
@@ -125,8 +125,8 @@ enddo
 
 if(infile.ne.-1) then
   if((ier.lt.0).or.(.not.((norma.gt.0).or.(norma.lt.0))).or.(norma.gt.error)) then ! exploto...
-    if(rank.eq.0)print*, 'solve: Error in solver: ', ier
-    if(rank.eq.0)print*, 'solve: norma ', norma
+    if(rank.eq.0)write(stdout,*) 'solve: Error in solver: ', ier
+    if(rank.eq.0)write(stdout,*) 'solve: norma ', norma
     call MPI_FINALIZE(ierr) ! finaliza MPI
     stop
   endif

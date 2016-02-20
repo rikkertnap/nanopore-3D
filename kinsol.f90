@@ -113,14 +113,14 @@ globalstrat = 0
 
 call fnvinits(3, neq, ier) ! fnvinits inits NVECTOR module
 if (ier .ne. 0) then       ! 3 for Kinsol, neq ecuantion number, ier error flag (0 is OK)
-  print*, 'call_kinsol: SUNDIALS_ERROR: FNVINITS returned IER = ', ier
+  write(stdout,*) 'call_kinsol: SUNDIALS_ERROR: FNVINITS returned IER = ', ier
   call MPI_FINALIZE(ierr) ! finaliza MPI
   stop
 endif
 
 call fkinmalloc(iout, rout, ier)    ! Allocates memory and output additional information
 if (ier .ne. 0) then
-   print*, 'call_kinsol: SUNDIALS_ERROR: FKINMALLOC returned IER = ', ier
+   write(stdout,*) 'call_kinsol: SUNDIALS_ERROR: FKINMALLOC returned IER = ', ier
    call MPI_FINALIZE(ierr) ! finaliza MPI
    stop
  endif
@@ -143,7 +143,7 @@ call fkinspgmr(maxl, maxlrst, ier) !  Scale Preconditioned GMRES solution of lin
 !call fkinspbcg(maxl, ier) !  Scale Preconditioned BCG
 
 if (ier .ne. 0) then
-  print*, 'call_kinsol: SUNDIALS_ERROR: FKINSPGMR returned IER = ', ier
+  write(stdout,*) 'call_kinsol: SUNDIALS_ERROR: FKINSPGMR returned IER = ', ier
   call fkinfree ! libera memoria
   call MPI_FINALIZE(ierr) ! finaliza MPI
   stop
@@ -166,8 +166,8 @@ enddo
 call fkinsol(x1, globalstrat, scale, scale, ier)         ! Llama a kinsol
 
 if (ier .lt. 0) then
-      print*, 'call_kinsol: SUNDIALS_ERROR: FKINSOL returned IER = ', ier
-      print*, 'call_kinsol: Linear Solver returned IER = ', iout(9)
+      write(stdout,*) 'call_kinsol: SUNDIALS_ERROR: FKINSOL returned IER = ', ier
+      write(stdout,*) 'call_kinsol: Linear Solver returned IER = ', iout(9)
       call fkinfree
 endif
 

@@ -132,9 +132,9 @@ temp = pi*rchannel2*float(dimz)*delta
 !temp = temp + 4.0/3.0*pi*Aell(1,j)*Aell(2,j)*Aell(3,j)
 !enddo
 if (rank.eq.0) then
-print*, 'channel:', 'update_matrix: Total nanochannel volumen real space= ', temp
-print*, 'channel:', 'update_matrix: Total discretized volumen =', (dimx*dimy*dimz-sum(volprot))*delta**3
-print*, 'channel:', 'number of monomers in system =', sumpolseg 
+write(stdout,*) 'channel:', 'update_matrix: Total nanochannel volumen real space= ', temp
+write(stdout,*) 'channel:', 'update_matrix: Total discretized volumen =', (dimx*dimy*dimz-sum(volprot))*delta**3
+write(stdout,*) 'channel:', 'number of monomers in system =', sumpolseg 
 endif
 endif
 
@@ -333,7 +333,7 @@ jz = js(3)
 if(indexvolx(jx,jy,jz).eq.0.0) then
 
  if(ncha1.eq.maxvolx) then
-   print*, 'channel: increase maxvolx'
+   write(stdout,*) 'channel: increase maxvolx'
    stop
  endif
 

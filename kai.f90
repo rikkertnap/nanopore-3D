@@ -36,13 +36,13 @@ Xulimit = int(cutoff/delta)+1
 limit = Xulimit + 5 ! make it much larger, will check at the end.
 
 ALLOCATE (matriz(-limit:limit, -limit:limit, -limit:limit)) ! matriz de kai
-if(rank.eq.0)print*,'kais: Kai calculation'
+if(rank.eq.0)write(stdout,*)'kais: Kai calculation'
 suma = 0.0
 matriz = 0.0
 MCsteps = 200*Xulimit
 volume = dfloat(MCsteps)**3
 
-!if(rank.eq.0)print*, 'kais: CORREGIR MCSTEPS!!!!'
+!if(rank.eq.0)write(stdout,*) 'kais: CORREGIR MCSTEPS!!!!'
 
 l = lseg 
 
@@ -93,12 +93,12 @@ enddo
 enddo
 
 if(Xulimit.eq.limit) then
-print*, 'kais: error Xulimit = limit'
+write(stdout,*) 'kais: error Xulimit = limit'
 call MPI_FINALIZE(ierr)
 stop
 endif
 
-if(rank.eq.0)print*,'kais: New Xulimit', Xulimit
+if(rank.eq.0)write(stdout,*)'kais: New Xulimit', Xulimit
 
 ALLOCATE (Xu(-Xulimit:Xulimit,-Xulimit:Xulimit,-Xulimit:Xulimit))
 Xu = 0.0
@@ -113,7 +113,7 @@ enddo
 enddo
 enddo
 
-if(rank.eq.0)print*, 'kais: Sum Xulimit', suma
+if(rank.eq.0)write(stdout,*) 'kais: Sum Xulimit', suma
 
 suma = 0.0
 do ix = -limit, limit
@@ -124,7 +124,7 @@ enddo
 enddo
 enddo
 
-if(rank.eq.0)print*, 'kais: Total Sum', suma
+if(rank.eq.0)write(stdout,*) 'kais: Total Sum', suma
 
 do ix = -Xulimit, Xulimit
 do iy = -Xulimit, Xulimit

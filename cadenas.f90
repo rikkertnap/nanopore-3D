@@ -18,23 +18,23 @@ integer nchas
 newcuantas = 0
 
 if((readchains.eq.-1).and.(rank.eq.0)) then
-print*, 'creador:', 'Saving conformations...'
+write(stdout,*) 'creador:', 'Saving conformations...'
 open(file='cadenas.dat',unit=3113)
 endif
 
 if(readchains.eq.1) then
- if(rank.eq.0)print*, 'creador:', 'Loading conformations'
+ if(rank.eq.0)write(stdout,*) 'creador:', 'Loading conformations'
  open(file='cadenas.dat',unit=3113)
  do i = 1, cuantas
  do j = 1, long
   read(3113,*)in1(j,1),in1(j,2),in1(j,3)
  enddo
  call pxs
-! print*, 'creador:', i, newcuantas(1)
+! write(stdout,*) 'creador:', i, newcuantas(1)
  enddo
 
 ! do il = 1, ncha
-! print*, 'creador:', newcuantas(il)
+! write(stdout,*) 'creador:', newcuantas(il)
 ! enddo
 ! stop
 
@@ -64,7 +64,7 @@ do while (il.lt.cuantas)
 enddo
 
 ! do il = 1, ncha
-! print*, 'creador:', newcuantas(il)
+! write(stdout,*) 'creador:', newcuantas(il)
 ! enddo
 ! stop
 
@@ -321,13 +321,13 @@ enddo
 
 if(rank.eq.0) then
 if(verbose.ge.1) then
- print*, 'creador:', 'graftingpoints:'
- print*, 'creador:', 'ncha = ', ncha
+ write(stdout,*) 'creador:', 'graftingpoints:'
+ write(stdout,*) 'creador:', 'ncha = ', ncha
  do j = 1, size
- print*, 'creador:', ' cpp    ', j, ' = ', cpp(j)
- print*, 'creador:', ' cppini ', j, ' = ', cppini(j)+1
- print*, 'creador:', ' cppfin ', j, ' = ', cppini(j)+cpp(j)
- print*, 'creador:', '!!!!!!!!!!!!!!!!!!!!!!!!!'
+ write(stdout,*) 'creador:', ' cpp    ', j, ' = ', cpp(j)
+ write(stdout,*) 'creador:', ' cppini ', j, ' = ', cppini(j)+1
+ write(stdout,*) 'creador:', ' cppfin ', j, ' = ', cppini(j)+cpp(j)
+ write(stdout,*) 'creador:', '!!!!!!!!!!!!!!!!!!!!!!!!!'
  enddo
 endif
 endif

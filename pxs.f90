@@ -51,7 +51,7 @@ case (1)
        endif
 
        if(testsystem(x).eq.-2) then ! if testsystem = -2, the polymer goes out-of-system
-         print*, 'pxs: out-of-system'
+         write(stdout,*) 'pxs: out-of-system'
          stop
        endif
 
@@ -64,7 +64,7 @@ case (2)
        endif
 
        if(testsystemc(x).eq.-2) then ! if testsystem = -2, the polymer goes out-of-system
-         print*, 'pxs: out-of-system'
+         write(stdout,*) 'pxs: out-of-system'
          stop
        endif
 
