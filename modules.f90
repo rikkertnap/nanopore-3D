@@ -1,22 +1,9 @@
-!EDITAR:
-
-!OK - chequear limites de psi y xtotal en fkfun
-!OK - Poisson eq en fkfun
-!OK - mapear particula en el nuevo sistema
-!OK - check free energy
-
-! 
-! Crystal v1.0
-! 
-! BASED on MCPARv4.0
-! + transformation in non-cubic lattices
-!
-
 
 module channel
 real*8 rchannel
 real*8 originc(2)
 real*8 echargec, sigmac, eepsc, sigmar
+integer NBRUSH
 endmodule
 
 module system 

@@ -55,7 +55,7 @@ case (1)
          stop
        endif
 
-case (2)
+case (2, 3)
 
 
        if(testsystemc(x).eq.-1) then ! if testsystem = -1,  there is a collision with all or particle 

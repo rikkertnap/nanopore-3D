@@ -291,6 +291,7 @@ do while (ios == 0)
    select case (systemtype) ! TYPE OF SYSTEM
                             ! TYPE = 1 is nanoparticle crystal
                             ! TYPE = 2 is 3D channel
+                            ! TYPE = 3 is a 3D channel with chains at specific conditions
 
     case(2)
      read(fh, *) basura
@@ -302,6 +303,16 @@ do while (ios == 0)
      read(fh, *) basura
      read(fh, *) eepsc
   
+    case(3)
+     read(fh, *) basura
+     read(fh, *) rchannel
+     read(fh, *) basura
+     read(fh, *) NBRUSH ! number of brushes in the tetha direction
+     read(fh, *) basura
+     read(fh, *) echargec
+     read(fh, *) basura
+     read(fh, *) eepsc
+
 
     case(1) 
      read(fh, *) basura
@@ -366,6 +377,14 @@ enddo
 if(systemtype.eq.2) then
  if((cdiva.ne.1.0).or.(gama0.ne.90.0)) then
   write(stdout,*) 'Channel works only for cdiva = 1 and gama0 = 90.0... ending'
+  call MPI_FINALIZE(ierr) ! finaliza MPI
+  stop
+ endif
+endif
+
+if(systemtype.eq.3) then
+ if((cdiva.ne.1.0472).or.(gama0.ne.90.0)) then
+  write(stdout,*) 'Channel type 3 works only for cdiva = 1.0472 (pi/3) and gama0 = 90.0... ending'
   call MPI_FINALIZE(ierr) ! finaliza MPI
   stop
  endif
