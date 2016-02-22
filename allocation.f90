@@ -42,7 +42,7 @@ ALLOCATE (voleps1(dimx,dimy,dimz))
 ALLOCATE (volq(dimx,dimy,dimz))
 ALLOCATE (volq1(dimx,dimy,dimz))
 ! mkinsol
-ALLOCATE (pp(2*dimx*dimy*dimz))
+ALLOCATE (pp(eqs*dimx*dimy*dimz))
 
 ! chainsdat
 allocate(in1(long,3))

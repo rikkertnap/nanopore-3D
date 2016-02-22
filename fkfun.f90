@@ -437,7 +437,7 @@ enddo
  
 norma = 0.0
 
-do i = 1, 2*ntot
+do i = 1, eqs*ntot
   norma = norma + (f(i))**2
 enddo
 

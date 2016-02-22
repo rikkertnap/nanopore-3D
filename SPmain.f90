@@ -36,6 +36,10 @@ call initmpi
 if(rank.eq.0)write(stdout,*) 'Program Crystal'
 if(rank.eq.0)write(stdout,*) 'GIT Version: ', _VERSION
 if(rank.eq.0)write(stdout,*) 'MPI OK'
+
+if(rank.eq.0)write(10,*) 'Program Crystal'
+if(rank.eq.0)write(10,*) 'GIT Version: ', _VERSION
+if(rank.eq.0)write(10,*) 'MPI OK'
 call readinput
 
 call initconst
