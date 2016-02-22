@@ -59,7 +59,6 @@ ncha = 0
 
  flag = .false.
 
-
  call integrate_c(rchannelL2, originc ,npoints, voleps1 , sumvoleps1, flag)
 
  flag = .false. ! not a problem if eps lays outside boundaries
@@ -356,6 +355,7 @@ do az = 0,1
 ! v in transformed space
 v(1) = float(ax+ix-1)*delta
 v(2) = float(ay+iy-1)*delta
+v(3) = 0.0
 
 ! x in real space, v in transformed space
     x = MATMUL(IMAT,v)
@@ -386,6 +386,7 @@ volprot(ix,iy,iz) = voltemp
 enddo ! ix
 enddo ! iy
 enddo ! iz
+
 
 end subroutine
 

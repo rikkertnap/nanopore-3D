@@ -345,6 +345,9 @@ endif
 
 ! Qtot
 
+
+qtot = 0.0
+
 do ix=1,dimx
    do iy=1,dimy
         do iz=1,dimz

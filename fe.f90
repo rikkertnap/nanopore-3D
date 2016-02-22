@@ -416,7 +416,8 @@ endif
       enddo
       enddo
       enddo
-
+  
+      print*, F_electro
 
       Free_Energy = Free_Energy + F_electro
 
