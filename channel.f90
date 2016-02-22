@@ -7,7 +7,7 @@ use const
 use chainsdat
 use molecules
 use channel
-use transform, only : MAT 
+use transform, only : MAT, IMAT
 implicit none
 
 real*8 rchannel2, rchannelL2, rchannelS2
