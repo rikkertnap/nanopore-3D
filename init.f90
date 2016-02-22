@@ -28,6 +28,10 @@ pKw = 14
 error = 1e-4 ! para comparar con la norma...
 errel=1d-6
 itmax=200
+
+if(electroflag.eq.0)eqs=1
+if(electroflag.eq.1)eqs=2
+
 end subroutine
 
 subroutine initall

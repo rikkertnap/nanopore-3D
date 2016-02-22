@@ -17,8 +17,8 @@ integer i, ix, iy, iz
 
 !-----  varables de la resolucion -----------
 
-real*8 x1(2*dimx*dimy*dimz),xg1(2*dimx*dimy*dimz)
-real*8 f(2*dimx*dimy*dimz)
+real*8 x1(eqs*dimx*dimy*dimz),xg1(eqs*dimx*dimy*dimz)
+real*8 f(eqs*dimx*dimy*dimz)
        
 integer n
 
@@ -40,7 +40,7 @@ n = dimx*dimy*dimz
 ! Initial guess
 
 if((infile.eq.2).or.(infile.eq.-1)) then
-  do i = 1, 2*n  
+  do i = 1, eqs*n  
       xg1(i) = xflag(i)     
       x1(i) = xflag(i)
   enddo
@@ -51,10 +51,12 @@ if(infile.eq.0) then
     xg1(i)=xsolbulk
     x1(i)=xsolbulk
   enddo
+if(electroflag.eq.1) then
   do i=n+1, n*2
     xg1(i)=0.0d0
     x1(i)=0.0d0
   enddo
+endif
 endif
 
 !--------------------------------------------------------------
@@ -64,7 +66,7 @@ endif
 ! JEFE
 if(rank.eq.0) then ! solo el jefe llama al solver
    iter = 0
-   write(stdout,*) 'solve: Enter solver ', 2*n, ' eqs'
+   write(stdout,*) 'solve: Enter solver ', eqs*n, ' eqs'
 
    if(infile.ge.0) then
     call call_kinsol(x1, xg1, ier)
@@ -116,7 +118,7 @@ do ix=1,dimx
    do iy=1,dimy
       do iz=1,dimz
        xh(ix,iy,iz)=x1(ix+dimx*(iy-1)+dimx*dimy*(iz-1))
-       psi(ix,iy,iz)=x1(ix+dimx*(iy-1)+dimx*dimy*(iz-1)+n)
+       if(electroflag.eq.1)psi(ix,iy,iz)=x1(ix+dimx*(iy-1)+dimx*dimy*(iz-1)+n)
       enddo
    enddo  
 enddo
@@ -133,7 +135,7 @@ if(infile.ne.-1) then
 endif    
 
 ! No exploto, guardo xflag
-do i = 1, 2*n
+do i = 1, eqs*n
   xflag(i) = x1(i) ! xflag sirve como input para la proxima iteracion
 enddo
 infile = 2 ! no vuelve a leer infile

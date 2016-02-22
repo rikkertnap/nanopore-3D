@@ -56,7 +56,7 @@ shift = 1.0d-100
 if(rank.eq.0) then ! llama a subordinados y pasa vector x
    flagsolver = 1
    CALL MPI_BCAST(flagsolver, 1, MPI_INTEGER, 0, MPI_COMM_WORLD,err)
-   CALL MPI_BCAST(x, 2*dimx*dimy*dimz , MPI_DOUBLE_PRECISION,0, MPI_COMM_WORLD,err)
+   CALL MPI_BCAST(x, eqs*dimx*dimy*dimz , MPI_DOUBLE_PRECISION,0, MPI_COMM_WORLD,err)
 endif
 
 !------------------------------------------------------
@@ -70,12 +70,13 @@ endif
 
 ! Recupera xh y psi desde x()
 
+psi = 0.0
 ntot = dimx*dimy*dimz ! numero de celdas
 do ix=1,dimx
  do iy=1,dimy
   do iz=1,dimz
      xh(ix,iy,iz)=x(ix+dimx*(iy-1)+dimx*dimy*(iz-1))
-     psi(ix,iy,iz)=x(ix+dimx*(iy-1)+dimx*dimy*(iz-1)+ntot)   
+     if(electroflag.eq.1)psi(ix,iy,iz)=x(ix+dimx*(iy-1)+dimx*dimy*(iz-1)+ntot)   
   enddo
  enddo
 enddo
@@ -428,8 +429,7 @@ psitemp = psitemp + DOT_PRODUCT(MATMUL(TMAT,epsv),MATMUL(TMAT,psiv))
 
 ! OJO CHECK!!!!
 
-      f(ix+dimx*(iy-1)+dimx*dimy*(iz-1)+ntot)=(psitemp + qtot(ix, iy, iz)*constq)/(-2.0)
-      if(electroflag.eq.0)f(ix+dimx*(iy-1)+dimx*dimy*(iz-1)+ntot)=0.0
+      if(electroflag.eq.1)f(ix+dimx*(iy-1)+dimx*dimy*(iz-1)+ntot)=(psitemp + qtot(ix, iy, iz)*constq)/(-2.0)
 
 enddo
 enddo

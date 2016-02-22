@@ -40,12 +40,15 @@ double precision vtemp1(*), vtemp2(*)
 
 common /psize/ neq
 
-do i = 1, neq/2
+
+do i = 1, dimx*dimy*dimz
    pp(i) = 0.1 / (1.0+exp(-udata(i)))
 enddo
-do i = neq/2+1, neq
+if(electroflag.eq.1) then
+do i = dimx*dimy*dimz+1, 2*dimx*dimy*dimz
    pp(i) = 1.0
 enddo
+endif
    ier = 0
 return
 end
@@ -60,9 +63,9 @@ use MPI
 
 integer i
 
-real*8 x1_old(2*dimx*dimy*dimz)
-real*8 x1(2*dimx*dimy*dimz)
-real*8 f(2*dimx*dimy*dimz)
+real*8 x1_old(eqs*dimx*dimy*dimz)
+real*8 x1(eqs*dimx*dimy*dimz)
+real*8 f(eqs*dimx*dimy*dimz)
 
 ! MPI
 
@@ -71,11 +74,11 @@ parameter(tag = 0)
 integer err
 
 x1 = 0.0
-do i = 1,2*dimx*dimy*dimz
+do i = 1,eqs*dimx*dimy*dimz
   x1(i) = x1_old(i)
 enddo
 
-CALL MPI_BCAST(x1, 2*dimx*dimy*dimz , MPI_DOUBLE_PRECISION,0, MPI_COMM_WORLD,err)
+CALL MPI_BCAST(x1, eqs*dimx*dimy*dimz , MPI_DOUBLE_PRECISION,0, MPI_COMM_WORLD,err)
 
 call fkfun(x1,f, ier) ! todavia no hay solucion => fkfun 
 end
@@ -85,14 +88,14 @@ use system
 use const
 implicit none
 integer i
-real*8 x1(2*dimx*dimy*dimz), xg1(2*dimx*dimy*dimz)
-real*8 x1_old(2*dimx*dimy*dimz), xg1_old(2*dimx*dimy*dimz)
+real*8 x1(eqs*dimx*dimy*dimz), xg1(eqs*dimx*dimy*dimz)
+real*8 x1_old(eqs*dimx*dimy*dimz), xg1_old(eqs*dimx*dimy*dimz)
 integer*8 iout(15) ! Kinsol additional output information
 real*8 rout(2) ! Kinsol additional out information
 integer*8 msbpre
 real*8 fnormtol, scsteptol
-real*8 scale(2*dimx*dimy*dimz)
-real*8 constr(2*dimx*dimy*dimz)
+real*8 scale(eqs*dimx*dimy*dimz)
+real*8 constr(eqs*dimx*dimy*dimz)
 integer*4  globalstrat, maxl, maxlrst
 integer*4 ier ! Kinsol error flag
 integer*8 neq ! Kinsol number of equations
@@ -102,7 +105,7 @@ integer ierr
 
 ! INICIA KINSOL
 
-neq = 2*dimx*dimy*dimz
+neq = eqs*dimx*dimy*dimz
 msbpre  = 10 ! maximum number of iterations without prec. setup (?)
 fnormtol = 1.0d-6 ! Function-norm stopping tolerance
 scsteptol = 1.0d-6 ! Function-norm stopping tolerance
@@ -131,12 +134,14 @@ call fkinsetrin('FNORM_TOL', fnormtol, ier)
 call fkinsetrin('SSTEP_TOL', scsteptol, ier)
 call fkinsetiin('MAX_NITER', max_niter, ier)
 
-do i = 1, neq  !constraint vector
+do i = 1, dimx*dimy*dimz  !constraint vector
    constr(i) = 0.0
 enddo
-do i = 1, neq/2  !constraint vector
+if(electroflag.eq.1) then
+do i = dimx*dimy*dimz+1, 2*dimx*dimy*dimz  !constraint vector
    constr(i) = 2.0
 enddo
+endif
 
 call fkinsetvin('CONSTR_VEC', constr, ier) ! constraint vector
 ! CALL FKINSPTFQMR (MAXL, IER)
@@ -152,9 +157,6 @@ endif
 call fkinspilssetprec(1, ier) ! preconditiones
 
 do i = 1, neq ! scaling vector
-  scale(i) = 1.0
-enddo
-do i = 1, neq/2 ! scaling vector
   scale(i) = 1.0
 enddo
 

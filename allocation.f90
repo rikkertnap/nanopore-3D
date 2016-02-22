@@ -20,7 +20,7 @@ ALLOCATE(psi(0:dimx+1, 0:dimy+1, 0:dimz+1))
 ALLOCATE(xh(dimx, dimy, dimz))
 
 ! kinsol
-ALLOCATE (xflag(2*dimx*dimy*dimz))
+ALLOCATE (xflag(eqs*dimx*dimy*dimz))
 ALLOCATE (xpar(dimx*dimy*dimz))
 
 ! results

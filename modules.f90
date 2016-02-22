@@ -17,6 +17,7 @@ integer  dimz
 integer PBC(6)
 integer vtkflag
 integer electroflag
+integer eqs ! number of set of equations 
 endmodule
 
 module s2d
