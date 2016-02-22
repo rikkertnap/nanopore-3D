@@ -7,6 +7,7 @@ use const
 use chainsdat
 use molecules
 use channel
+use transform, only : MAT 
 implicit none
 
 real*8 rchannel2, rchannelL2, rchannelS2
@@ -31,7 +32,7 @@ integer p1(maxvolx,3)
 integer i
 real*8 volxx1(dimx,dimy,dimz)
 real*8 volxx(dimx,dimy,dimz)
-
+real*8 x(3), v(3), hcyl
 
 cutarea = 0.0 ! throw away cells that have less area than cutarea x area of the cell with largest area  
 sumpolseg = 0.0
@@ -80,7 +81,18 @@ ncha = 0
 
 !! grafting
 
- area = 2.0*pi*rchannel*float(dimz)*delta*cdiva
+v(1) = 0.0
+v(2) = 0.0
+v(3) = float(dimz)*delta
+
+! v in transformed space, x in real space
+! only work for gam = 90, cdiva any value
+
+x = MATMUL(IMAT,v)
+
+hcyl = x(3) ! height of the cylinder
+
+area = 2.0*pi*rchannel*hcyl
 
 !! volume  
  volprot1 = volprot1 * 0.9999
@@ -229,7 +241,7 @@ ncha = 0
 
 !! grafting
 
- area = 2.0*pi*rchannel*float(dimz)*delta*cdiva
+ area = 2.0*pi*rchannel*float(dimz)*delta
 
  temp2 = maxval(volx1)
 
@@ -346,7 +358,7 @@ v(1) = float(ax+ix-1)*delta
 v(2) = float(ay+iy-1)*delta
 
 ! x in real space, v in transformed space
-    x = MATMUL(MAT,v)
+    x = MATMUL(IMAT,v)
 
 x(1) = x(1) - originc(1)
 x(2) = x(2) - originc(2)
@@ -476,7 +488,7 @@ v(3) = float(dimz)*delta
 ! v in transformed space, x in real space
 ! only work for gam = 90, cdiva any value
 
-x = MATMUL(MAT,v)
+x = MATMUL(IMAT,v)
 
 hcyl = x(3) ! height of the cylinder
 
@@ -517,7 +529,7 @@ jz = js(3)
 do i = 1, 3
 if((js(i).le.0).or.(js(i).gt.dims(i))) then
    write(stdout,*) 'error in channel', i, js(i), dims(i)
-    write(stdout,*) x(1), x(2), x(3), float(npointz-1)/float(npointz)*hcyl
+    write(stdout,*) v(1), v(2), v(3)
    stop
 endif
 enddo
