@@ -382,15 +382,6 @@ if(systemtype.eq.2) then
  endif
 endif
 
-if(systemtype.eq.3) then
- if((cdiva.ne.1.0472).or.(gama0.ne.90.0)) then
-  write(stdout,*) 'Channel type 3 works only for cdiva = 1.0472 (pi/3) and gama0 = 90.0... ending'
-  call MPI_FINALIZE(ierr) ! finaliza MPI
-  stop
- endif
-endif
-
-
 if(vtkflag.eq.ndi)call stopundef('vtkflag')
 if(dimx.eq.ndi)call stopundef('dimx')
 if(scx.eq.ndi)call stopundef('scx')

@@ -80,7 +80,7 @@ ncha = 0
 
 !! grafting
 
- area = pi*rchannel2*float(dimz)*delta
+ area = 2.0*pi*rchannel*float(dimz)*delta*cdiva
 
 !! volume  
  volprot1 = volprot1 * 0.9999
@@ -122,7 +122,7 @@ write(stdout,*) 'channel:', 'update_matrix: Total discretized volumen =', (dimx*
 write(stdout,*) 'channel:', 'number of polymers in system =', sumpolseg 
 write(stdout,*) 'channel:', 'surface area =', area
 write(stdout,*) 'channel:', 'surface density =', sumpolseg/area
-write(stdout,*) 'channel:', 'surface density expected from input =', float(NBRUSH)/((2.0*pi*rchannel)/float(NBRUSH))**2
+write(stdout,*) 'channel:', 'surface density expected from input =', 1.0/(((2.0*pi*rchannel)/float(NBRUSH))**2)
 endif
 endif
 
@@ -229,7 +229,7 @@ ncha = 0
 
 !! grafting
 
- area = pi*rchannel2*float(dimz)*delta
+ area = 2.0*pi*rchannel*float(dimz)*delta*cdiva
 
  temp2 = maxval(volx1)
 
@@ -494,15 +494,15 @@ x(1) = cos(float(jjjt-1)/float(npointt)*2.0*pi)*rchannel + originc(1)
 x(2) = sin(float(jjjt-1)/float(npointt)*2.0*pi)*rchannel + originc(2)
 x(3) = float(jjjz-1)/float(npointz)*hcyl
 
+!x in  real space
+v = MATMUL(MAT,x)
+
 do j = 1,3
-    js(j) = floor(x(j)/delta)+1
+    js(j) = floor(v(j)/delta)+1
 enddo
 jx = js(1)
 jy = js(2)
 jz = js(3)
-
-!x in  real space
-v = MATMUL(MAT,x)
 
 v(3) = v(3) + 0.5*delta ! centers the first row of polymers at the middle of the layer, useful to avoid numerical rounding errors.
 x = MATMUL(IMAT,v) ! and recalculates x due to the change in v
@@ -516,7 +516,8 @@ jz = js(3)
 
 do i = 1, 3
 if((js(i).le.0).or.(js(i).gt.dims(i))) then
-   write(stdout,*) 'error in channel'
+   write(stdout,*) 'error in channel', i, js(i), dims(i)
+    write(stdout,*) x(1), x(2), x(3), float(npointz-1)/float(npointz)*hcyl
    stop
 endif
 enddo
@@ -545,8 +546,8 @@ enddo ! jjjz
 
 do i = 1, ncha1
 ! Moves the position of the first segment lseg/2 away from the surface to prevent collision due to round errors.
-com1(i,1) = com1(i,1) - lseg/2.0*((com1(i,1)-originc(1)))/rchannel 
-com1(i,2) = com1(i,2) - lseg/2.0*((com1(i,2)-originc(2)))/rchannel 
+com1(i,1) = com1(i,1) - lseg*((com1(i,1)-originc(1)))/rchannel 
+com1(i,2) = com1(i,2) - lseg*((com1(i,2)-originc(2)))/rchannel 
 enddo
 end
 
@@ -648,8 +649,8 @@ com1(i,:) = com1(i,:)/volx1(i)
 
 ! Moves the position of the first segment lseg/2 away from the surface to prevent collision due to round errors.
 
-com1(i,1) = com1(i,1) - lseg/2.0*((com1(i,1)-originc(1)))/rchannel 
-com1(i,2) = com1(i,2) - lseg/2.0*((com1(i,2)-originc(2)))/rchannel 
+com1(i,1) = com1(i,1) - 0.5*lseg*((com1(i,1)-originc(1)))/rchannel 
+com1(i,2) = com1(i,2) - 0.5*lseg*((com1(i,2)-originc(2)))/rchannel 
 enddo
 end
 
