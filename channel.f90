@@ -436,7 +436,9 @@ use transform
 use chainsdat
 use ematrix
 use const
+use channel, only : sigmar
 implicit none
+real*8 rtetha, rz
 integer NBRUSH
 real*8 sumvolx1
 integer npoints
@@ -460,6 +462,7 @@ integer flagin
 integer dims(3), is(3), js(3)
 integer jjjz, jjjt, npointz, npointt
 real*8 hcyl
+real*8, external :: rands
 
 pi=acos(-1.0)
 
@@ -503,9 +506,15 @@ npointt = NBRUSH    ! number of sites along the tetha coordinate
 do jjjz = 1, npointz
 do jjjt = 1, npointt
 
-x(1) = cos(float(jjjt-1)/float(npointt)*2.0*pi)*rchannel + originc(1)
-x(2) = sin(float(jjjt-1)/float(npointt)*2.0*pi)*rchannel + originc(2)
-x(3) = float(jjjz-1)/float(npointz)*hcyl
+if(sigmar.ne.0.0) then
+ rtetha = delta/2.0/(2.0*pi*rchannel)*(rands(seed)-1.0)
+ rz = hcyl/float(dimz)/2.0*(rands(seed)-1.0)
+endif
+
+x(1) = cos(float(jjjt-1)/float(npointt)*2.0*pi+rtetha)*rchannel + originc(1)
+x(2) = sin(float(jjjt-1)/float(npointt)*2.0*pi+rtetha)*rchannel + originc(2)
+x(3) = float(jjjz-1)/float(npointz)*hcyl+rz
+
 
 !x in  real space
 v = MATMUL(MAT,x)
