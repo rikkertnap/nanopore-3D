@@ -3,8 +3,8 @@ subroutine allocatencha
 use fields_fkfun
 use chainsdat
 use conformations
+use rotchain
 implicit none
-
 
 ! fields_fkfun
 ALLOCATE(q(ncha))

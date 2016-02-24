@@ -37,6 +37,8 @@ do jj = 1, cpp(rank+1)
        x(2) = in1(j, 3)
        x(3) = in1(j, 1)
 
+       if((systemtype.eq.2).or.(systemtype.eq.3))call rot_chain_cyl(x,ii)
+
        x = x + posicion(ii,:)
        v = MATMUL(MAT,x)
        pxtemp(:,j) = v(:)
@@ -123,4 +125,17 @@ end
       
 
 
+subroutine rot_chain_cyl(x,ii)
+use rotchain
+implicit none
+integer ii
+real*8 x(3)
+real*8 y(3)
+real*8 t
 
+t = rotangle(ii)
+y = x
+x(1) = cos(t)*y(1)-sin(t)*y(2)
+x(2) = sin(t)*y(1)+cos(t)*y(2)
+x(3) = y(3)
+end

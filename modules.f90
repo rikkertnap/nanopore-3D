@@ -1,3 +1,7 @@
+module rotchain
+use ematrix, only : maxvolx
+real*8 rotangle(maxvolx)
+endmodule
 
 module channel
 real*8 rchannel
@@ -179,7 +183,7 @@ real*8, allocatable :: voleps1(:,:,:)
 real*8, allocatable :: volq(:,:,:)
 real*8, allocatable :: volq1(:,:,:)
 
-integer, parameter :: maxvolx = 10000
+integer, parameter :: maxvolx = 50000
 real*8 volx(maxvolx)
 real*8 com(maxvolx,3)
 integer p0(maxvolx,3)

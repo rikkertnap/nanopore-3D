@@ -8,6 +8,8 @@ use chainsdat
 use molecules
 use channel
 use transform, only : MAT, IMAT
+use rotchain
+
 implicit none
 
 real*8 rchannel2, rchannelL2, rchannelS2
@@ -109,11 +111,12 @@ area = 2.0*pi*rchannel*hcyl
 
  volxx = volxx1
 
-do i = 1, ncha1
-ncha = ncha+1
-volx(ncha)=volx1(i)
-com(ncha,:)=com1(i,:)
-p0(ncha,:)=p1(i,:)
+ncha = ncha1
+do i = 1, ncha
+volx(i)=volx1(i)
+com(i,:)=com1(i,:)
+p0(i,:)=p1(i,:)
+rotangle(i) = atan2(com1(i,1)-originc(1), com1(i,2)-originc(2))
 enddo
 
 title = 'avpro'
@@ -161,7 +164,7 @@ use MPI
 use const
 use chainsdat
 use molecules
-
+use rotchain
 implicit none
 
 real*8 rchannel2, rchannelL2, rchannelS2
@@ -273,11 +276,12 @@ ncha = 0
 
  volxx = volxx + volxx1
 
-do i = 1, ncha1
-ncha = ncha+1
-volx(ncha)=volx1(i)
-com(ncha,:)=com1(i,:)
-p0(ncha,:)=p1(i,:)
+ncha = ncha1
+do i = 1, ncha
+volx(i)=volx1(i)
+com(i,:)=com1(i,:)
+p0(i,:)=p1(i,:)
+rotangle(i) = atan2(com1(i,1)-originc(1), com1(i,2)-originc(2))
 enddo
 
 title = 'avpro'
