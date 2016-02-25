@@ -25,6 +25,7 @@ integer n
 ! Volumen fraction
 real*8 xh(dimx, dimy, dimz)
 real*8 psi(dimx, dimy, dimz) ! potencial
+real*8 temp
 
 ! MPI
 integer tag, source
@@ -45,6 +46,53 @@ if((infile.eq.2).or.(infile.eq.-1)) then
       x1(i) = xflag(i)
   enddo
 endif
+
+
+if(infile.eq.3) then ! mirror input
+
+do ix=1,dimx
+ do iy=1,dimy
+  do iz=1,dimz
+     xh(ix,iy,iz)=xflag(ix+dimx*(iy-1)+dimx*dimy*(iz-1))
+     if(electroflag.eq.1)psi(ix,iy,iz)=xflag(ix+dimx*(iy-1)+dimx*dimy*(iz-1)+dimx*dimy*dimz)
+  enddo
+ enddo
+enddo
+
+do ix=1,int(dimx/2)
+ do iy=1,int(dimy/2)
+  do iz=1,dimz
+
+     temp = xh(ix,iy,iz)  
+     xh(ix,iy,iz) = xh(dimx-ix,dimy-iy,iz)
+     xh(dimx-ix,dimy-iy,iz) = temp
+     
+     if(electroflag.eq.1) then
+     temp = psi(ix,iy,iz)
+     psi(ix,iy,iz) = psi(dimx-ix,dimy-iy,iz)
+     psi(dimx-ix,dimy-iy,iz) = temp
+     endif
+
+  enddo
+ enddo
+enddo
+
+
+do ix=1,dimx
+   do iy=1,dimy
+      do iz=1,dimz
+      xflag(ix+dimx*(iy-1)+dimx*dimy*(iz-1))= xh(ix,iy,iz)
+      if(electroflag.eq.1)xflag(ix+dimx*(iy-1)+dimx*dimy*(iz-1)+dimx*dimy*dimz)= psi(ix,iy,iz)
+      enddo
+   enddo
+enddo
+
+  do i = 1, eqs*n
+      xg1(i) = xflag(i)
+      x1(i) = xflag(i)
+  enddo
+endif ! infile
+
 
 if(infile.eq.0) then
   do i=1,n
