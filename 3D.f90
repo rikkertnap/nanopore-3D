@@ -60,17 +60,17 @@ do ix=1,dimx
 enddo
 
 do ix=1,int(dimx/2)
- do iy=1,int(dimy/2)
+ do iy=1,dimy
   do iz=1,dimz
 
      temp = xh(ix,iy,iz)  
-     xh(ix,iy,iz) = xh(dimx-ix,dimy-iy,iz)
-     xh(dimx-ix,dimy-iy,iz) = temp
+     xh(ix,iy,iz) = xh(dimx-ix,iy,iz)
+     xh(dimx-ix,iy,iz) = temp
      
      if(electroflag.eq.1) then
      temp = psi(ix,iy,iz)
-     psi(ix,iy,iz) = psi(dimx-ix,dimy-iy,iz)
-     psi(dimx-ix,dimy-iy,iz) = temp
+     psi(ix,iy,iz) = psi(dimx-ix,iy,iz)
+     psi(dimx-ix,iy,iz) = temp
      endif
 
   enddo
