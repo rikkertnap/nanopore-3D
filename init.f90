@@ -169,10 +169,10 @@ if(rank.eq.0) then ! solo el jefe escribe a disco....
   call savetodisk(temp, title, cccc)
 
 ! Solvente
-  temp(:,:,:) = xh(:,:,:)*(1.0 - volprot(:,:,:))
+!  temp(:,:,:) = xh(:,:,:)*(1.0 - volprot(:,:,:))
 
-  title = 'avsol'
-  call savetodisk(temp, title, cccc)
+!  title = 'avsol'
+!  call savetodisk(temp, title, cccc)
 ! Cationes
 !  title = 'avpos'
 !  call savetodisk(xpos, title, cccc)
@@ -190,13 +190,13 @@ if(rank.eq.0) then ! solo el jefe escribe a disco....
 !  call savetodisk(fdis, title, cccc)
 ! Potencial electrostatico
 
-  temp(1:dimx,1:dimy, 1:dimz) = psi(1:dimx,1:dimy, 1:dimz)
+!  temp(1:dimx,1:dimy, 1:dimz) = psi(1:dimx,1:dimy, 1:dimz)
 
-  title = 'poten'
-  call savetodisk(temp, title, cccc)
+!  title = 'poten'
+!  call savetodisk(temp, title, cccc)
 ! Particle
-  title = 'avpar'
-  call savetodisk(volprot, title, cccc)
+!  title = 'avpar'
+!  call savetodisk(volprot, title, cccc)
 
 ! save volprot for supercell
 
@@ -295,5 +295,56 @@ read(8)free_energy
 read(8)xflag
 close(8)
 end subroutine
+
+subroutine mirror
+use const
+use kinsol
+implicit none
+real*8 xh(dimx,dimy,dimz), psi(dimx,dimy,dimz)
+integer ix,iy,iz
+real*8 temp
+
+do ix=1,dimx
+ do iy=1,dimy
+  do iz=1,dimz
+     xh(ix,iy,iz)=xflag(ix+dimx*(iy-1)+dimx*dimy*(iz-1))
+     if(electroflag.eq.1)psi(ix,iy,iz)=xflag(ix+dimx*(iy-1)+dimx*dimy*(iz-1)+dimx*dimy*dimz)
+  enddo
+ enddo
+enddo 
+   
+do ix=1,int(dimx/2)
+ do iy=1,dimy
+  do iz=1,dimz
+      
+     temp = xh(ix,iy,iz)
+     xh(ix,iy,iz) = xh(dimx-ix,iy,iz)
+     xh(dimx-ix,iy,iz) = temp
+
+     if(electroflag.eq.1) then
+     temp = psi(ix,iy,iz)
+     psi(ix,iy,iz) = psi(dimx-ix,iy,iz)
+     psi(dimx-ix,iy,iz) = temp
+     endif
+  
+  enddo
+ enddo
+enddo
+    
+  
+do ix=1,dimx
+   do iy=1,dimy
+      do iz=1,dimz
+      xflag(ix+dimx*(iy-1)+dimx*dimy*(iz-1))= xh(ix,iy,iz)
+      if(electroflag.eq.1)xflag(ix+dimx*(iy-1)+dimx*dimy*(iz-1)+dimx*dimy*dimz)= psi(ix,iy,iz)
+      enddo
+   enddo
+enddo
+
+
+endsubroutine
+
+
+
 
 

@@ -92,6 +92,7 @@ if(infile.ne.0) then
    call retrivefromdisk(counter)
    if(rank.eq.0)write(stdout,*) 'Load input from file'
    if(rank.eq.0)write(stdout,*) 'Free energy', free_energy
+   if(infile.eq.3)call mirror
    if(infile.ne.-1)infile = 2
 !   call update_matrix(flag)
    if(flag.eqv..true.) then
