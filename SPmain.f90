@@ -23,6 +23,7 @@ real*8, external :: rands
 logical flag
 character*10 filename
 integer j, i, ii, iii
+integer flagcrash
 
 stdout = 6
 
@@ -72,6 +73,9 @@ elseif (systemtype.eq.2) then
 call update_matrix_channel(flag) ! updates 'the matrix'
 elseif (systemtype.eq.3) then
 call update_matrix_channel_3(flag) ! updates 'the matrix'
+elseif (systemtype.eq.4) then
+call update_matrix_channel_4(flag) ! updates 'the matrix'
+
 endif
 
   if(flag.eqv..true.) then
@@ -108,9 +112,17 @@ do i = 1, nst
  if(rank.eq.0)write(stdout,*)'Switch to st = ', st
 do ii = 1, nsc
  sc = scs(ii)
+ flagcrash = 1
+do while(flagcrash.eq.1)
  if(rank.eq.0)write(stdout,*)'Switch to sc = ', sc
+ flagcrash = 0
+ call solve(flagcrash)
+ if(flagcrash.eq.1) then
+    if(i.eq.1)stop
+    st = st + sts(i-1)
+ endif
+enddo
 
- call solve
  counterr = counter + i + ii  - 1
  call Free_Energy_Calc(counterr)
  if(rank.eq.0)write(stdout,*) 'Free energy after solving', free_energy

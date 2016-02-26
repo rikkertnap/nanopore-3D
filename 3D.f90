@@ -1,4 +1,4 @@
-subroutine solve
+subroutine solve(flagcrash)
 
 use system
 use const
@@ -14,6 +14,7 @@ use ematrix
 implicit none
 external fcn
 integer i, ix, iy, iz
+integer flagcrash
 
 !-----  varables de la resolucion -----------
 
@@ -130,8 +131,8 @@ if(infile.ne.-1) then
   if((ier.lt.0).or.(.not.((norma.gt.0).or.(norma.lt.0))).or.(norma.gt.error)) then ! exploto...
     if(rank.eq.0)write(stdout,*) 'solve: Error in solver: ', ier
     if(rank.eq.0)write(stdout,*) 'solve: norma ', norma
-    call MPI_FINALIZE(ierr) ! finaliza MPI
-    stop
+    flagcrash = 1
+    return
   endif
 endif    
 
@@ -154,6 +155,9 @@ infile = 2 ! no vuelve a leer infile
 !   enddo
 !  close(45)
 ! endif
+
+flagcrash = 0
+return
 
 end subroutine
 
