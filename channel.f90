@@ -661,7 +661,7 @@ x = MATMUL(IMAT,v)
 
 hcyl = x(3) ! height of the cylinder
 
-npointz = nint(float(NBRUSH)*hcyl/(2.0*pi*rchannel))   ! number of sites along the z - coordinate, first site is at bdist
+npointz = nint(float(NBRUSH)*hcyl/(2.0*pi*rchannel)/cos(30/180*pi))   ! number of sites along the z - coordinate, first site is at bdist
                              ! rounds to nearest number to avoid rounding errors later
 
 npointt = NBRUSH    ! number of sites along the tetha coordinate
