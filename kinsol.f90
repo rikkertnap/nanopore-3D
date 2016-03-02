@@ -42,7 +42,7 @@ common /psize/ neq
 
 
 do i = 1, dimx*dimy*dimz
-   pp(i) = 0.1 / (1.0+exp(-udata(i)))
+   pp(i) = 0.1 / (1.0+exp(1.0-udata(i)))
 enddo
 if(electroflag.eq.1) then
 do i = dimx*dimy*dimz+1, 2*dimx*dimy*dimz
@@ -110,7 +110,7 @@ msbpre  = 10 ! maximum number of iterations without prec. setup (?)
 fnormtol = 1.0d-6 ! Function-norm stopping tolerance
 scsteptol = 1.0d-6 ! Function-norm stopping tolerance
 
-maxl = 500 ! maximum Krylov subspace dimesion (?!?!?!) ! Esto se usa para el preconditioner
+maxl = 2000 ! maximum Krylov subspace dimesion (?!?!?!) ! Esto se usa para el preconditioner
 maxlrst = 5 ! maximum number of restarts
 max_niter = 2000
 globalstrat = 0

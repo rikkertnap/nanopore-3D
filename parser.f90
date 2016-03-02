@@ -58,7 +58,8 @@ long = ndi
 cuantas = ndi
 readchains = ndi
 infile = ndi
-randominput = ndi
+randominput = 0
+epstype = 0
 cutoff = ndr
 lseg = ndr
 nst = ndi
@@ -147,6 +148,11 @@ do while (ios == 0)
  case ('randominput')
    read(buffer, *, iostat=ios) randominput
    if(rank.eq.0)write(stdout,*) 'parser:','Set ',trim(label),' = ',trim(buffer)
+
+ case ('epstype')
+   read(buffer, *, iostat=ios) epstype
+   if(rank.eq.0)write(stdout,*) 'parser:','Set ',trim(label),' = ',trim(buffer)
+
 
  case ('readchains')
    read(buffer, *, iostat=ios) readchains
@@ -393,7 +399,6 @@ if(ncha.eq.ndi)call stopundef('ncha')
 if(long.eq.ndi)call stopundef('long')
 if(cuantas.eq.ndi)call stopundef('cuantas')
 if(infile.eq.ndi)call stopundef('infile')
-if(randominput.eq.ndi)call stopundef('randominput')
 if(cutoff.eq.ndr)call stopundef('Xucutoff')
 if(readchains.eq.ndi)call stopundef('readchains')
 if(systemtype.eq.ndi)call stopundef('systemtype')

@@ -35,12 +35,13 @@ integer i
 real*8 volxx1(dimx,dimy,dimz)
 real*8 volxx(dimx,dimy,dimz)
 real*8 x(3), v(3), hcyl
+integer nbands
 
 cutarea = 0.0 ! throw away cells that have less area than cutarea x area of the cell with largest area  
 sumpolseg = 0.0
 
 rchannel2 = rchannel**2
-rchannelL2 = (rchannel - delta)**2
+rchannelL2 = (rchannel - 3*delta)**2
 rchannelS2 = (rchannel + delta)**2
 
 ! clear all
@@ -74,6 +75,20 @@ ncha = 0
 !! eps
  voleps1 = voleps1-volprot1
  voleps1 = voleps1*eepsc
+
+! epstype
+
+
+select case (epstype)
+case (1)
+nbands = dimz/8
+do iz = 1, dimz
+if (mod(int((iz-1)/nbands),2).eq.1) then
+voleps1(:,:,iz) = 0.0
+endif
+enddo
+endselect
+
 
 !! charge
  volq1 = volprot1-volq1
@@ -136,7 +151,8 @@ write(stdout,*) 'channel:', 'update_matrix: Total discretized volumen =', (dimx*
 write(stdout,*) 'channel:', 'number of polymers in system =', sumpolseg 
 write(stdout,*) 'channel:', 'surface area =', area
 write(stdout,*) 'channel:', 'surface density =', sumpolseg/area
-write(stdout,*) 'channel:', 'surface density expected from input =', 1.0/(((2.0*pi*rchannel)/float(NBRUSH))**2)
+write(stdout,*) 'channel:', 'surface density expected from input =', &
+ float(NBRUSH)/(2.0*pi*rchannel)/cos(30.0/180.0*pi)/(2.0*pi*rchannel/float(NBRUSH))
 endif
 endif
 
@@ -194,12 +210,13 @@ integer i
 real*8 volxx1(dimx,dimy,dimz)
 real*8 volxx(dimx,dimy,dimz)
 real*8 x(3), v(3), hcyl
+integer nbands
 
 cutarea = 0.0 ! throw away cells that have less area than cutarea x area of the cell with largest area  
 sumpolseg = 0.0
 
 rchannel2 = rchannel**2
-rchannelL2 = (rchannel - delta)**2
+rchannelL2 = (rchannel - 3*delta)**2
 rchannelS2 = (rchannel + delta)**2
 
 ! clear all
@@ -348,13 +365,14 @@ integer p1(maxvolx,3)
 integer i
 real*8 volxx1(dimx,dimy,dimz)
 real*8 volxx(dimx,dimy,dimz)
+integer nbands
 
 
 cutarea = 0.0 ! throw away cells that have less area than cutarea x area of the cell with largest area  
 sumpolseg = 0.0
 
 rchannel2 = rchannel**2
-rchannelL2 = (rchannel - delta)**2
+rchannelL2 = (rchannel - 3*delta)**2
 rchannelS2 = (rchannel + delta)**2
 
 ! clear all
@@ -386,14 +404,24 @@ ncha = 0
 
  call newintegrateg_c(rchannel2,originc,npoints,volx1,sumvolx1, com1, p1, ncha1, volxx1)
 
-!! volume
-! temp = 4.0/3.0*pi*Aell(1,j)*Aell(2,j)*Aell(3,j)/(sumvolprot1*delta**3) ! rescales volume
-! volprot1 = volprot1*temp                                                 ! OJO: transformation should mantain cell volumen
-! sumvolprot1 = sumvolprot1*temp
-
 !! eps
  voleps1 = voleps1-volprot1
  voleps1 = voleps1*eepsc
+
+! epstype
+
+select case (epstype)
+
+case (1)
+nbands = dimz/8
+do iz = 1, dimz
+if (mod(int((iz-1)/nbands),2).eq.1) then
+voleps1(:,:,iz) = 0.0
+endif
+enddo
+
+endselect
+
 
 !! charge
  volq1 = volprot1-volq1
@@ -470,6 +498,7 @@ call savetodisk(volq, title, counter)
 title = 'avgrf'
 counter = 1
 call savetodisk(volxx, title, counter)
+
 end subroutine
 
 subroutine integrate_c(rchannel2,originc, npoints,volprot,sumvolprot, flag)
@@ -673,13 +702,23 @@ do jjjt = 1, npointt
 
 select case (randominput)
  
+ case(0)
+ rtetha = 0.0
+ rz = 0.0
+
  case(1)
+ 
  rtetha = disp/2.0/(2.0*pi*rchannel)*(rands(seed)-1.0)
  rz = disp/delta*hcyl/float(dimz)/2.0*(rands(seed)-1.0)
 
  case(2)
  rtetha = 0.0
- rz = 2.0*disp*(float(mod(jjjz,2))-0.5)
+ rz = disp*(float(mod(jjjz,2))-0.5)
+
+ case(20)
+ rtetha = 0.0
+ rz = disp*(float(mod(jjjz,4))-0.5)
+
 
  case(3)
  rtetha = 2.0*disp*(float(mod(jjjt,2))-0.5)
@@ -687,8 +726,42 @@ select case (randominput)
 
  case(4)
  rtetha = 0.0
- rz = (float(jjjt)/float(npointt)-0.5)*2.0*disp
+ rz = (float(jjjt)/float(npointt)-0.5)*4.0*disp
 
+ case(40)
+ disp = hcyl/8.0
+ rtetha = 0.0
+ rz = (((float(jjjt)-1)/float(npointt))-0.5)*disp*2.0
+ rz = rz + disp/2.0*(float(mod(jjjz,2))-0.5)
+
+ case(50)
+ disp = hcyl/8.0
+ rtetha = 0.0
+
+ if(jjjt.lt.npointt/2) then
+ rz = (((float(jjjt)-1)/float(npointt/2))-0.5)*disp*4.0
+ rz = rz + disp/2.0*(float(mod(jjjz,2))-0.5)
+ else
+ rz = (((float(jjjt)-1-npointt/2)/float(npointt/2))-0.5)*disp*4.0
+ rz = rz + disp/2.0*(float(mod(jjjz,2))-0.5)
+ endif
+
+ case(51)
+ disp = hcyl/8.0
+ rtetha = 0.0
+ rz = (((float(jjjt)-1)/float(npointt))-0.5)*disp*4.0
+ rz = rz + disp/2.0*(float(mod(jjjz,2))-0.5)
+
+ case(52)
+ disp = hcyl/8.0
+ rtetha = 0.0
+ rz = (((float(jjjt)-1)/float(npointt))-0.5)*disp*3.0
+ rz = rz + disp/2.0*(float(mod(jjjz,2))-0.5)
+
+
+ case(41)
+ rtetha = 2.0*disp*(float(mod(jjjt,2))-0.5)
+ rz = (float(jjjt)/float(npointt)-0.5)*4.0*disp
 
 endselect
 
@@ -700,20 +773,15 @@ x(3) = float(jjjz-1)/float(npointz)*hcyl+rz
 
 !x in  real space
 v = MATMUL(MAT,x)
-
-do j = 1,3
-    js(j) = floor(v(j)/delta)+1
-enddo
-jx = js(1)
-jy = js(2)
-jz = js(3)
-
 v(3) = v(3) + float(dimz/npointz)/2.0*delta ! centers the first row of polymers at the middle of the layer, useful to avoid numerical rounding errors.
 x = MATMUL(IMAT,v) ! and recalculates x due to the change in v
 
 do j = 1,3
     js(j) = floor(v(j)/delta)+1
 enddo
+
+js(3)=mod(js(3)+dimz-1,dimz)+1
+
 jx = js(1)
 jy = js(2)
 jz = js(3)

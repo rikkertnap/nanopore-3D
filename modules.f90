@@ -124,6 +124,7 @@ real*8 errel
 integer itmax
 integer infile
 integer randominput
+integer epstype
 integer verbose
 integer stdout
 endmodule

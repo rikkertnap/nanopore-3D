@@ -106,15 +106,14 @@ if(infile.ne.0) then
    endif
 
 endif
-
+ ii = 1
+ sc = scs(ii)
 do i = 1, nst
  st = sts(i)
  if(rank.eq.0)write(stdout,*)'Switch to st = ', st
-do ii = 1, nsc
- sc = scs(ii)
  flagcrash = 1
 do while(flagcrash.eq.1)
- if(rank.eq.0)write(stdout,*)'Switch to sc = ', sc
+ if(rank.eq.0)write(stdout,*)'Error, switch to sc = ', st
  flagcrash = 0
  call solve(flagcrash)
  if(flagcrash.eq.1) then
@@ -130,7 +129,6 @@ enddo
  if(rank.eq.0)write(stdout,*) 'Save OK'
  call store2disk(counterr)
 
-enddo
 enddo
 
 call endall
