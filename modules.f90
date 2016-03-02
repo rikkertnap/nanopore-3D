@@ -1,3 +1,10 @@
+module branches
+integer longb1,longb2,longb3, longbb
+integer branched
+integer indexncha
+endmodule
+
+
 module rotchain
 use ematrix, only : maxvolx
 real*8 rotangle(maxvolx)

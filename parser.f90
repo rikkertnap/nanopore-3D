@@ -13,6 +13,7 @@ use kai
 use kaist
 use s2d
 use channel
+use branches
 implicit none
 
 ! Input related variables
@@ -29,6 +30,7 @@ real*8 ndr
 
 ! not defined variables, change if any variable can take the value
 
+
 PBC = 1
 
 ndi = -1e5
@@ -38,6 +40,8 @@ verbose = 5
 stdout = 6
 
 electroflag = 1 ! system with electrostatics?
+
+branched = 0 ! branched chains?
 
 sigmar = 0.0 ! random sigma
 
@@ -144,6 +148,14 @@ do while (ios == 0)
  case ('electroflag')
    read(buffer, *, iostat=ios) electroflag
    if(rank.eq.0)write(stdout,*) 'parser:','Set ',trim(label),' = ',trim(buffer)
+
+ case ('branched')
+   read(buffer, *, iostat=ios) branched
+    
+ if(branched.eq.1) then
+   read(fh, *) basura
+   read(fh, *)longb1, longb2, longb3
+ endif
 
  case ('randominput')
    read(buffer, *, iostat=ios) randominput
@@ -284,8 +296,6 @@ do while (ios == 0)
    read(fh,*)scs(i)
    enddo 
 
-
-
  case ('Xucutoff')
    read(buffer, *, iostat=ios) cutoff
    if(rank.eq.0)write(stdout,*) 'parser:','Set ',trim(label),' = ',trim(buffer)
@@ -387,6 +397,11 @@ if(systemtype.eq.2) then
   stop
  endif
 endif
+
+if (branched.eq.1) then
+ longbb = long
+ long = longbb + longb1 + longb2 + longb3
+endif 
 
 if(vtkflag.eq.ndi)call stopundef('vtkflag')
 if(dimx.eq.ndi)call stopundef('dimx')

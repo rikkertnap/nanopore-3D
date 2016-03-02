@@ -5,6 +5,7 @@ use const
 use system
 use chainsdat
 use MPI
+use branches
 implicit none
 integer i,il,ll
 integer j
@@ -15,6 +16,8 @@ real*8 theta,theta1
 integer iglobal
 integer nchas
 integer ii, jj
+
+indexncha = 1
 
 newcuantas = 0
 
@@ -48,7 +51,14 @@ iglobal=1
 
 do while (il.lt.cuantas)
 
+ select case (branched)
+
+ case (0)
   call cadenas72mr(chains,nchas,gauches)
+ case (1)
+  call cadenas_b(chains,nchas,gauches) ! branched chains
+
+endselect
 
   do i=1,nchas
       il=il+1
