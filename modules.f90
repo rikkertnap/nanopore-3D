@@ -1,5 +1,5 @@
 module branches
-integer longb1,longb2,longb3, longbb
+integer longb(3), longbb
 integer branched
 integer indexncha
 endmodule

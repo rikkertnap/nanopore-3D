@@ -154,7 +154,7 @@ do while (ios == 0)
     
  if(branched.eq.1) then
    read(fh, *) basura
-   read(fh, *)longb1, longb2, longb3
+   read(fh, *)longb(1), longb(2), longb(3)
  endif
 
  case ('randominput')
@@ -400,7 +400,7 @@ endif
 
 if (branched.eq.1) then
  longbb = long
- long = longbb + longb1 + longb2 + longb3
+ long = longbb + longb(1) + longb(2) + longb(3)
 endif 
 
 if(vtkflag.eq.ndi)call stopundef('vtkflag')

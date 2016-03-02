@@ -8,11 +8,15 @@ integer i,state,ii,j,ive,jve
 real*8 rn,state1,sitheta,cotheta,dista
 real*8 siphip,cophip
 character*1 test
-real*8 m(3,3),mm(3,3),tt(3,3),tp(3,3),tm(3,3)
-real*8 x(3),xend(3,200),xendr(3,200)
+real*8 m(3,3),m1(3,3),mm(3,3),tt(3,3),tp(3,3),tm(3,3)
+real*8 x(3),xend(3,200), xendr(3,200)
 integer nchas
 real*8 rands
 integer ng
+integer kkk, bbb, lll
+real*8 tol
+
+tol = 1.0d-4
 
 sitheta=sin(68.0*pi/180.0)
 cotheta=cos(68.0*pi/180.0)
@@ -22,6 +26,7 @@ cophip=cos(120.0*pi/180.0)
 nchas=0
 
 do while (nchas.eq.0) 
+
  x(1)=lseg
  x(2)=0.0
  x(3)=0.0
@@ -62,6 +67,8 @@ do while (nchas.eq.0)
       
  222  rn=rands(seed)
       
+ kkk = 2
+
  state1=0.0
      
  m(1,1)=cotheta
@@ -79,13 +86,20 @@ do while (nchas.eq.0)
  x(2)=m(2,1)*lseg
  x(3)=m(3,1)*lseg
       
- xend(1,2)=lseg+x(1)
- xend(2,2)=x(2)
- xend(3,2)=x(3)
+ xend(1,kkk)=lseg+x(1)
+ xend(2,kkk)=x(2)
+ xend(3,kkk)=x(3)
       
  ng = 0 ! number of trans-bonds
 
- do i=3,long
+
+!!! backbone 
+
+
+ do i=3,longbb
+
+ kkk = kkk + 1
+
          rn=rands(seed)
          state=int(rn*3)
          if (state.eq.3) then 
@@ -99,7 +113,6 @@ do while (nchas.eq.0)
              m(ii,j)=mm(ii,j)
           enddo
           enddo
-            ng = ng + 1
          elseif (state.eq.1) then
             call mrrrr(m,tp,mm)
           do ii=1,3
@@ -120,45 +133,81 @@ do while (nchas.eq.0)
          x(2)=m(2,1)*lseg
          x(3)=m(3,1)*lseg
          
-         xend(1,i)=xend(1,i-1)+x(1)
-         xend(2,i)=xend(2,i-1)+x(2)
-         xend(3,i)=xend(3,i-1)+x(3)
+         xend(1,kkk)=xend(1,kkk-1)+x(1)
+         xend(2,kkk)=xend(2,kkk-1)+x(2)
+         xend(3,kkk)=xend(3,kkk-1)+x(3)
  enddo       
-      
+
+ m1 = m
+ bbb = kkk ! position of branching
+
+ do j = 1, 3 ! branches
+
+   lll = bbb ! index for xend
+   m = m1
+
+   do i = 1, longb(j)
+
+   kkk = kkk + 1
+    
+   select case (j)
+     case (1) 
+        call mrrrr(m,tt,mm) ! trans
+     case (2)
+         call mrrrr(m,tp,mm)
+     case (3)
+         call mrrrr(m,tm,mm)
+   end select
+
+         m=mm
+
+         x(1)=m(1,1)*lseg
+         x(2)=m(2,1)*lseg
+         x(3)=m(3,1)*lseg
+
+         xend(1,kkk)=xend(1,lll)+x(1)
+         xend(2,kkk)=xend(2,lll)+x(2)
+         xend(3,kkk)=xend(3,lll)+x(3)
+    
+         lll = kkk ! new index por xend
+
+   enddo ! i
+enddo ! j
+
  dista=0.0
- do ive=4,long
-         do jve=1,ive-3
+ do ive=1,long ! check all possible pairs for self avoiding
+         do jve=ive+1,long 
             dista=(xend(1,jve)-xend(1,ive))**(2.0)
             dista=dista+(xend(2,jve)-xend(2,ive))**(2.0)
             dista=dista+(xend(3,jve)-xend(3,ive))**(2.0)
-            dista=sqrt(dista)
+            dista=sqrt(dista)+tol
             if (dista.lt.lseg) then
+!               print*, jve, xend(:,jve)
+!               print*, ive, xend(:,ive)
+!               print*, dista
+           
                goto 222
             endif
          enddo
  enddo
 
-
- do i=1,300
+ do i=1,50
          test='S'
          call rota36(xend,xendr,long,test)
          if (test.eq.'N')cycle
          nchas=nchas+1
-         call print_ent(xendr)
+!         call print_ent(xendr)
          do j=1,long
             chains(1,j,nchas)=xendr(1,j)
             chains(2,j,nchas)=xendr(2,j)
             chains(3,j,nchas)=xendr(3,j)
          enddo
 
-          
-
-            gauches(nchas) = ng
+         gauches(nchas) = ng
          if (nchas.eq.25)exit
  enddo   
 enddo
 
-stop
 return
 end
 
@@ -173,23 +222,30 @@ implicit none
 
 real*8 xend(3,200)
 integer i
+character*21 filename
 
-indexncha = indexncha + 1
+
 
 ! Imprime cadenas en formato ENT
 
+write(filename,'(A6,A1, I3.3, A4)') 'cadena','.', indexncha, '.ent'
+
+open(unit=4400, file=filename)
+
 do i=1, long ! Imprime todo
-WRITE((4400+indexncha),'(A6,I5,A3,I12,A4,F8.3,F8.3,F8.3)') &
+WRITE(4400,'(A6,I5,A3,I12,A4,F8.3,F8.3,F8.3)') &
 "HETATM",i,"  C",i,"    ",xend(1, i)*10,  & 
 xend(2, i)*10,xend(3, i)*10
 end do
 
 do i = 1, long ! Une segmentos
-WRITE((4000+indexncha),'(A6,I5,I5)')"CONECT", i, i+1
+WRITE((4400),'(A6,I5,I5)')"CONECT", i, i+1
 end do
 
-WRITE((4000+indexncha),*)"END"
+WRITE(4400,*)"END"
 
-close(4000+indexncha)
+close(4400)
+indexncha = indexncha + 1
+if(indexncha.eq.1000)stop
 end subroutine
 
