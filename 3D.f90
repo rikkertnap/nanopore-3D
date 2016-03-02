@@ -11,6 +11,7 @@ use bulk
 use MPI
 use ellipsoid
 use ematrix
+use mparameters_monomer
 implicit none
 external fcn
 integer i, ix, iy, iz, ip
@@ -130,7 +131,7 @@ do ix=1,dimx
        xh(ix,iy,iz)=x1(ix+dimx*(iy-1)+dimx*dimy*(iz-1))
 
        do ip=1, N_poorsol
-          xtotal(ix,iy,iz,ip)=xtotal(ix+dimx*(iy-1)+dimx*dimy*(iz-1)+ip*mcells)
+          xtotal(ix,iy,iz,ip)=x1(ix+dimx*(iy-1)+dimx*dimy*(iz-1)+ip*ncells)
        enddo
 
        if(electroflag.eq.1)psi(ix,iy,iz)=x1(ix+dimx*(iy-1)+dimx*dimy*(iz-1)+(N_poorsol+1)*ncells)
@@ -150,7 +151,7 @@ if(infile.ne.-1) then
 endif    
 
 ! No exploto, guardo xflag
-do i = 1, eqs*n
+do i = 1, eqs*ncells
   xflag(i) = x1(i) ! xflag sirve como input para la proxima iteracion
 enddo
 infile = 2 ! no vuelve a leer infile

@@ -31,24 +31,35 @@ end
 subroutine fkpset(udata, uscale, fdata, fscale,vtemp1,vtemp2, ier)
 use system
 use mkinsol
+use mparameters_monomer
 implicit none
 
 integer ier
 integer*8 neq, i
 double precision udata(*), uscale(*), fdata(*), fscale(*)
 double precision vtemp1(*), vtemp2(*)
+integer ncells
 
 common /psize/ neq
 
+ncells =  dimx*dimy*dimz
 
-do i = 1, dimx*dimy*dimz
+do i = 1, ncells
    pp(i) = 0.1 / (1.0+exp(1.0-udata(i)))
+! pp(i) = 1
 enddo
+
+do i = ncells+1, (N_poorsol+1)*ncells
+   pp(i) = 0.1 / (1.0+exp(1.0-udata(i)))
+! 0.1 / (1.0+exp(1.0-udata(i)))
+enddo
+
 if(electroflag.eq.1) then
-do i = dimx*dimy*dimz+1, 2*dimx*dimy*dimz
+do i = ncells*(N_poorsol+1), ncells*(N_poorsol+2)
    pp(i) = 1.0
 enddo
 endif
+
    ier = 0
 return
 end
@@ -86,6 +97,7 @@ end
 subroutine call_kinsol(x1_old, xg1_old, ier)
 use system
 use const
+use mparameters_monomer
 implicit none
 integer i
 real*8 x1(eqs*dimx*dimy*dimz), xg1(eqs*dimx*dimy*dimz)
@@ -102,9 +114,11 @@ integer*8 neq ! Kinsol number of equations
 integer*4 max_niter
 common /psize/ neq ! Kinsol
 integer ierr
+integer ncells
+
 
 ! INICIA KINSOL
-
+ncells = dimx*dimy*dimz
 neq = eqs*dimx*dimy*dimz
 msbpre  = 10 ! maximum number of iterations without prec. setup (?)
 fnormtol = 1.0d-6 ! Function-norm stopping tolerance
@@ -134,12 +148,17 @@ call fkinsetrin('FNORM_TOL', fnormtol, ier)
 call fkinsetrin('SSTEP_TOL', scsteptol, ier)
 call fkinsetiin('MAX_NITER', max_niter, ier)
 
-do i = 1, dimx*dimy*dimz  !constraint vector
-   constr(i) = 0.0
+do i = 1, ncells  !constraint vector
+   constr(i) = 2.0 ! xh > 0
 enddo
+
+do i = ncells+1, (N_poorsol+1)*ncells
+   constr(i) = 1.0 ! xtotal >= 0
+enddo
+
 if(electroflag.eq.1) then
-do i = dimx*dimy*dimz+1, 2*dimx*dimy*dimz  !constraint vector
-   constr(i) = 2.0
+do i = ncells*(N_poorsol+1), ncells*(N_poorsol+2)  !constraint vector
+   constr(i) = 0.0 ! no contraint for psi
 enddo
 endif
 

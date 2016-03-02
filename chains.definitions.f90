@@ -1,10 +1,8 @@
 subroutine chains_definitions
 
 use chainsdat
-
+use MPI
 implicit none
-include 'mpif.h'
-include 'MPI.h'
 integer i, ii
 
 ALLOCATE (segtype(long)) 

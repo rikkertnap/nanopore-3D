@@ -11,6 +11,7 @@ use mkinsol
 use ellipsoid
 use MPI
 use kai
+use mparameters_monomer
 implicit none
 
 ! fields_fkfun

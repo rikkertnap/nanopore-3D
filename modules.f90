@@ -77,7 +77,7 @@ real*8 vpol
 real*8 vpol0
 real*8 vsol0
 real*8 vsalt
-real*8 zpos,zneg, zpol
+real*8 zpos,zneg
 real*8 benergy
 endmodule
 
@@ -131,7 +131,7 @@ module const
 real*8 dielW, dielP, dielS
 real*8 constqE
 real*8 dielPr, dielSr
-real*8 pKw
+real*8 pKw, Kw
 real*8 pi 
 real*8, parameter :: Na = 6.02d23 
 real*8 constq
@@ -169,7 +169,6 @@ endmodule
 
 module bulk
 real*8 expmupos,expmuneg,expmuHplus,expmuOHmin
-real*8 K0
 real*8 xsolbulk, xposbulk, xnegbulk, xHplusbulk,xOHminbulk
 endmodule
 
@@ -212,7 +211,6 @@ module inputtemp
 real*8 xsalt
 real*8 pHbulk
 real*8 pOHbulk
-real*8 pKa, Ka
 real*8 csalt
 real*8 cHplus, cOHmin
 end module

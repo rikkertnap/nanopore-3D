@@ -14,6 +14,7 @@ subroutine initconst
 use const
 use molecules
 use ellipsoid
+use mparameters_monomer
 implicit none
 pi = acos(-1.0)
 seed = 938121
@@ -42,7 +43,9 @@ use MPI
 use ellipsoid
 use chainsdat
 use inputtemp
+use mparameters_monomer
 implicit none
+integer im
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! Open common files
@@ -150,13 +153,14 @@ use fields_fkfun
 use MPI
 use kinsol
 use kaist
+use mparameters_monomer
 implicit none
 integer cccc
 character*20 filename
 character*5  title
 real*8 temp(dimx,dimy,dimz)
 real*8 sumpol
-integer ix,iy,iz
+integer ix,iy,iz, im
 !----------------------------------------------------------
 !  OUTPUT
 !----------------------------------------------------------
@@ -258,7 +262,9 @@ endif
   do ix = 1, dimx
   do iy = 1, dimy
   do iz = 1, dimz
-  sumpol = sumpol + avpol(ix,iy,iz)*(delta**3)*(1.0-volprot(ix,iy,iz))/vpol/vsol
+  do im = 1, N_monomer
+  sumpol = sumpol + avpol(ix,iy,iz,im)*(delta**3)*(1.0-volprot(ix,iy,iz))/vpol/vsol
+  enddo
   enddo
   enddo
   enddo

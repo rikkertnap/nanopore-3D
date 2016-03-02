@@ -20,6 +20,7 @@ use ellipsoid
 use transform
 use kaist
 use conformations
+use mparameters_monomer
 implicit none
 
 integer looped
@@ -34,6 +35,7 @@ real*8 F_Mix_OHmin, F_gauche, F_Conf, F_Eq, F_vdW, F_eps, F_electro
 real*8 pro0(cuantas, maxcpp)
 real*8 entropy(dimx,dimy,dimz)
 character*5  title
+real*8 xtotalsum(dimz,dimy,dimz)
  
 ! MPI
 integer stat(MPI_STATUS_SIZE) 
@@ -46,7 +48,7 @@ integer err
 ! Dummies
 integer ix, iy, iz, i, ii, ax, ay, az, jj
 integer jx, jy, jz,iii
-
+integer im, ip, ipp
 real*8 gradpsi2
 real*8 fv, fv2
 
@@ -310,20 +312,32 @@ endif
       do ix  = 1, dimx
       do iy  = 1, dimy
       do iz  = 1, dimz
+
+      do im = 1, N_monomer
       
       fv=(1.0-volprot(ix,iy,iz))
 
-      F_Eq = F_Eq + fdis(ix, iy, iz)*dlog(fdis(ix, iy, iz)) &
-      *avpol(ix,iy,iz)/vpol*fv
+      if(zpol(im).ne.0) then
 
-      F_Eq = F_Eq + (1.0-fdis(ix,iy,iz)) &
-      *dlog(1.0-fdis(ix, iy,iz))*avpol(ix, iy,iz)/vpol*fv
+      F_Eq = F_Eq + fdis(ix,iy,iz,im)*dlog(fdis(ix,iy,iz,im)) &
+      *avpol(ix,iy,iz,im)/vpol*fv
 
-      F_Eq = F_Eq + (1.0-fdis(ix, iy,iz))*dlog(K0)*avpol(ix, iy,iz)/vpol*fv
+      F_Eq = F_Eq + (1.0-fdis(ix,iy,iz,im)) &
+      *dlog(1.0-fdis(ix,iy,iz,im))*avpol(ix,iy,iz,im)/vpol*fv
 
-      F_Eq = F_Eq + (1.0-fdis(ix, iy,iz)) &
-      *(-dlog(expmuHplus))*avpol(ix, iy, iz)/vpol*fv
+      F_Eq = F_Eq + (1.0-fdis(ix,iy,iz,im))*dlog(K0(im))*avpol(ix,iy,iz,im)/vpol*fv
 
+      select case (zpol(im))
+      case (-1) ! acid
+       F_Eq = F_Eq + (1.0-fdis(ix,iy,iz,im))*(-dlog(expmuHplus))*avpol(ix,iy,iz,im)/vpol*fv
+      case (1) ! base
+       F_Eq = F_Eq + (1.0-fdis(ix,iy,iz,im))*(-dlog(expmuOHmin))*avpol(ix,iy,iz,im)/vpol*fv
+      end select
+
+      endif ! zpol
+
+      enddo ! im
+   
       enddo
       enddo
       enddo
@@ -369,7 +383,6 @@ endif
             if(PBC(4).eq.3)jy = PBCREFI(jy,dimy)
             endif
 
-
             if(jz.lt.1) then
             if(PBC(5).eq.1)jz = PBCSYMI(jz,dimz)
             if(PBC(5).eq.3)jz = PBCREFI(jz,dimz)
@@ -385,8 +398,14 @@ endif
             if((jz.ge.1).and.(jz.le.dimz)) then
                 fv2 = (1.0-volprot(jx,jy,jz)) 
 
-                F_vdW = F_vdW - 0.5000*delta**3*xtotal(ix, iy, iz) &
-        *xtotal(jx, jy,jz)*Xu(ax, ay, az)*st*fv*fv2/(vpol*vpol*vsol*vsol)
+            do ip = 1, N_poorsol
+            do ipp = 1, N_poorsol
+ 
+                F_vdW = F_vdW - 0.5000*delta**3*xtotal(ix,iy,iz,ip) &
+        *xtotal(jx,jy,jz,ipp)*Xu(ax, ay, az)*st*st_matrix(ip,ipp)*fv*fv2/(vpol*vpol*vsol*vsol)
+ 
+            enddo ! ip
+            enddo ! ipp
 
             endif
             endif
@@ -429,7 +448,9 @@ endif
       do iy = 1, dimy
       do iz = 1, dimz
       fv=(1.0-volprot(ix,iy,iz))
-      F_eps = F_eps - avpol(ix,iy,iz)*voleps(ix,iy,iz)*(delta**3)/vpol/vsol*fv
+      do im = 1, N_monomer
+      F_eps = F_eps - avpol(ix,iy,iz,im)*voleps(ix,iy,iz)*(delta**3)/vpol/vsol*fv
+      enddo
       enddo
       enddo
       enddo
@@ -443,6 +464,12 @@ endif
 ! minimal F
 
       Free_Energy2 = 0.0
+
+      xtotalsum = 0.0
+      do ip = 1, N_poorsol
+      xtotalsum(:,:,:)= xtotalsum(:,:,:)+xtotal(:,:,:,ip)
+      enddo
+
 
         sumpi = 0.0
         sumrho=0.0
@@ -475,7 +502,7 @@ endif
          psiv(3) = psi(ix,iy,iz+1)-psi(ix,iy,iz)
 
          gradpsi2 = DOT_PRODUCT(MATMUL(TMAT, psiv), MATMUL(TMAT, psiv))
-         sumdiel = sumdiel + 0.5/constq*xtotal(ix,iy,iz)*gradpsi2*Depsfcn(ix,iy,iz)
+         sumdiel = sumdiel + 0.5/constq*xtotalsum(ix,iy,iz)*gradpsi2*Depsfcn(ix,iy,iz)
 
          enddo
          enddo

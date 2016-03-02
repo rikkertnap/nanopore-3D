@@ -1,11 +1,10 @@
 subroutine monomer_definitions
 
+use MPI
 use mparameters_monomer
 
 implicit none
 
-include 'mpif.h'
-include 'MPI.h'
 
 N_poorsol = 1 ! number of different kais
 N_monomer = 4 

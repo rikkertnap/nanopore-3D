@@ -15,6 +15,7 @@ use ematrix
 use ellipsoid
 use transform
 use kaist
+use mparameters_monomer
 implicit none
 
 integer*4 ier2
@@ -79,7 +80,7 @@ do ix=1,dimx
   do iz=1,dimz
      xh(ix,iy,iz)=x(ix+dimx*(iy-1)+dimx*dimy*(iz-1))
 
-     do ip = 1, N_poosol
+     do ip = 1, N_poorsol
       xtotal(ix,iy,iz,ip) = x(ix+dimx*(iy-1)+dimx*dimy*(iz-1)+ ip*ncells)
      enddo
      if(electroflag.eq.1)psi(ix,iy,iz)=x(ix+dimx*(iy-1)+dimx*dimy*(iz-1)+(N_poorsol+1)*ncells)   
@@ -166,11 +167,11 @@ endselect
 ! volume fraction and frdir
 
 fdis = 0.0
+avpol = 0.0
 
 do ix=1,dimx
  do iy=1,dimy
   do iz=1,dimz
-    avpol(ix,iy,iz)=0.0
     xpos(ix, iy, iz) = expmupos*(xh(ix, iy, iz)**vsalt)*dexp(-psi(ix, iy, iz)*zpos) ! ion plus volume fraction 
     xneg(ix, iy, iz) = expmuneg*(xh(ix, iy, iz)**vsalt)*dexp(-psi(ix, iy, iz)*zneg) ! ion neg volume fraction
     xHplus(ix, iy, iz) = expmuHplus*(xh(ix, iy, iz))*dexp(-psi(ix, iy, iz))           ! H+ volume fraction
@@ -285,7 +286,7 @@ do ix=1,dimx
             if((jx.ge.1).and.(jx.le.dimx)) then
             if((jy.ge.1).and.(jy.le.dimy)) then
             if((jz.ge.1).and.(jz.le.dimz)) then
-                fv = (1.0-volpirot(jx,jy,jz))
+                fv = (1.0-volprot(jx,jy,jz))
 
                do ip = 1, N_poorsol
                protemp=protemp + Xu(ax,ay,az)*st_matrix(hydroph(im),ip)*sttemp*xtotal(jx,jy,jz,ip)*fv
@@ -361,12 +362,12 @@ call MPI_Barrier(MPI_COMM_WORLD, err)
 ! Jefe
 if (rank.eq.0) then
 ! Junta avpol       
-  call MPI_REDUCE(avpol_tosend, avpol, ncells*N_monomers, MPI_DOUBLE_PRECISION, MPI_SUM,0, MPI_COMM_WORLD, err)
+  call MPI_REDUCE(avpol_tosend, avpol, ncells*N_monomer, MPI_DOUBLE_PRECISION, MPI_SUM,0, MPI_COMM_WORLD, err)
 endif
 ! Subordinados
 if(rank.ne.0) then
 ! Junta avpol       
-  call MPI_REDUCE(avpol_tosend, avpol, ncells*N_monomers, MPI_DOUBLE_PRECISION, MPI_SUM,0, MPI_COMM_WORLD, err) 
+  call MPI_REDUCE(avpol_tosend, avpol, ncells*N_monomer, MPI_DOUBLE_PRECISION, MPI_SUM,0, MPI_COMM_WORLD, err) 
 !!!!!!!!!!! IMPORTANTE, LOS SUBORDINADOS TERMINAN ACA... SINO VER !MPI_allreduce!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1
   goto 3333
 endif
