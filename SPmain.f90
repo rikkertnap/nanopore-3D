@@ -43,6 +43,9 @@ if(rank.eq.0)write(10,*) 'GIT Version: ', _VERSION
 if(rank.eq.0)write(10,*) 'MPI OK'
 call readinput
 
+call monomer_definitions
+call chains_definitions
+
 call initconst
 call inittransf ! Create transformation matrixes
 call initellpos ! calculate real positions for ellipsoid centers

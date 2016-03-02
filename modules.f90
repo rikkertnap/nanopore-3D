@@ -1,3 +1,13 @@
+module mparameters_monomer
+integer N_poorsol ! number of different kais
+integer N_monomer ! number of different monomer types
+real*8, allocatable :: st_matrix(:,:) ! interaction between monomer types in fraction of st, scaled by st-scale during running....
+integer, allocatable :: zpol(:)  ! charge of monomer segment: 1: base, -1: acid, 0:neutral
+integer, allocatable :: hydroph(:) ! 0: hydrophilic, 1 < x < N_poorsol, type of poor solvent
+real*8, allocatable ::  pKa(:), Ka(:), K0(:)
+endmodule mparameters_monomer
+
+
 module branches
 integer longb(3), longbb
 integer branched
@@ -46,7 +56,8 @@ endmodule
 module chainsdat
 integer cuantas 
 integer, allocatable :: newcuantas(:)
-integer long 
+integer long
+integer, allocatable :: segtype(:) ! sequence of the chain 
 integer ncha 
 real*8, ALLOCATABLE :: in1(:,:)  ! segment positions 
 integer ing ! number of gauches in current chain
@@ -84,7 +95,7 @@ endmodule
 module fields_fkfun
 use system
 use chainsdat
-real*8, allocatable :: xtotal(:, :, :) ! xtotal para poor solvent
+real*8, allocatable :: xtotal(:, :, :, :) ! xtotal para poor solvent
 real*8, allocatable :: psi(:, :, :) 
 real*8, allocatable :: q(:)
 real*8, allocatable :: sumgauche(:)
@@ -145,7 +156,7 @@ endmodule
 
 module results
 use system
-real*8, allocatable :: avpol(:,:,:)
+real*8, allocatable :: avpol(:,:,:,:) ! avpol ix iy iz im
 real*8, allocatable :: epsfcn(:,:,:)
 real*8, allocatable :: Depsfcn(:,:,:)
 real*8, allocatable :: xpos(:,:,:) ! pos ion
@@ -153,7 +164,7 @@ real*8, allocatable :: xneg(:,:,:) ! neg ioni
 real*8, allocatable :: qtot(:,:,:) ! Carga total
 real*8, allocatable :: xHplus(:,:,:) ! H+
 real*8, allocatable :: xOHmin(:,:,:) ! OH-
-real*8, allocatable :: fdis(:,:,:)
+real*8, allocatable :: fdis(:,:,:,:)
 endmodule
 
 module bulk

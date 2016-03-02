@@ -18,18 +18,20 @@ use kaist
 implicit none
 
 integer*4 ier2
-integer ntot
+integer ncells
 real*8 x(*),f(*)
 real*8 protemp
 integer i,j, ix, iy, iz, ii, ax, ay, az
+integer im, ip
 integer jx, jy, jz, jj
-real*8 xpot(dimx, dimy, dimz)
+real*8 xpot(dimx, dimy, dimz, N_monomer)
 ! Charge
 real*8 psitemp
 real*8 MV(3),MU(3),MW(3)
 real*8 MVV,MUU,MWW,MVU,MVW,MUW
 real*8 psivv,psiuu,psiww, psivu,psivw,psiuw
 real*8 psiv(3), epsv(3)
+real*8 xtotalsum(dimx,dimy,dimz)
 
 integer, external :: PBCSYMI, PBCREFI
 
@@ -39,8 +41,8 @@ real*8 sttemp
 integer tag
 parameter(tag = 0)
 integer err
-real*8 avpol_tosend(dimx,dimy,dimz)
-real*8 avpol_temp(dimx,dimy,dimz)
+real*8 avpol_tosend(dimx,dimy,dimz,N_monomer)
+real*8 avpol_temp(dimx,dimy,dimz,N_monomer)
 real*8 q_tosend, sumgauche_tosend
 real*8 gradpsi2
 real*8 fv
@@ -50,13 +52,14 @@ real*8 fv
 
 shift = 1.0d-200
 
+ncells = dimx*dimy*dimz ! numero de celdas
 
 ! Jefe
 
 if(rank.eq.0) then ! llama a subordinados y pasa vector x
    flagsolver = 1
    CALL MPI_BCAST(flagsolver, 1, MPI_INTEGER, 0, MPI_COMM_WORLD,err)
-   CALL MPI_BCAST(x, eqs*dimx*dimy*dimz , MPI_DOUBLE_PRECISION,0, MPI_COMM_WORLD,err)
+   CALL MPI_BCAST(x, eqs*ncells , MPI_DOUBLE_PRECISION,0, MPI_COMM_WORLD,err)
 endif
 
 !------------------------------------------------------
@@ -71,12 +74,16 @@ endif
 ! Recupera xh y psi desde x()
 
 psi = 0.0
-ntot = dimx*dimy*dimz ! numero de celdas
 do ix=1,dimx
  do iy=1,dimy
   do iz=1,dimz
      xh(ix,iy,iz)=x(ix+dimx*(iy-1)+dimx*dimy*(iz-1))
-     if(electroflag.eq.1)psi(ix,iy,iz)=x(ix+dimx*(iy-1)+dimx*dimy*(iz-1)+ntot)   
+
+     do ip = 1, N_poosol
+      xtotal(ix,iy,iz,ip) = x(ix+dimx*(iy-1)+dimx*dimy*(iz-1)+ ip*ncells)
+     enddo
+     if(electroflag.eq.1)psi(ix,iy,iz)=x(ix+dimx*(iy-1)+dimx*dimy*(iz-1)+(N_poorsol+1)*ncells)   
+
   enddo
  enddo
 enddo
@@ -158,6 +165,8 @@ endselect
 
 ! volume fraction and frdir
 
+fdis = 0.0
+
 do ix=1,dimx
  do iy=1,dimy
   do iz=1,dimz
@@ -166,25 +175,28 @@ do ix=1,dimx
     xneg(ix, iy, iz) = expmuneg*(xh(ix, iy, iz)**vsalt)*dexp(-psi(ix, iy, iz)*zneg) ! ion neg volume fraction
     xHplus(ix, iy, iz) = expmuHplus*(xh(ix, iy, iz))*dexp(-psi(ix, iy, iz))           ! H+ volume fraction
     xOHmin(ix, iy,iz) = expmuOHmin*(xh(ix,iy,iz))*dexp(+psi(ix,iy,iz))           ! OH-  volume fraction
-    fdis(ix,iy,iz)=1.0 /(1.0 + xHplus(ix,iy,iz)/(K0*xh(ix,iy,iz)) )
+
+     do im =1,N_monomer
+        if (zpol(im).eq.1) then !BASE
+          fdis(ix,iy,iz,im) = 1.0 /(1.0 + xOHmin(ix,iy,iz)/(K0(im)*xh(ix,iy,iz)))
+        else if (zpol(im).eq.-1) then !ACID
+          fdis(ix,iy,iz,im) = 1.0 /(1.0 + xHplus(ix,iy,iz)/(K0(im)*xh(ix,iy,iz)))
+        endif
+     enddo
+
    enddo
  enddo  
 enddo
 
 
-! Calculo de xtotal para poor solvent
-! en el lattice
-do ix=1,dimx
- do iy=1,dimy
-  do iz=1,dimz
-   xtotal(ix, iy, iz) = 1.0-xpos(ix, iy,iz) - xneg(ix, iy, iz)- xh(ix, iy, iz) - xHplus(ix, iy, iz) - xOHmin(ix, iy, iz) ! xtotal es todo menos solvente e iones
-  enddo
- enddo
-enddo
-
-
 ! Compute dielectric permitivity
-call dielectfcn(xtotal,volprot,epsfcn,Depsfcn)
+
+xtotalsum = 0.0 ! sum of all polymers
+do ip = 1, N_poorsol
+xtotalsum(:,:,:) = xtotalsum(:,:,:) + xtotal(:,:,:,ip)
+enddo
+ 
+call dielectfcn(xtotalsum,volprot,epsfcn,Depsfcn)
 
 !------------------------------------------------------------------------
 ! PDFs polimero
@@ -199,20 +211,34 @@ call dielectfcn(xtotal,volprot,epsfcn,Depsfcn)
 
 sttemp = st/(vpol*vsol)
 
+do im = 1, N_monomer ! loop over different monomer types
+
 do ix=1,dimx
  do iy=1,dimy
    do iz=1,dimz
 
      fv = (1.0 - volprot(ix,iy,iz))
+     xpot(ix, iy, iz, im) = xh(ix,iy,iz)**vpol
+     xpot(ix, iy, iz, im) = xpot(ix,iy,iz, im)*dexp(voleps(ix,iy,iz))
 
-     xpot(ix, iy, iz) = xh(ix,iy,iz)**vpol/fdis(ix,iy,iz)*dexp(-psi(ix, iy, iz)*zpol)
-     xpot(ix, iy, iz) = xpot(ix,iy,iz)*dexp(voleps(ix,iy,iz))
-     
+! Electrostatics
+
+     if(zpol(im).ne.0.0) then
+         xpot(ix,iy,iz,im) =  xpot(ix,iy,iz,im)/fdis(ix,iy,iz,im)*dexp(-psi(ix,iy,iz)*zpol(im))
+     endif
+  
+! Dielectrics
+
      gradpsi2 = (psi(ix+1,iy,iz)-psi(ix,iy,iz))**2+(psi(ix,iy+1,iz)-psi(ix,iy,iz))**2+(psi(ix,iy,iz+1)-psi(ix,iy,iz))**2 
+
 !     gradpsi2 = (psi(ix+1,iy,iz)-psi(ix-1,iy,iz))**2+(psi(ix,iy+1,iz)-psi(ix,iy-1,iz))**2+(psi(ix,iy,iz+1)-psi(ix,iy,iz-1))**2 
 !     xpot(ix, iy, iz) = xpot(ix,iy,iz)*exp(-Depsfcn(ix,iy,iz)*(gradpsi2)*constqE)
 
-     xpot(ix,iy,iz) = xpot(ix,iy,iz)*exp(Depsfcn(ix,iy,iz)*(gradpsi2)/constq/2.0*vpol/fv)
+     xpot(ix,iy,iz,im) = xpot(ix,iy,iz,im)*exp(Depsfcn(ix,iy,iz)*(gradpsi2)/constq/2.0*vpol/fv)
+
+! Poor solvent
+
+     if(hydroph(im).ne.0) then
 
      protemp=0.0
 
@@ -259,8 +285,12 @@ do ix=1,dimx
             if((jx.ge.1).and.(jx.le.dimx)) then
             if((jy.ge.1).and.(jy.le.dimy)) then
             if((jz.ge.1).and.(jz.le.dimz)) then
-                fv = (1.0-volprot(jx,jy,jz))
-                protemp=protemp + Xu(ax,ay,az)*sttemp*xtotal(jx, jy, jz)*fv
+                fv = (1.0-volpirot(jx,jy,jz))
+
+               do ip = 1, N_poorsol
+               protemp=protemp + Xu(ax,ay,az)*st_matrix(hydroph(im),ip)*sttemp*xtotal(jx,jy,jz,ip)*fv
+               enddo ! ip
+
             endif
             endif
             endif
@@ -269,11 +299,15 @@ do ix=1,dimx
       enddo
      enddo
 
-     xpot(ix,iy,iz) = xpot(ix,iy,iz)*dexp(protemp)
+     xpot(ix,iy,iz,im) = xpot(ix,iy,iz,im)*dexp(protemp)
 
-   enddo
-  enddo
-enddo
+     endif ! hydrph
+
+   enddo ! ix
+  enddo ! iy
+enddo !iz
+
+enddo ! N_monomer
 
 avpol_tosend = 0.0
 q = 0.0
@@ -292,13 +326,15 @@ do jj = 1, cpp(rank+1)
     ax = px(i, j, jj) ! cada uno para su cadena...
     ay = py(i, j, jj)
     az = pz(i, j, jj)         
-    pro(i, jj) = pro(i, jj) * xpot(ax, ay, az)
+    pro(i, jj) = pro(i, jj) * xpot(ax, ay, az, segtype(j))
    enddo
     pro(i,jj) = pro(i,jj)*exp(-benergy*ngauche(i,ii)) ! energy of gauche bonds
+
    do j=1,long
    fv = (1.0-volprot(px(i,j, jj),py(i,j, jj),pz(i,j, jj)))
-    avpol_temp(px(i,j, jj),py(i,j, jj),pz(i,j, jj))= &
-    avpol_temp(px(i,j, jj),py(i,j, jj),pz(i,j, jj))+pro(i, jj)*vpol*vsol/(delta**3)/fv* &
+   im = segtype(j)
+    avpol_temp(px(i,j, jj),py(i,j, jj),pz(i,j, jj), im)= &
+    avpol_temp(px(i,j, jj),py(i,j, jj),pz(i,j, jj), im)+pro(i, jj)*vpol*vsol/(delta**3)/fv* &
     ngpol(ii)*sc ! ngpol(ii) has the number of chains grafted to the point ii
    enddo
 
@@ -307,13 +343,9 @@ do jj = 1, cpp(rank+1)
 
  enddo ! i
 ! norma 
- do ix=1,dimx
-  do iy=1,dimy
-   do iz=1,dimz
-    avpol_tosend(ix,iy,iz)=avpol_tosend(ix, iy, iz) + avpol_temp(ix,iy,iz)/q_tosend
-    enddo
-   enddo
- enddo
+    
+avpol_tosend=avpol_tosend + avpol_temp/q_tosend
+
 q(ii) = q_tosend ! no la envia ahora
 sumgauche(ii) = sumgauche_tosend/q_tosend
 
@@ -329,12 +361,12 @@ call MPI_Barrier(MPI_COMM_WORLD, err)
 ! Jefe
 if (rank.eq.0) then
 ! Junta avpol       
-  call MPI_REDUCE(avpol_tosend, avpol, dimx*dimy*dimz, MPI_DOUBLE_PRECISION, MPI_SUM,0, MPI_COMM_WORLD, err)
+  call MPI_REDUCE(avpol_tosend, avpol, ncells*N_monomers, MPI_DOUBLE_PRECISION, MPI_SUM,0, MPI_COMM_WORLD, err)
 endif
 ! Subordinados
 if(rank.ne.0) then
 ! Junta avpol       
-  call MPI_REDUCE(avpol_tosend, avpol, dimx*dimy*dimz, MPI_DOUBLE_PRECISION, MPI_SUM,0, MPI_COMM_WORLD, err) 
+  call MPI_REDUCE(avpol_tosend, avpol, ncells*N_monomers, MPI_DOUBLE_PRECISION, MPI_SUM,0, MPI_COMM_WORLD, err) 
 !!!!!!!!!!! IMPORTANTE, LOS SUBORDINADOS TERMINAN ACA... SINO VER !MPI_allreduce!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1
   goto 3333
 endif
@@ -350,31 +382,65 @@ endif
 qtot = 0.0
 
 do ix=1,dimx
-   do iy=1,dimy
-        do iz=1,dimz
+do iy=1,dimy
+do iz=1,dimz
   
-         fv = (1.0-volprot(ix,iy,iz))
+ fv = (1.0-volprot(ix,iy,iz))
 
-         qtot(ix, iy, iz) =  (zpos*xpos(ix, iy, iz)+zneg*xneg(ix, iy, iz))/vsalt + avpol(ix, iy, iz)*zpol/vpol*fdis(ix,iy,iz) + &
-         xHplus(ix, iy, iz) - xOHmin(ix, iy, iz)
+ qtot(ix, iy, iz) =  (zpos*xpos(ix, iy, iz)+zneg*xneg(ix, iy, iz))/vsalt + xHplus(ix, iy, iz) - xOHmin(ix, iy, iz)
 
-         qtot(ix, iy,iz) = qtot(ix,iy,iz)*fv + volq(ix,iy,iz)*vsol    ! OJO
+ do im = 1, N_monomer
+     qtot(ix, iy, iz) =  qtot(ix,iy,iz) + avpol(ix,iy,iz,im)*zpol(im)/vpol*fdis(ix,iy,iz,im)
+ enddo
 
-        enddo
-   enddo
+ qtot(ix, iy,iz) = qtot(ix,iy,iz)*fv + volq(ix,iy,iz)*vsol    ! OJO
+
+enddo
+enddo
 enddo
 
 ! Volume fraction
 
 do ix=1,dimx
-   do iy=1,dimy
-      do iz=1,dimz
-      f(ix+dimx*(iy-1)+dimx*dimy*(iz-1))= avpol(ix,iy,iz) + xh(ix,iy,iz) + &
+do iy=1,dimy
+do iz=1,dimz
+
+f(ix+dimx*(iy-1)+dimx*dimy*(iz-1))= xh(ix,iy,iz) + &
       xneg(ix, iy, iz) + xpos(ix, iy, iz) + xHplus(ix, iy, iz) + &
       xOHmin(ix, iy, iz) -1.000000d0
-      enddo
-   enddo
+
+ do im = 1, N_monomer
+  f(ix+dimx*(iy-1)+dimx*dimy*(iz-1)) = f(ix+dimx*(iy-1)+dimx*dimy*(iz-1)) + avpol(ix,iy,iz,im)
+ enddo
+
 enddo
+enddo
+enddo
+
+! Poor solvent
+
+
+
+do ix=1,dimx
+do iy=1,dimy
+do iz=1,dimz
+
+do ip = 1, N_poorsol
+  f(ix+dimx*(iy-1)+dimx*dimy*(iz-1)+ip*ncells) = xtotal(ix,iy,iz,ip)
+
+  do im = 1, N_monomer
+   if(hydroph(im).eq.ip) then 
+    f(ix+dimx*(iy-1)+dimx*dimy*(iz-1)+ip*ncells) = f(ix+dimx*(iy-1)+dimx*dimy*(iz-1)+ip*ncells) - avpol(ix,iy,iz,im)
+   endif
+  enddo ! im
+enddo ! ip
+
+enddo ! ix
+enddo ! iy
+enddo ! iz
+
+
+if(electroflag.eq.1) then
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! Poisson equatio
@@ -429,15 +495,17 @@ psitemp = psitemp + DOT_PRODUCT(MATMUL(TMAT,epsv),MATMUL(TMAT,psiv))
 
 ! OJO CHECK!!!!
 
-      if(electroflag.eq.1)f(ix+dimx*(iy-1)+dimx*dimy*(iz-1)+ntot)=(psitemp + qtot(ix, iy, iz)*constq)/(-2.0)
+f(ix+dimx*(iy-1)+dimx*dimy*(iz-1)+(N_poorsol+1)*ncells)=(psitemp + qtot(ix, iy, iz)*constq)/(-2.0)
 
 enddo
 enddo
 enddo
+
+endif ! electroflag
  
 norma = 0.0
 
-do i = 1, eqs*ntot
+do i = 1, eqs*ncells
   norma = norma + (f(i))**2
 enddo
 

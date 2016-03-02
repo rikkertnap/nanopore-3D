@@ -13,7 +13,7 @@ use ellipsoid
 use ematrix
 implicit none
 external fcn
-integer i, ix, iy, iz
+integer i, ix, iy, iz, ip
 integer flagcrash
 
 !-----  varables de la resolucion -----------
@@ -21,10 +21,10 @@ integer flagcrash
 real*8 x1(eqs*dimx*dimy*dimz),xg1(eqs*dimx*dimy*dimz)
 real*8 f(eqs*dimx*dimy*dimz)
        
-integer n
+integer ncells
 
 ! Volumen fraction
-real*8 xh(dimx, dimy, dimz)
+real*8 xh(dimx, dimy, dimz), xtotal(dimx,dimy,dimz,N_poorsol)
 real*8 psi(dimx, dimy, dimz) ! potencial
 real*8 temp
 
@@ -37,29 +37,37 @@ double  precision norma_tosend
 
 ! number of equations
 
-n = dimx*dimy*dimz
+ncells = dimx*dimy*dimz
 
 ! Initial guess
 
 if((infile.eq.2).or.(infile.eq.-1).or.(infile.eq.3)) then
-  do i = 1, eqs*n  
+  do i = 1, eqs*ncells  
       xg1(i) = xflag(i)     
       x1(i) = xflag(i)
   enddo
 endif
 
 if(infile.eq.0) then
-  do i=1,n
+  do i=1,ncells
     xg1(i)=xsolbulk
     x1(i)=xsolbulk
   enddo
+
+  do i = N_poorsol*ncells+1,(N_poorsol+1)*ncells
+    xg1(i)=0.0
+    x1(i)=0.0
+  enddo
+
 if(electroflag.eq.1) then
-  do i=n+1, n*2
+
+  do i=(N_poorsol+1)*ncells+1, (N_poorsol+2)*ncells
     xg1(i)=0.0d0
     x1(i)=0.0d0
   enddo
-endif
-endif
+
+endif ! electroflag
+endif ! infile
 
 !--------------------------------------------------------------
 ! Solve               
@@ -68,7 +76,7 @@ endif
 ! JEFE
 if(rank.eq.0) then ! solo el jefe llama al solver
    iter = 0
-   write(stdout,*) 'solve: Enter solver ', eqs*n, ' eqs'
+   write(stdout,*) 'solve: Enter solver ', eqs*ncells, ' eqs'
 
    if(infile.ge.0) then
     call call_kinsol(x1, xg1, ier)
@@ -120,7 +128,12 @@ do ix=1,dimx
    do iy=1,dimy
       do iz=1,dimz
        xh(ix,iy,iz)=x1(ix+dimx*(iy-1)+dimx*dimy*(iz-1))
-       if(electroflag.eq.1)psi(ix,iy,iz)=x1(ix+dimx*(iy-1)+dimx*dimy*(iz-1)+n)
+
+       do ip=1, N_poorsol
+          xtotal(ix,iy,iz,ip)=xtotal(ix+dimx*(iy-1)+dimx*dimy*(iz-1)+ip*mcells)
+       enddo
+
+       if(electroflag.eq.1)psi(ix,iy,iz)=x1(ix+dimx*(iy-1)+dimx*dimy*(iz-1)+(N_poorsol+1)*ncells)
       enddo
    enddo  
 enddo

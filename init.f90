@@ -29,8 +29,8 @@ error = 1e-4 ! para comparar con la norma...
 errel=1d-6
 itmax=200
 
-if(electroflag.eq.0)eqs=1
-if(electroflag.eq.1)eqs=2
+if(electroflag.eq.0)eqs=(1+N_poorsol)
+if(electroflag.eq.1)eqs=(2+N_poorsol)
 
 end subroutine
 
@@ -74,7 +74,17 @@ dielW = 78.54
 dielPr = dielP/dielW
 dielSr = dielS/dielW
 
-Ka=10**(-pKa)
+
+do im = 1, N_monomer
+Ka(im)=10**(-pKa(im))
+select case (zpol(im))
+case (-1) ! acid
+K0(im) = (Ka(im)*vsol/xsolbulk)*(Na/1.0d24)! intrinstic equilibruim constant, Ka
+case (1) ! base
+K0(im) = ((Kw/Ka(im))*vsol/xsolbulk)*(Na/1.0d24)! intrinstic equilibruim constant, Kb 
+end select
+enddo
+
 cHplus = 10**(-pHbulk)    ! concentration H+ in bulk
 xHplusbulk = (cHplus*Na/(1.0d24))*(vsol)  ! volume fraction H+ in bulk vH+=vsol
 pOHbulk= pKw -pHbulk
@@ -161,12 +171,23 @@ if(rank.eq.0) then ! solo el jefe escribe a disco....
 !  close(45)
 
 !!!!!!!!!!!!!!!!!!! Guarda archivos !!!!!!!!!!!!!!!!!!!!!!!!!!!!
-! Polimero
+! Polimero, todo
 
-  temp(:,:,:) = avpol(:,:,:)*(1.0 - volprot(:,:,:))
+  temp = 0.0
+  do im = 1, N_monomer
+     temp(:,:,:) =  temp(:,:,:) + avpol(:,:,:, im)*(1.0 - volprot(:,:,:))
+  enddo
 
   title = 'avpol'
   call savetodisk(temp, title, cccc)
+
+! Polimero, por tipo
+  
+  do im = 1, N_monomer
+    temp(:,:,:) = avpol(:,:,:,im)*(1.0 - volprot(:,:,:))
+    write(title,'(A3, I2.2)')'avp',im
+    call savetodisk(temp, title, cccc)
+  enddo
 
 ! Solvente
 !  temp(:,:,:) = xh(:,:,:)*(1.0 - volprot(:,:,:))
@@ -299,16 +320,28 @@ end subroutine
 subroutine mirror
 use const
 use kinsol
+use mparameters_monomer
 implicit none
 real*8 xh(dimx,dimy,dimz), psi(dimx,dimy,dimz)
+real*8 xtotal(dimx,dimy,dimz,N_poorsol)
+integer ip
 integer ix,iy,iz
 real*8 temp
+integer ncells
+
+
+ncells = dimx*dimy*dimz
 
 do ix=1,dimx
  do iy=1,dimy
   do iz=1,dimz
      xh(ix,iy,iz)=xflag(ix+dimx*(iy-1)+dimx*dimy*(iz-1))
-     if(electroflag.eq.1)psi(ix,iy,iz)=xflag(ix+dimx*(iy-1)+dimx*dimy*(iz-1)+dimx*dimy*dimz)
+
+     do ip = 1, N_poorsol
+     xtotal(ix,iy,iz,ip) = xflag(ix+dimx*(iy-1)+dimx*dimy*(iz-1)+ip*ncells)
+     enddo
+
+     if(electroflag.eq.1)psi(ix,iy,iz)=xflag(ix+dimx*(iy-1)+dimx*dimy*(iz-1)+(N_poorsol+1)*ncells)
   enddo
  enddo
 enddo 
@@ -320,6 +353,12 @@ do ix=1,int(dimx/2)
      temp = xh(ix,iy,iz)
      xh(ix,iy,iz) = xh(dimx-ix,iy,iz)
      xh(dimx-ix,iy,iz) = temp
+
+     do ip = 1, N_poorsol
+       temp = xtotal(ix,iy,iz,ip)
+       xtotal(ix,iy,iz,ip) = xtotal(dimx-ix,iy,iz,ip)
+       xtotal(dimx-ix,iy,iz,ip) = temp
+     enddo
 
      if(electroflag.eq.1) then
      temp = psi(ix,iy,iz)
@@ -335,8 +374,13 @@ enddo
 do ix=1,dimx
    do iy=1,dimy
       do iz=1,dimz
-      xflag(ix+dimx*(iy-1)+dimx*dimy*(iz-1))= xh(ix,iy,iz)
-      if(electroflag.eq.1)xflag(ix+dimx*(iy-1)+dimx*dimy*(iz-1)+dimx*dimy*dimz)= psi(ix,iy,iz)
+        xflag(ix+dimx*(iy-1)+dimx*dimy*(iz-1))= xh(ix,iy,iz)
+
+        do ip = 1, N_poorsol
+         xflag(ix+dimx*(iy-1)+dimx*dimy*(iz-1)+ip*ncells) =  xtotal(ix,iy,iz,ip)
+        enddo
+
+        if(electroflag.eq.1)xflag(ix+dimx*(iy-1)+dimx*dimy*(iz-1)+(N_poorsol+1)*ncells)= psi(ix,iy,iz)
       enddo
    enddo
 enddo

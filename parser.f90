@@ -76,8 +76,6 @@ dy = ndr
 dz = ndr
 cdiva = ndr
 csalt = ndr
-zpol = ndr
-pKa = ndr
 vpol0 = ndr
 vsol0 = ndr
 gama0 = ndr
@@ -241,10 +239,6 @@ do while (ios == 0)
    read(buffer, *, iostat=ios) csalt
    if(rank.eq.0)write(stdout,*) 'parser:','Set ',trim(label),' = ',trim(buffer)
 
- case ('zpol')
-   read(buffer, *, iostat=ios) zpol
-   if(rank.eq.0)write(stdout,*) 'parser:','Set ',trim(label),' = ',trim(buffer)
-
  case ('vsol')
    read(buffer, *, iostat=ios) vsol0
    if(rank.eq.0)write(stdout,*) 'parser:','Set ',trim(label),' = ',trim(buffer)
@@ -262,10 +256,6 @@ do while (ios == 0)
    read(buffer, *, iostat=ios) sigmar
    if(rank.eq.0)write(stdout,*) 'parser:','Set ',trim(label),' = ',trim(buffer)
 
-
- case ('pKa')
-   read(buffer, *, iostat=ios) pKa
-   if(rank.eq.0)write(stdout,*) 'parser:','Set ',trim(label),' = ',trim(buffer)
 
  case ('gama')
    read(buffer, *, iostat=ios) gama0
@@ -429,12 +419,10 @@ if(dielP.eq.ndr)call stopundef('dielP')
 if(lseg.eq.ndr)call stopundef('lseg')
 if(csalt.eq.ndr)call stopundef('csalt')
 if(pHbulk.eq.ndr)call stopundef('pHbulk')
-if(zpol.eq.ndr)call stopundef('zpol')
 if(vpol0.eq.ndr)call stopundef('vpol')
 if(vsol0.eq.ndr)call stopundef('vsol')
 if(benergy.eq.ndr)call stopundef('benergy')
 if(gama0.eq.ndr)call stopundef('gama')
-if(pKa.eq.ndr)call stopundef('pKa')
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
