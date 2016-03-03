@@ -35,7 +35,7 @@ real*8 F_Mix_OHmin, F_gauche, F_Conf, F_Eq, F_vdW, F_eps, F_electro
 real*8 pro0(cuantas, maxcpp)
 real*8 entropy(dimx,dimy,dimz)
 character*5  title
-real*8 xtotalsum(dimz,dimy,dimz)
+real*8 xtotalsum(dimx,dimy,dimz)
  
 ! MPI
 integer stat(MPI_STATUS_SIZE) 

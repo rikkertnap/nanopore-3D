@@ -55,7 +55,7 @@ if(infile.eq.0) then
     x1(i)=xsolbulk
   enddo
 
-  do i = N_poorsol*ncells+1,(N_poorsol+1)*ncells
+  do i = ncells+1,(N_poorsol+1)*ncells
     xg1(i)=0.0
     x1(i)=0.0
   enddo
