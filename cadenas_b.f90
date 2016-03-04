@@ -4,7 +4,7 @@ use const
 use branches
 implicit none
 real*8 chains(3,200,100), gauches(100)
-integer i,state,ii,j,ive,jve
+integer i,state,statef,ii,j,ive,jve
 real*8 rn,state1,sitheta,cotheta,dista
 real*8 siphip,cophip
 character*1 test
@@ -141,16 +141,21 @@ do while (nchas.eq.0)
  m1 = m
  bbb = kkk ! position of branching
 
+ statef=int(rands(seed)*3) ! 0, 1 or 2
+
  do j = 1, 3 ! branches
 
    lll = bbb ! index for xend
    m = m1
 
-   do i = 1, longb(j)
+   statef=statef+1 
+   if(statef.eq.4)statef=1 ! sets always the same order (chirality) but can start with anyone
+
+! First segment
 
    kkk = kkk + 1
-    
-   select case (j)
+   
+   select case (statef)
      case (1) 
         call mrrrr(m,tt,mm) ! trans
      case (2)
@@ -169,7 +174,41 @@ do while (nchas.eq.0)
          xend(2,kkk)=xend(2,lll)+x(2)
          xend(3,kkk)=xend(3,lll)+x(3)
     
-         lll = kkk ! new index por xend
+         lll = kkk ! new index for xend
+
+! remaining segments
+ 
+   do i = 2, longb(j)
+
+   kkk = kkk + 1
+
+         rn=rands(seed)
+         state=int(rn*3)
+         if (state.eq.3) then
+            state=2
+         endif
+
+         select case (state) 
+
+         case (0) ! trans
+            call mrrrr(m,tt,mm)
+         case (1)
+            call mrrrr(m,tp,mm)
+         case (2)
+            call mrrrr(m,tm,mm)
+         end select
+
+         m = mm
+
+         x(1)=m(1,1)*lseg
+         x(2)=m(2,1)*lseg
+         x(3)=m(3,1)*lseg
+
+         xend(1,kkk)=xend(1,lll)+x(1)
+         xend(2,kkk)=xend(2,lll)+x(2)
+         xend(3,kkk)=xend(3,lll)+x(3)
+
+         lll = kkk ! new index for xend
 
    enddo ! i
 enddo ! j
@@ -186,7 +225,7 @@ enddo ! j
 !               print*, ive, xend(:,ive)
 !               print*, dista
            
-               goto 222
+                goto 222
             endif
          enddo
  enddo
