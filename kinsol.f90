@@ -50,8 +50,8 @@ do i = 1, ncells
 enddo
 
 do i = ncells+1, (N_poorsol+1)*ncells
-   pp(i) = 0.1 / (1.0+exp(1.0-udata(i)))
-! 0.1 / (1.0+exp(1.0-udata(i)))
+!   pp(i) = 0.1 / (1.0+exp(1.0-udata(i)))
+pp(i) = 0.1 / (1.0+exp(1.0-udata(i)))
 enddo
 
 if(electroflag.eq.1) then
