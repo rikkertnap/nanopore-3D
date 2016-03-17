@@ -11,9 +11,10 @@ segtype = 1
 
 
 if(branched.eq.1) then
-   segtype(longbb+1:longbb+longb(1)) = 2 ! first branch is hydrophobic
+   segtype(1:longbb+longb(1)) = 2 ! backbone and first branch is hydrophobic
 endif
 
+if(branched.ne.1) segtype = 2
 end
 
 
