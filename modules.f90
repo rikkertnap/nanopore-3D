@@ -14,19 +14,6 @@ integer branched
 integer indexncha
 endmodule
 
-
-module rotchain
-use ematrix, only : maxvolx
-real*8 rotangle(maxvolx)
-endmodule
-
-module channel
-real*8 rchannel
-real*8 originc(2)
-real*8 echargec, sigmac, eepsc, sigmar
-integer NBRUSH
-endmodule
-
 module system 
 integer systemtype
 real*8 delta
@@ -39,6 +26,36 @@ integer PBC(6)
 integer vtkflag
 integer electroflag
 integer eqs ! number of set of equations 
+endmodule
+
+
+
+module ematrix
+use system
+real*8, allocatable :: volprot(:,:,:)
+real*8, allocatable :: volprot1(:,:,:)
+real*8, allocatable :: voleps(:,:,:)
+real*8, allocatable :: voleps1(:,:,:)
+real*8, allocatable :: volq(:,:,:)
+real*8, allocatable :: volq1(:,:,:)
+integer, parameter :: maxvolx = 50000
+real*8 volx(maxvolx)
+real*8 com(maxvolx,3)
+integer p0(maxvolx,3)
+end module
+
+
+
+module rotchain
+use ematrix, only : maxvolx
+real*8 rotangle(maxvolx)
+endmodule
+
+module channel
+real*8 rchannel
+real*8 originc(2)
+real*8 echargec, sigmac, eepsc, sigmar
+integer NBRUSH
 endmodule
 
 module s2d
@@ -190,21 +207,6 @@ real*8, allocatable :: orient(:,:)
 real*8, allocatable :: echarge(:)
 real*8, allocatable :: sigma(:)
 real*8, allocatable :: eeps(:)
-end module
-
-module ematrix
-use system
-real*8, allocatable :: volprot(:,:,:)
-real*8, allocatable :: volprot1(:,:,:)
-real*8, allocatable :: voleps(:,:,:)
-real*8, allocatable :: voleps1(:,:,:)
-real*8, allocatable :: volq(:,:,:)
-real*8, allocatable :: volq1(:,:,:)
-
-integer, parameter :: maxvolx = 50000
-real*8 volx(maxvolx)
-real*8 com(maxvolx,3)
-integer p0(maxvolx,3)
 end module
 
 module inputtemp
