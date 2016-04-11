@@ -57,6 +57,9 @@ do while (il.lt.cuantas)
   call cadenas72mr(chains,nchas,gauches)
  case (1)
   call cadenas_b(chains,nchas,gauches) ! branched chains
+ case (2)
+  call cadenas_b2(chains,nchas,gauches) ! branched chains type 2
+
 
 endselect
 

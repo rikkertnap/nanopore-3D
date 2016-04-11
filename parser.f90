@@ -155,6 +155,12 @@ do while (ios == 0)
    read(fh, *)longb(1), longb(2), longb(3)
  endif
 
+ if(branched.eq.2) then
+   read(fh, *) basura
+   read(fh, *)longb(1), longb(2)
+ endif
+
+
  case ('randominput')
    read(buffer, *, iostat=ios) randominput
    if(rank.eq.0)write(stdout,*) 'parser:','Set ',trim(label),' = ',trim(buffer)
@@ -392,6 +398,13 @@ if (branched.eq.1) then
  longbb = long
  long = longbb + longb(1) + longb(2) + longb(3)
 endif 
+
+if (branched.eq.2) then
+ longbb = long
+ long = long + longb(2) - longb(1)
+endif 
+
+
 
 if(vtkflag.eq.ndi)call stopundef('vtkflag')
 if(dimx.eq.ndi)call stopundef('dimx')

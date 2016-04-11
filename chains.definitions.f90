@@ -15,6 +15,7 @@ if(branched.eq.1) then
 endif
 
 if(branched.ne.1) segtype = 2
+
 end
 
 
