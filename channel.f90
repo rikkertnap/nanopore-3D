@@ -693,24 +693,27 @@ x = MATMUL(IMAT,v)
 
 hcyl = x(3) ! height of the cylinder
 
-v(1) = 0.0
-v(2) = 0.0
-v(3) = float(RdimZ+1)*delta
-
-! v in transformed space, x in real space
-! only work for gam = 90, cdiva any value
-
-x = MATMUL(IMAT,v)
-
-hcyl0 = x(3) ! position of the base of the cylinder
-
-
-npointz = nint(float(NBRUSH)*hcyl/(2.0*pi*rchannel)/cos(30.0/180.0*pi))   ! number of sites along the z - coordinate, first site is at bdist
-                             ! rounds to nearest number to avoid rounding errors later
 
 npointt = NBRUSH    ! number of sites along the tetha coordinate
 
 
+
+select case (systemtype)
+case (4) ! uniformed coated cylinder
+   npointz = nint(float(NBRUSH)*hcyl/(2.0*pi*rchannel)/cos(30.0/180.0*pi))   ! number of sites along the z - coordinate, first site is at bdist
+   v(1) = 0.0
+   v(2) = 0.0
+   v(3) = float(RdimZ+1)*delta
+   x = MATMUL(IMAT,v)
+   hcyl0 = x(3) ! position of the base of the cylinder
+case (41) ! only one row
+   npointz = 1
+   v(1) = 0.0
+   v(2) = 0.0
+   v(3) = float(dimz)*delta/2.0
+   x = MATMUL(IMAT,v)
+   hcyl0 = x(3) ! position of the base of the cylinder
+endselect
 
 do jjjz = 1, npointz
 do jjjt = 1, npointt

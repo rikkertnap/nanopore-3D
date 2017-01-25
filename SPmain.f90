@@ -78,7 +78,8 @@ elseif (systemtype.eq.3) then
 call update_matrix_channel_3(flag) ! updates 'the matrix'
 elseif (systemtype.eq.4) then
 call update_matrix_channel_4(flag) ! updates 'the matrix'
-
+elseif (systemtype.eq.41) then
+call update_matrix_channel_4(flag) ! updates 'the matrix'
 endif
 
   if(flag.eqv..true.) then
