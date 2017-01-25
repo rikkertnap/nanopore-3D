@@ -319,6 +319,8 @@ do while (ios == 0)
      read(fh, *) basura
      read(fh, *) rchannel
      read(fh, *) basura
+     read(fh, *) RdimZ
+     read(fh, *) basura
      read(fh, *) NBRUSH ! number of brushes in the tetha direction
      read(fh, *) basura
      read(fh, *) echargec

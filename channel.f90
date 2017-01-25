@@ -62,15 +62,15 @@ ncha = 0
 
  flag = .false.
 
- call integrate_c(rchannelL2, originc ,npoints, voleps1 , sumvoleps1, flag)
+ call integrate_c(rchannelL2, RdimZ,originc ,npoints, voleps1 , sumvoleps1, flag)
 
  flag = .false. ! not a problem if eps lays outside boundaries
 
- call integrate_c(rchannel2, originc,npoints, volprot1, sumvolprot1, flag)
+ call integrate_c(rchannel2,RdimZ, originc,npoints, volprot1, sumvolprot1, flag)
 
- call integrate_c(rchannelS2,originc,npoints, volq1, sumvolq1, flag)
+ call integrate_c(rchannelS2,RdimZ,originc,npoints, volq1, sumvolq1, flag)
 
- call newintegrateg_c_4(rchannel2,originc,npoints,volx1,sumvolx1, com1, p1, ncha1, volxx1, NBRUSH)
+ call newintegrateg_c_4(rchannel2,RdimZ,originc,npoints,volx1,sumvolx1, com1, p1, ncha1, volxx1, NBRUSH)
 
 !! eps
  voleps1 = voleps1-volprot1
@@ -99,7 +99,7 @@ endselect
 
 v(1) = 0.0
 v(2) = 0.0
-v(3) = float(dimz)*delta
+v(3) = float(dimz-2*RdimZ)*delta
 
 ! v in transformed space, x in real space
 ! only work for gam = 90, cdiva any value
@@ -237,15 +237,15 @@ ncha = 0
 
  flag = .false.
 
- call integrate_c(rchannelL2, originc ,npoints, voleps1 , sumvoleps1, flag)
+ call integrate_c(rchannelL2,RdimZ, originc ,npoints, voleps1 , sumvoleps1, flag)
 
  flag = .false. ! not a problem if eps lays outside boundaries
 
- call integrate_c(rchannel2, originc,npoints, volprot1, sumvolprot1, flag)
+ call integrate_c(rchannel2, RdimZ, originc,npoints, volprot1, sumvolprot1, flag)
 
- call integrate_c(rchannelS2,originc,npoints, volq1, sumvolq1, flag)
+ call integrate_c(rchannelS2,RdimZ, originc,npoints, volq1, sumvolq1, flag)
 
- call newintegrateg_c_3(rchannel2,originc,npoints,volx1,sumvolx1, com1, p1, ncha1, volxx1, NBRUSH)
+ call newintegrateg_c_3(rchannel2,RdimZ, originc,npoints,volx1,sumvolx1, com1, p1, ncha1, volxx1, NBRUSH)
 
 !! eps
  voleps1 = voleps1-volprot1
@@ -260,7 +260,7 @@ ncha = 0
 
 v(1) = 0.0
 v(2) = 0.0
-v(3) = float(dimz)*delta
+v(3) = float(dimz-2*RdimZ)*delta
 
 ! v in transformed space, x in real space
 ! only work for gam = 90, cdiva any value
@@ -394,15 +394,15 @@ ncha = 0
  flag = .false.
 
 
- call integrate_c(rchannelL2, originc ,npoints, voleps1 , sumvoleps1, flag)
+ call integrate_c(rchannelL2,RdimZ, originc ,npoints, voleps1 , sumvoleps1, flag)
 
  flag = .false. ! not a problem if eps lays outside boundaries
 
- call integrate_c(rchannel2, originc,npoints, volprot1, sumvolprot1, flag)
+ call integrate_c(rchannel2, RdimZ, originc,npoints, volprot1, sumvolprot1, flag)
 
- call integrate_c(rchannelS2,originc,npoints, volq1, sumvolq1, flag)
+ call integrate_c(rchannelS2,RdimZ, originc,npoints, volq1, sumvolq1, flag)
 
- call newintegrateg_c(rchannel2,originc,npoints,volx1,sumvolx1, com1, p1, ncha1, volxx1)
+ call newintegrateg_c(rchannel2,RdimZ,originc,npoints,volx1,sumvolx1, com1, p1, ncha1, volxx1)
 
 !! eps
  voleps1 = voleps1-volprot1
@@ -501,7 +501,7 @@ call savetodisk(volxx, title, counter)
 
 end subroutine
 
-subroutine integrate_c(rchannel2,originc, npoints,volprot,sumvolprot, flag)
+subroutine integrate_c(rchannel2,RdimZ, originc, npoints,volprot,sumvolprot, flag)
 use system
 use transform
 
@@ -518,6 +518,7 @@ real*8 intcell_c
 real*8 mmmult
 integer jx,jy, jz
 logical flag
+integer RdimZ
 
 real*8 box(4)
 real*8 x(3), v(3)
@@ -535,7 +536,7 @@ sumvolprot = 0.0 ! total volumen, including that outside the system
 
 do ix = 1, dimx
 do iy = 1, dimy
-do iz = 1, dimz
+do iz = RdimZ+1, dimz-RdimZ
 
 flagin = .false.
 flagout = .false.
@@ -621,7 +622,7 @@ enddo
 intcell_c = float(cc)/(float(n)**3)
 end function
 
-subroutine newintegrateg_c_4(rchannel2,originc, npoints,volx1,sumvolx1,com1,p1,ncha1,volxx1, NBRUSH)
+subroutine newintegrateg_c_4(rchannel2,RdimZ,originc, npoints,volx1,sumvolx1,com1,p1,ncha1,volxx1, NBRUSH)
 use system
 use transform
 use chainsdat
@@ -653,8 +654,10 @@ integer flagin
 integer dims(3), is(3), js(3)
 integer jjjz, jjjt, npointz, npointt
 real*8 hcyl
+real*8 hcyl0
 real*8, external :: rands
 real*8 tethaadd, disp
+integer RdimZ
 
 disp = delta
 
@@ -681,7 +684,7 @@ volxx1 = 0.0
 
 v(1) = 0.0
 v(2) = 0.0
-v(3) = float(dimz)*delta
+v(3) = float(dimz-2*RdimZ)*delta
 
 ! v in transformed space, x in real space
 ! only work for gam = 90, cdiva any value
@@ -689,6 +692,18 @@ v(3) = float(dimz)*delta
 x = MATMUL(IMAT,v)
 
 hcyl = x(3) ! height of the cylinder
+
+v(1) = 0.0
+v(2) = 0.0
+v(3) = float(RdimZ+1)*delta
+
+! v in transformed space, x in real space
+! only work for gam = 90, cdiva any value
+
+x = MATMUL(IMAT,v)
+
+hcyl0 = x(3) ! position of the base of the cylinder
+
 
 npointz = nint(float(NBRUSH)*hcyl/(2.0*pi*rchannel)/cos(30.0/180.0*pi))   ! number of sites along the z - coordinate, first site is at bdist
                              ! rounds to nearest number to avoid rounding errors later
@@ -709,7 +724,7 @@ select case (randominput)
  case(1)
  
  rtetha = disp/2.0/(2.0*pi*rchannel)*(rands(seed)-1.0)
- rz = disp/delta*hcyl/float(dimz)/2.0*(rands(seed)-1.0)
+ rz = disp/delta*hcyl/float(dimz-2*RdimZ)/2.0*(rands(seed)-1.0)
 
  case(2)
  rtetha = 0.0
@@ -769,7 +784,7 @@ tethaadd = mod(jjjz,2)*2.0*pi/float(npointt)*0.5
 
 x(1) = cos(float(jjjt-1)/float(npointt)*2.0*pi+rtetha+tethaadd)*rchannel + originc(1)
 x(2) = sin(float(jjjt-1)/float(npointt)*2.0*pi+rtetha+tethaadd)*rchannel + originc(2)
-x(3) = float(jjjz-1)/float(npointz)*hcyl+rz
+x(3) = float(jjjz-1)/float(npointz)*hcyl+rz+hcyl0
 
 !x in  real space
 v = MATMUL(MAT,x)
@@ -825,7 +840,7 @@ end
 
 
 
-subroutine newintegrateg_c_3(rchannel2,originc, npoints,volx1,sumvolx1,com1,p1,ncha1,volxx1, NBRUSH)
+subroutine newintegrateg_c_3(rchannel2,RdimZ,originc, npoints,volx1,sumvolx1,com1,p1,ncha1,volxx1, NBRUSH)
 use system
 use transform
 use chainsdat
@@ -856,8 +871,9 @@ real*8 volxx1(dimx,dimy,dimz)
 integer flagin
 integer dims(3), is(3), js(3)
 integer jjjz, jjjt, npointz, npointt
-real*8 hcyl
+real*8 hcyl, hcyl0
 real*8, external :: rands
+integer RdimZ
 
 pi=acos(-1.0)
 
@@ -882,7 +898,7 @@ volxx1 = 0.0
 
 v(1) = 0.0
 v(2) = 0.0
-v(3) = float(dimz)*delta
+v(3) = float(dimz-2*RdimZ)*delta
 
 ! v in transformed space, x in real space
 ! only work for gam = 90, cdiva any value
@@ -890,6 +906,17 @@ v(3) = float(dimz)*delta
 x = MATMUL(IMAT,v)
 
 hcyl = x(3) ! height of the cylinder
+
+v(1) = 0.0
+v(2) = 0.0
+v(3) = float(RdimZ+1)*delta
+
+! v in transformed space, x in real space
+! only work for gam = 90, cdiva any value
+
+x = MATMUL(IMAT,v)
+
+hcyl0 = x(3) ! height of the cylinder
 
 npointz = nint(float(NBRUSH)*hcyl/(2.0*pi*rchannel))   ! number of sites along the z - coordinate, first site is at bdist
                              ! rounds to nearest number to avoid rounding errors later
@@ -903,12 +930,12 @@ do jjjt = 1, npointt
 
 if(sigmar.ne.0.0) then
  rtetha = delta/2.0/(2.0*pi*rchannel)*(rands(seed)-1.0)
- rz = hcyl/float(dimz)/2.0*(rands(seed)-1.0)
+ rz = hcyl/float(dimz-2*RdimZ)/2.0*(rands(seed)-1.0)
 endif
 
 x(1) = cos(float(jjjt-1)/float(npointt)*2.0*pi+rtetha)*rchannel + originc(1)
 x(2) = sin(float(jjjt-1)/float(npointt)*2.0*pi+rtetha)*rchannel + originc(2)
-x(3) = float(jjjz-1)/float(npointz)*hcyl+rz
+x(3) = float(jjjz-1)/float(npointz)*hcyl+rz+hcyl0
 
 
 !x in  real space
@@ -969,7 +996,7 @@ enddo
 end
 
 
-subroutine newintegrateg_c(rchannel2,originc, npoints,volx1,sumvolx1,com1,p1,ncha1,volxx1)
+subroutine newintegrateg_c(rchannel2,RdimZ,originc, npoints,volx1,sumvolx1,com1,p1,ncha1,volxx1)
 use system
 use transform
 use chainsdat
@@ -997,6 +1024,7 @@ real*8 volxx1(dimx,dimy,dimz)
 integer flagin
 integer dims(3), is(3), js(3)
 integer jjjz, jjjt, npointz, npointt
+integer RdimZ
 
 pi=acos(-1.0)
 
