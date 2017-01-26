@@ -59,33 +59,30 @@ endif
 
 if (testsystemc.eq.0) then ! saves some time
 
-do i = 1, 3 ! put into cell
-if(v(i).lt.0.0) then
-   if(PBC(2*i-1).eq.1)v(i) = PBCSYMR(v(i),maxx(i))
-   if(PBC(2*i-1).eq.3)v(i) = PBCREFR(v(i),maxx(i))
-endif
-if(v(i).gt.dims(i)) then
-   if(PBC(2*i).eq.1)v(i) = PBCSYMR(v(i),maxx(i))
-   if(PBC(2*i).eq.3)v(i) = PBCREFR(v(i),maxx(i))
-endif
-enddo
+!do i = 1, 3 ! put into cell
+!if(v(i).lt.0.0) then
+!   if(PBC(2*i-1).eq.1)v(i) = PBCSYMR(v(i),maxx(i))
+!   if(PBC(2*i-1).eq.3)v(i) = PBCREFR(v(i),maxx(i))
+!endif
+!if(v(i).gt.dims(i)) then
+!   if(PBC(2*i).eq.1)v(i) = PBCSYMR(v(i),maxx(i))
+!   if(PBC(2*i).eq.3)v(i) = PBCREFR(v(i),maxx(i))
+!endif
+!enddo
 
 ! collision with the channel
 
 xx(1) = x(1) - originc(1) ! distance to the center of the channel
 xx(2) = x(2) - originc(2) 
 
-! Looks for near neighbor, only important for PBC
-!if(PBC(1).eq.1)xx(1) = xx(1) - nint(xx(1) / (float(dimx)*delta)) * float(dimx)*delta
-!if(PBC(3).eq.1)xx(2) = xx(2) - nint(xx(2) / (float(dimy)*delta)) * float(dimy)*delta
-!if(PBC(5).eq.1)xx(3) = xx(3) - nint(xx(3) / (float(dimz)*delta)) * float(dimz)*delta
-
 vect = xx(1)**2+xx(2)**2
 
- if(vect.ge.rchannel**2) then 
+ if(vect.ge.rchannel**2) then
+  if((x(3).gt.float(RdimZ)*delta).and.(x(3).lt.(float(dimz-RdimZ)*delta))) then  
   testsystemc = -1
   return
  endif
+endif
 
 endif ! testsystem = 0
 
