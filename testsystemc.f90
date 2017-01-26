@@ -59,18 +59,18 @@ endif
 
 if (testsystemc.eq.0) then ! saves some time
 
-!do i = 1, 3 ! put into cell
-!if(v(i).lt.0.0) then
-!   if(PBC(2*i-1).eq.1)v(i) = PBCSYMR(v(i),maxx(i))
-!   if(PBC(2*i-1).eq.3)v(i) = PBCREFR(v(i),maxx(i))
-!endif
-!if(v(i).gt.dims(i)) then
-!   if(PBC(2*i).eq.1)v(i) = PBCSYMR(v(i),maxx(i))
-!   if(PBC(2*i).eq.3)v(i) = PBCREFR(v(i),maxx(i))
-!endif
-!enddo
+do i = 1, 3 ! put into cell
+if(v(i).lt.0.0) then
+   if(PBC(2*i-1).eq.1)v(i) = PBCSYMR(v(i),maxx(i))
+   if(PBC(2*i-1).eq.3)v(i) = PBCREFR(v(i),maxx(i))
+endif
+if(v(i).gt.dims(i)) then
+   if(PBC(2*i).eq.1)v(i) = PBCSYMR(v(i),maxx(i))
+   if(PBC(2*i).eq.3)v(i) = PBCREFR(v(i),maxx(i))
+endif
+enddo
 
-! collision with the channel
+! collision with the channel (real coordinates)
 
 xx(1) = x(1) - originc(1) ! distance to the center of the channel
 xx(2) = x(2) - originc(2) 
@@ -78,7 +78,7 @@ xx(2) = x(2) - originc(2)
 vect = xx(1)**2+xx(2)**2
 
  if(vect.ge.rchannel**2) then
-  if((x(3).gt.float(RdimZ)*delta).and.(x(3).lt.(float(dimz-RdimZ)*delta))) then  
+  if((v(3).gt.float(RdimZ)*delta).and.(v(3).lt.(float(dimz-RdimZ)*delta))) then  ! reservoirs in transformed coordinates
   testsystemc = -1
   return
  endif
