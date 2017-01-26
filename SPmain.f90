@@ -121,8 +121,8 @@ do while(flagcrash.eq.1)
  call solve(flagcrash)
  if(flagcrash.eq.1) then
     if(i.eq.1)stop
-    st = st + sts(i-1)
- if(rank.eq.0)write(stdout,*)'Error, switch to sc = ', st
+    st = (st + sts(i-1))/2
+ if(rank.eq.0)write(stdout,*)'Error, switch to st = ', st
  endif
 enddo
 
