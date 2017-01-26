@@ -696,24 +696,19 @@ hcyl = x(3) ! height of the cylinder
 
 npointt = NBRUSH    ! number of sites along the tetha coordinate
 
-
+   v(1) = 0.0
+   v(2) = 0.0
+   v(3) = float(RdimZ)*delta
+   x = MATMUL(IMAT,v)
+   hcyl0 = x(3) ! position of the base of the cylinder
 
 select case (systemtype)
 case (4) ! uniformed coated cylinder
    npointz = nint(float(NBRUSH)*hcyl/(2.0*pi*rchannel)/cos(30.0/180.0*pi))   ! number of sites along the z - coordinate, first site is at bdist
-   v(1) = 0.0
-   v(2) = 0.0
-   v(3) = float(RdimZ+1)*delta
-   x = MATMUL(IMAT,v)
-   hcyl0 = x(3) ! position of the base of the cylinder
 case (41) ! only one row
    npointz = 1
-   v(1) = 0.0
-   v(2) = 0.0
-   v(3) = float(dimz)*delta/2.0
-   x = MATMUL(IMAT,v)
-   hcyl0 = x(3) ! position of the base of the cylinder
 endselect
+
 
 do jjjz = 1, npointz
 do jjjt = 1, npointt
@@ -791,7 +786,7 @@ x(3) = float(jjjz-1)/float(npointz)*hcyl+rz+hcyl0
 
 !x in  real space
 v = MATMUL(MAT,x)
-v(3) = v(3) + float(dimz/npointz)/2.0*delta ! centers the first row of polymers at the middle of the layer, useful to avoid numerical rounding errors.
+v(3) = v(3) + float((dimz-RdimZ*2)/npointz)/2.0*delta ! centers the first row of polymers at the middle of the layer, useful to avoid numerical rounding errors.
 x = MATMUL(IMAT,v) ! and recalculates x due to the change in v
 
 do j = 1,3
