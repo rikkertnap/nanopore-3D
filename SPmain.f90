@@ -24,6 +24,7 @@ logical flag
 character*10 filename
 integer j, i, ii, iii
 integer flagcrash
+integer stOK
 
 stdout = 6
 
