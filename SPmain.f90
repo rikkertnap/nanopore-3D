@@ -121,7 +121,6 @@ do while (st.ne.sts(i))
  st = sts(i)
  if(rank.eq.0)write(stdout,*)'Switch to st = ', st
  flagcrash = 1
-
 do while(flagcrash.eq.1)
  flagcrash = 0
  call solve(flagcrash)
@@ -130,9 +129,12 @@ do while(flagcrash.eq.1)
     st = (st + stOK)/2
  if(rank.eq.0)write(stdout,*)'Error, switch to st = ', st
  endif
- stOK = st ! last st solved OK
- 
 enddo
+
+ stOK = st ! last st solved OK
+ if(rank.eq.0)write(stdout,*) 'Solved OK, st: ', stOK
+ 
+
 enddo
 
 
