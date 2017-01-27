@@ -24,7 +24,7 @@ logical flag
 character*10 filename
 integer j, i, ii, iii
 integer flagcrash
-integer stOK
+real*8 stOK
 
 stdout = 6
 
@@ -114,9 +114,8 @@ endif
  ii = 1
  sc = scs(ii)
 
-
+st = 1.0d10+sts(1)
 do i = 1, nst
-
 do while (st.ne.sts(i))
  st = sts(i)
  if(rank.eq.0)write(stdout,*)'Switch to st = ', st
@@ -126,7 +125,7 @@ do while(flagcrash.eq.1)
  call solve(flagcrash)
  if(flagcrash.eq.1) then
     if(i.eq.1)stop
-    st = (st + stOK)/2
+    st = (st + stOK)/2.0
  if(rank.eq.0)write(stdout,*)'Error, switch to st = ', st
  endif
 enddo
