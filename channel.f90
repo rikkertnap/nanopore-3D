@@ -782,7 +782,15 @@ tethaadd = mod(jjjz,2)*2.0*pi/float(npointt)*0.5
 
 x(1) = cos(float(jjjt-1)/float(npointt)*2.0*pi+rtetha+tethaadd)*rchannel + originc(1)
 x(2) = sin(float(jjjt-1)/float(npointt)*2.0*pi+rtetha+tethaadd)*rchannel + originc(2)
+
+
+select case (systemtype)
+case(4)
 x(3) = float(jjjz-1)/float(npointz)*hcyl+rz+hcyl0
+case(41)
+x(3) = float(jjjz-1)/float(npointz)*hcyl+hcyl0 ! for systemtype = 41 shift only in tetha, no in z
+end select
+
 
 !x in  real space
 v = MATMUL(MAT,x)

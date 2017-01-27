@@ -191,8 +191,8 @@ print*, 'ier', ier
 if (ier .lt. 0) then
       write(stdout,*) 'call_kinsol: SUNDIALS_ERROR: FKINSOL returned IER = ', ier
       write(stdout,*) 'call_kinsol: Linear Solver returned IER = ', iout(9)
+!      call fkinfree
 endif
-      call fkinfree
 
 do i = 1, neq ! output
   x1_old(i) = x1(i)
