@@ -126,7 +126,7 @@ scsteptol = 1.0d-6 ! Function-norm stopping tolerance
 
 maxl = 500 ! maximum Krylov subspace dimesion (?!?!?!) ! Esto se usa para el preconditioner
 maxlrst = 5 ! maximum number of restarts
-max_niter = 500
+max_niter = 1000
 globalstrat = 0
 
 call fnvinits(3, neq, ier) ! fnvinits inits NVECTOR module

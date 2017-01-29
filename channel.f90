@@ -720,8 +720,8 @@ select case (randominput)
  rz = 0.0
 
  case(1)
- 
- rtetha = disp/2.0/(2.0*pi*rchannel)*(rands(seed)-1.0)
+
+ rtetha = (2.0*pi*rchannel)/float(npointt)*(rands(seed)-0.5)*0.02 
  rz = disp/delta*hcyl/float(dimz-2*RdimZ)/2.0*(rands(seed)-1.0)
 
  case(2)
@@ -773,7 +773,7 @@ select case (randominput)
 
 
  case(41)
- rtetha = 2.0*disp*(float(mod(jjjt,2))-0.5)
+ rtetha = 2.0*disp*(float(mod(jjjt,2))-0.5)*0.1 
  rz = (float(jjjt)/float(npointt)-0.5)*4.0*disp
 
 endselect

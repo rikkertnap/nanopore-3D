@@ -30,7 +30,7 @@ real*8 ndr
 
 ! not defined variables, change if any variable can take the value
 
-
+seed = 938121
 PBC = 1
 
 ndi = -1e5
@@ -134,6 +134,11 @@ do while (ios == 0)
  case ('verbose')
    read(buffer, *, iostat=ios) verbose
    if(rank.eq.0)write(stdout,*) 'parser:','Set ',trim(label),' = ',trim(buffer)
+
+ case ('seed')
+   read(buffer, *, iostat=ios) seed
+   if(rank.eq.0)write(stdout,*) 'parser:','Set ',trim(label),' = ',trim(buffer)
+
 
  case ('stdout')
    read(buffer, *, iostat=ios) stdout

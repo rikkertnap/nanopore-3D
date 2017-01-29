@@ -17,7 +17,6 @@ use ellipsoid
 use mparameters_monomer
 implicit none
 pi = acos(-1.0)
-seed = 938121
 lb = 0.714 ! bjerrum lenght in nm
 zpos = 1.0
 zneg = -1.0
