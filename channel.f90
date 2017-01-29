@@ -721,8 +721,8 @@ select case (randominput)
 
  case(1)
 
- rtetha = (2.0*pi*rchannel)/float(npointt)*(rands(seed)-0.5)*0.02 
- rz = disp/delta*hcyl/float(dimz-2*RdimZ)/2.0*(rands(seed)-1.0)
+ rtetha = (2.0*pi*rchannel)/float(npointt)*(rands(seed2)-0.5)*0.02 
+ rz = disp/delta*hcyl/float(dimz-2*RdimZ)/2.0*(rands(seed2)-1.0)
 
  case(2)
  rtetha = 0.0
@@ -935,8 +935,8 @@ do jjjz = 1, npointz
 do jjjt = 1, npointt
 
 if(sigmar.ne.0.0) then
- rtetha = delta/2.0/(2.0*pi*rchannel)*(rands(seed)-1.0)
- rz = hcyl/float(dimz-2*RdimZ)/2.0*(rands(seed)-1.0)
+ rtetha = delta/2.0/(2.0*pi*rchannel)*(rands(seed2)-1.0)
+ rz = hcyl/float(dimz-2*RdimZ)/2.0*(rands(seed2)-1.0)
 endif
 
 x(1) = cos(float(jjjt-1)/float(npointt)*2.0*pi+rtetha)*rchannel + originc(1)

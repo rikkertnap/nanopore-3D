@@ -155,6 +155,7 @@ real*8, parameter :: Na = 6.02d23
 real*8 constq
 real*8 lb
 integer seed
+integer seed2
 real*8 error  ! para comparar con la norma...
 real*8 errel
 integer itmax
