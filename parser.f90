@@ -366,6 +366,30 @@ do while (ios == 0)
      read(fh, *) echargec
      read(fh, *) basura
      read(fh, *) eepsc
+ 
+    case(42)
+     read(fh, *) basura
+     read(fh, *) rchannel
+     read(fh, *) basura
+     read(fh, *) RdimZ
+     read(fh, *) basura
+     read(fh, *) NBRUSH ! number of brushes in the tetha direction
+     read(fh, *) basura
+     read(fh, *) Nrings
+
+     allocate (ringpos(Nrings))
+
+     read(fh, *) basura
+     do i = 1, Nrings
+       read(fh, *) ringpos(i)
+     enddo
+      ringpos = ringpos - 0.5
+    
+     read(fh, *) basura
+     read(fh, *) echargec
+     read(fh, *) basura
+     read(fh, *) eepsc
+
 
 
     case(1) 

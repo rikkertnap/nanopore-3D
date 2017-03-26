@@ -37,7 +37,8 @@ do jj = 1, cpp(rank+1)
        x(2) = in1(j, 3)
        x(3) = in1(j, 1)
 
-       if((systemtype.eq.2).or.(systemtype.eq.3).or.(systemtype.eq.4).or.(systemtype.eq.41))call rot_chain_cyl(x,ii)
+       if((systemtype.eq.2).or.(systemtype.eq.3).or.(systemtype.eq.4).or.(systemtype.eq.41)   &
+       .or.(systemtype.eq.42))call rot_chain_cyl(x,ii)
 
        x = x + posicion(ii,:)
        v = MATMUL(MAT,x)
@@ -57,7 +58,7 @@ case (1)
          stop
        endif
 
-case (2, 3, 4, 41)
+case (2, 3, 4, 41, 42)
 
 
        if(testsystemc(x).eq.-1) then ! if testsystem = -1,  there is a collision with all or particle 

@@ -58,6 +58,8 @@ real*8 originc(2)
 real*8 echargec, sigmac, eepsc, sigmar
 integer NBRUSH
 integer RdimZ ! size of reservoirs in delta units
+integer Nrings ! number of rings for systemtype = 42
+real*8, allocatable :: ringpos(:) ! position along the pore
 endmodule
 
 module s2d
