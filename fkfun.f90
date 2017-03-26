@@ -48,6 +48,12 @@ real*8 q_tosend, sumgauche_tosend
 real*8 gradpsi2
 real*8 fv
 
+! hamiltonian inception
+real*8 hfactor, hd
+real*8, allocatable :: hds(:)
+ALLOCATE(hds(100))
+hds = -1
+
 !-----------------------------------------------------
 ! Common variables
 
@@ -218,6 +224,29 @@ do ix=1,dimx
  do iy=1,dimy
    do iz=1,dimz
 
+     if(hguess .eq. 0) then
+
+      hd = sqrt(float((2*ix-dimx)**2+(2*iy-dimy)**2))/2.0*delta
+      hd = hd**2+(oval*float(2*iz-dimz)/2.0*delta)**2
+      hfactor = dexp(-(kp**2)*hd)
+
+     elseif(hguess .eq. 1) then
+
+      hd = sqrt(float((2*ix-dimx)**2+(2*iy-dimy)**2))/2.0*delta-hring
+      hd = hd**2+(oval*float(2*iz-dimz)/2.0*delta)**2
+      hfactor = dexp(-(kp**2)*hd)
+
+     else
+
+      do i=1,hguess
+       hds(i) = (float(2*ix-dimx)-2*cos(i*2*pi/hguess)*hring/delta)**2+(float(2*iy-dimy)-2*sin(i*2*pi/hguess)*hring/delta)**2
+       hds(i) = hds(i)/4.0*(delta**2)+(oval*float(2*iz-dimz)/2.0*delta)**2
+      end do
+      hd = minval(hds, mask = hds .gt.0)
+      hfactor = dexp(-(kp**2)*hd)
+
+     end if
+
      fv = (1.0 - volprot(ix,iy,iz))
      xpot(ix, iy, iz, im) = xh(ix,iy,iz)**vpol
      xpot(ix, iy, iz, im) = xpot(ix,iy,iz, im)*dexp(voleps(ix,iy,iz))
@@ -289,7 +318,7 @@ do ix=1,dimx
                 fv = (1.0-volprot(jx,jy,jz))
 
                do ip = 1, N_poorsol
-               protemp=protemp + Xu(ax,ay,az)*st_matrix(hydroph(im),ip)*sttemp*xtotal(jx,jy,jz,ip)*fv
+               protemp=protemp + hfactor*Xu(ax,ay,az)*st_matrix(hydroph(im),ip)*sttemp*xtotal(jx,jy,jz,ip)*fv
                enddo ! ip
 
             endif

@@ -16,6 +16,7 @@ endmodule
 
 module system 
 integer systemtype
+integer vscan
 real*8 delta
 real*8 dx,dy,dz
 real*8 cdiva
@@ -90,8 +91,10 @@ endmodule
 
 module molecules
 use system
+integer potential
 real*8 vsol
 real*8 vpol
+real*8 rpol
 real*8 vpol0
 real*8 vsol0
 real*8 vsalt
@@ -100,6 +103,13 @@ real*8 benergy
 endmodule
 
 module kaist
+integer hguess
+real*8 hring
+real*8 oval
+integer nkp
+real*8 kp
+real*8 kps(100)
+
 integer nst
 real*8 st
 real*8 sts(100)
@@ -167,6 +177,7 @@ integer stdout
 endmodule
 
 module kai
+real*8 lambda
 integer Xulimit
 real*8 cutoff
 real*8, allocatable :: Xu(:,:,:)
