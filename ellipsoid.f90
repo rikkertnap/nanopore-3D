@@ -110,6 +110,8 @@ ncha = 0
 
 do j = 1, NNN
 
+seed = 4322319 ! use the same initial seed, so all particles have the same area distribution, which helps cancelling small errors for free energy calculations
+
 ! rotate ellipsoid matrixes according to current rotation matrix
 
  call rotv(AAA(:,:,j), rotmatrix(:,:,j))

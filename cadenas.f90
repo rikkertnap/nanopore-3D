@@ -45,6 +45,8 @@ endif
 il=0
 iglobal=1
 
+seed = 342432 ! use always the same intial seed
+
 do while (il.lt.cuantas)
 
   call cadenas72mr(chains,nchas,gauches)
