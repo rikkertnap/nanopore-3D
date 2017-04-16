@@ -85,7 +85,7 @@ real*8 rn,state1,sitheta,cotheta,dista
 real*8 siphip,cophip
 character*1 test
 real*8 m(3,3),mm(3,3),tt(3,3),tp(3,3),tm(3,3)
-real*8 x(3),xend(3,200),xendr(3,200)
+real*8 x(3),xend(3,200),xendr(3,200),xendr2(3,200)
 integer nchas
 real*8 rands
 integer ng
@@ -220,6 +220,9 @@ do while (nchas.eq.0)
          test='S'
          call rota36(xend,xendr,long,test)
          if (test.eq.'N')cycle
+
+         xendr2 = xendr
+
          nchas=nchas+1
          do j=1,long
             chains(1,j,nchas)=xendr(1,j)
@@ -227,7 +230,411 @@ do while (nchas.eq.0)
             chains(3,j,nchas)=xendr(3,j)
          enddo
             gauches(nchas) = ng
-         if (nchas.eq.25)exit
+
+         nchas=nchas+1
+         do j=1,long
+            chains(1,j,nchas)=-xendr(1,j)
+            chains(2,j,nchas)=xendr(2,j)
+            chains(3,j,nchas)=xendr(3,j)
+         enddo
+            gauches(nchas) = ng
+
+         nchas=nchas+1
+         do j=1,long
+            chains(1,j,nchas)=-xendr(1,j)
+            chains(2,j,nchas)=-xendr(2,j)
+            chains(3,j,nchas)=xendr(3,j)
+         enddo
+            gauches(nchas) = ng
+
+         nchas=nchas+1
+         do j=1,long
+            chains(1,j,nchas)=-xendr(1,j)
+            chains(2,j,nchas)=xendr(2,j)
+            chains(3,j,nchas)=-xendr(3,j)
+         enddo
+            gauches(nchas) = ng
+
+         nchas=nchas+1
+         do j=1,long
+            chains(1,j,nchas)=-xendr(1,j)
+            chains(2,j,nchas)=-xendr(2,j)
+            chains(3,j,nchas)=-xendr(3,j)
+         enddo
+            gauches(nchas) = ng
+
+         nchas=nchas+1
+         do j=1,long
+            chains(1,j,nchas)=xendr(1,j)
+            chains(2,j,nchas)=-xendr(2,j)
+            chains(3,j,nchas)=xendr(3,j)
+         enddo
+            gauches(nchas) = ng
+
+         nchas=nchas+1
+         do j=1,long
+            chains(1,j,nchas)=xendr(1,j)
+            chains(2,j,nchas)=-xendr(2,j)
+            chains(3,j,nchas)=-xendr(3,j)
+         enddo
+            gauches(nchas) = ng
+
+         nchas=nchas+1
+         do j=1,long
+            chains(1,j,nchas)=xendr(1,j)
+            chains(2,j,nchas)=xendr(2,j)
+            chains(3,j,nchas)=-xendr(3,j)
+         enddo
+            gauches(nchas) = ng
+
+         xendr(1,:)=xendr2(2,:)
+         xendr(2,:)=xendr2(1,:)
+         xendr(3,:)=xendr2(3,:)
+
+
+         nchas=nchas+1
+         do j=1,long
+            chains(1,j,nchas)=xendr(1,j)
+            chains(2,j,nchas)=xendr(2,j)
+            chains(3,j,nchas)=xendr(3,j)
+         enddo
+            gauches(nchas) = ng
+
+         nchas=nchas+1
+         do j=1,long
+            chains(1,j,nchas)=-xendr(1,j)
+            chains(2,j,nchas)=xendr(2,j)
+            chains(3,j,nchas)=xendr(3,j)
+         enddo
+            gauches(nchas) = ng
+
+         nchas=nchas+1
+         do j=1,long
+            chains(1,j,nchas)=-xendr(1,j)
+            chains(2,j,nchas)=-xendr(2,j)
+            chains(3,j,nchas)=xendr(3,j)
+         enddo
+            gauches(nchas) = ng
+
+         nchas=nchas+1
+         do j=1,long
+            chains(1,j,nchas)=-xendr(1,j)
+            chains(2,j,nchas)=xendr(2,j)
+            chains(3,j,nchas)=-xendr(3,j)
+         enddo
+            gauches(nchas) = ng
+
+         nchas=nchas+1
+         do j=1,long
+            chains(1,j,nchas)=-xendr(1,j)
+            chains(2,j,nchas)=-xendr(2,j)
+            chains(3,j,nchas)=-xendr(3,j)
+         enddo
+            gauches(nchas) = ng
+
+         nchas=nchas+1
+         do j=1,long
+            chains(1,j,nchas)=xendr(1,j)
+            chains(2,j,nchas)=-xendr(2,j)
+            chains(3,j,nchas)=xendr(3,j)
+         enddo
+            gauches(nchas) = ng
+
+         nchas=nchas+1
+         do j=1,long
+            chains(1,j,nchas)=xendr(1,j)
+            chains(2,j,nchas)=-xendr(2,j)
+            chains(3,j,nchas)=-xendr(3,j)
+         enddo
+            gauches(nchas) = ng
+
+         nchas=nchas+1
+         do j=1,long
+            chains(1,j,nchas)=xendr(1,j)
+            chains(2,j,nchas)=xendr(2,j)
+            chains(3,j,nchas)=-xendr(3,j)
+         enddo
+            gauches(nchas) = ng
+
+         xendr(1,:)=xendr2(3,:)
+         xendr(2,:)=xendr2(2,:)
+         xendr(3,:)=xendr2(1,:)
+
+
+         nchas=nchas+1
+         do j=1,long
+            chains(1,j,nchas)=xendr(1,j)
+            chains(2,j,nchas)=xendr(2,j)
+            chains(3,j,nchas)=xendr(3,j)
+         enddo
+            gauches(nchas) = ng
+
+         nchas=nchas+1
+         do j=1,long
+            chains(1,j,nchas)=-xendr(1,j)
+            chains(2,j,nchas)=xendr(2,j)
+            chains(3,j,nchas)=xendr(3,j)
+         enddo
+            gauches(nchas) = ng
+
+         nchas=nchas+1
+         do j=1,long
+            chains(1,j,nchas)=-xendr(1,j)
+            chains(2,j,nchas)=-xendr(2,j)
+            chains(3,j,nchas)=xendr(3,j)
+         enddo
+            gauches(nchas) = ng
+
+         nchas=nchas+1
+         do j=1,long
+            chains(1,j,nchas)=-xendr(1,j)
+            chains(2,j,nchas)=xendr(2,j)
+            chains(3,j,nchas)=-xendr(3,j)
+         enddo
+            gauches(nchas) = ng
+
+         nchas=nchas+1
+         do j=1,long
+            chains(1,j,nchas)=-xendr(1,j)
+            chains(2,j,nchas)=-xendr(2,j)
+            chains(3,j,nchas)=-xendr(3,j)
+         enddo
+            gauches(nchas) = ng
+
+         nchas=nchas+1
+         do j=1,long
+            chains(1,j,nchas)=xendr(1,j)
+            chains(2,j,nchas)=-xendr(2,j)
+            chains(3,j,nchas)=xendr(3,j)
+         enddo
+            gauches(nchas) = ng
+
+         nchas=nchas+1
+         do j=1,long
+            chains(1,j,nchas)=xendr(1,j)
+            chains(2,j,nchas)=-xendr(2,j)
+            chains(3,j,nchas)=-xendr(3,j)
+         enddo
+            gauches(nchas) = ng
+
+         nchas=nchas+1
+         do j=1,long
+            chains(1,j,nchas)=xendr(1,j)
+            chains(2,j,nchas)=xendr(2,j)
+            chains(3,j,nchas)=-xendr(3,j)
+         enddo
+            gauches(nchas) = ng
+
+         xendr(1,:)=xendr2(1,:)
+         xendr(2,:)=xendr2(3,:)
+         xendr(3,:)=xendr2(2,:)
+
+
+         nchas=nchas+1
+         do j=1,long
+            chains(1,j,nchas)=xendr(1,j)
+            chains(2,j,nchas)=xendr(2,j)
+            chains(3,j,nchas)=xendr(3,j)
+         enddo
+            gauches(nchas) = ng
+
+         nchas=nchas+1
+         do j=1,long
+            chains(1,j,nchas)=-xendr(1,j)
+            chains(2,j,nchas)=xendr(2,j)
+            chains(3,j,nchas)=xendr(3,j)
+         enddo
+            gauches(nchas) = ng
+
+         nchas=nchas+1
+         do j=1,long
+            chains(1,j,nchas)=-xendr(1,j)
+            chains(2,j,nchas)=-xendr(2,j)
+            chains(3,j,nchas)=xendr(3,j)
+         enddo
+            gauches(nchas) = ng
+
+         nchas=nchas+1
+         do j=1,long
+            chains(1,j,nchas)=-xendr(1,j)
+            chains(2,j,nchas)=xendr(2,j)
+            chains(3,j,nchas)=-xendr(3,j)
+         enddo
+            gauches(nchas) = ng
+
+         nchas=nchas+1
+         do j=1,long
+            chains(1,j,nchas)=-xendr(1,j)
+            chains(2,j,nchas)=-xendr(2,j)
+            chains(3,j,nchas)=-xendr(3,j)
+         enddo
+            gauches(nchas) = ng
+
+         nchas=nchas+1
+         do j=1,long
+            chains(1,j,nchas)=xendr(1,j)
+            chains(2,j,nchas)=-xendr(2,j)
+            chains(3,j,nchas)=xendr(3,j)
+         enddo
+            gauches(nchas) = ng
+
+         nchas=nchas+1
+         do j=1,long
+            chains(1,j,nchas)=xendr(1,j)
+            chains(2,j,nchas)=-xendr(2,j)
+            chains(3,j,nchas)=-xendr(3,j)
+         enddo
+            gauches(nchas) = ng
+
+         nchas=nchas+1
+         do j=1,long
+            chains(1,j,nchas)=xendr(1,j)
+            chains(2,j,nchas)=xendr(2,j)
+            chains(3,j,nchas)=-xendr(3,j)
+         enddo
+            gauches(nchas) = ng
+
+         xendr(1,:)=xendr2(3,:)
+         xendr(2,:)=xendr2(1,:)
+         xendr(3,:)=xendr2(2,:)
+
+
+         nchas=nchas+1
+         do j=1,long
+            chains(1,j,nchas)=xendr(1,j)
+            chains(2,j,nchas)=xendr(2,j)
+            chains(3,j,nchas)=xendr(3,j)
+         enddo
+            gauches(nchas) = ng
+
+         nchas=nchas+1
+         do j=1,long
+            chains(1,j,nchas)=-xendr(1,j)
+            chains(2,j,nchas)=xendr(2,j)
+            chains(3,j,nchas)=xendr(3,j)
+         enddo
+            gauches(nchas) = ng
+
+         nchas=nchas+1
+         do j=1,long
+            chains(1,j,nchas)=-xendr(1,j)
+            chains(2,j,nchas)=-xendr(2,j)
+            chains(3,j,nchas)=xendr(3,j)
+         enddo
+            gauches(nchas) = ng
+
+         nchas=nchas+1
+         do j=1,long
+            chains(1,j,nchas)=-xendr(1,j)
+            chains(2,j,nchas)=xendr(2,j)
+            chains(3,j,nchas)=-xendr(3,j)
+         enddo
+            gauches(nchas) = ng
+
+         nchas=nchas+1
+         do j=1,long
+            chains(1,j,nchas)=-xendr(1,j)
+            chains(2,j,nchas)=-xendr(2,j)
+            chains(3,j,nchas)=-xendr(3,j)
+         enddo
+            gauches(nchas) = ng
+
+         nchas=nchas+1
+         do j=1,long
+            chains(1,j,nchas)=xendr(1,j)
+            chains(2,j,nchas)=-xendr(2,j)
+            chains(3,j,nchas)=xendr(3,j)
+         enddo
+            gauches(nchas) = ng
+
+         nchas=nchas+1
+         do j=1,long
+            chains(1,j,nchas)=xendr(1,j)
+            chains(2,j,nchas)=-xendr(2,j)
+            chains(3,j,nchas)=-xendr(3,j)
+         enddo
+            gauches(nchas) = ng
+
+         nchas=nchas+1
+         do j=1,long
+            chains(1,j,nchas)=xendr(1,j)
+            chains(2,j,nchas)=xendr(2,j)
+            chains(3,j,nchas)=-xendr(3,j)
+         enddo
+            gauches(nchas) = ng
+
+         xendr(1,:)=xendr2(2,:)
+         xendr(2,:)=xendr2(3,:)
+         xendr(3,:)=xendr2(1,:)
+
+
+         nchas=nchas+1
+         do j=1,long
+            chains(1,j,nchas)=xendr(1,j)
+            chains(2,j,nchas)=xendr(2,j)
+            chains(3,j,nchas)=xendr(3,j)
+         enddo
+            gauches(nchas) = ng
+
+         nchas=nchas+1
+         do j=1,long
+            chains(1,j,nchas)=-xendr(1,j)
+            chains(2,j,nchas)=xendr(2,j)
+            chains(3,j,nchas)=xendr(3,j)
+         enddo
+            gauches(nchas) = ng
+
+         nchas=nchas+1
+         do j=1,long
+            chains(1,j,nchas)=-xendr(1,j)
+            chains(2,j,nchas)=-xendr(2,j)
+            chains(3,j,nchas)=xendr(3,j)
+         enddo
+            gauches(nchas) = ng
+
+         nchas=nchas+1
+         do j=1,long
+            chains(1,j,nchas)=-xendr(1,j)
+            chains(2,j,nchas)=xendr(2,j)
+            chains(3,j,nchas)=-xendr(3,j)
+         enddo
+            gauches(nchas) = ng
+
+         nchas=nchas+1
+         do j=1,long
+            chains(1,j,nchas)=-xendr(1,j)
+            chains(2,j,nchas)=-xendr(2,j)
+            chains(3,j,nchas)=-xendr(3,j)
+         enddo
+            gauches(nchas) = ng
+
+         nchas=nchas+1
+         do j=1,long
+            chains(1,j,nchas)=xendr(1,j)
+            chains(2,j,nchas)=-xendr(2,j)
+            chains(3,j,nchas)=xendr(3,j)
+         enddo
+            gauches(nchas) = ng
+
+         nchas=nchas+1
+         do j=1,long
+            chains(1,j,nchas)=xendr(1,j)
+            chains(2,j,nchas)=-xendr(2,j)
+            chains(3,j,nchas)=-xendr(3,j)
+         enddo
+            gauches(nchas) = ng
+
+         nchas=nchas+1
+         do j=1,long
+            chains(1,j,nchas)=xendr(1,j)
+            chains(2,j,nchas)=xendr(2,j)
+            chains(3,j,nchas)=-xendr(3,j)
+         enddo
+            gauches(nchas) = ng
+
+
+
+         if (nchas.ge.25)exit
  enddo   
 enddo
 return
