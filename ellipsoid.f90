@@ -131,7 +131,7 @@ seed = 4322319 ! use the same initial seed, so all particles have the same area 
 
  call integrate(AAAS(:,:,j),AellS(:,j), Rell(:,j),npoints, volq1, sumvolq1, flag)
 
- npoints = 1000000000
+ npoints = 200000000
  call newintegrateg(Aell(:,j),Rell(:,j),npoints,volx1,sumvolx1, com1, p1, ncha1, volxx1)
 
 !! volume
