@@ -37,6 +37,7 @@ real*8 volxx(dimx,dimy,dimz)
 real*8 x(3), v(3), hcyl
 integer nbands
 
+
 cutarea = 0.0 ! throw away cells that have less area than cutarea x area of the cell with largest area  
 sumpolseg = 0.0
 

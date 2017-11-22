@@ -38,6 +38,9 @@ real*8 volxx(dimx,dimy,dimz)
 real*8 x(3), v(3), hcyl
 integer nbands
 
+
+call make_ellipsoid ! update matrixes for all particles
+
 cutarea = 0.0 ! throw away cells that have less area than cutarea x area of the cell with largest area  
 sumpolseg = 0.0
 rchannel2 = rchannel**2
@@ -109,6 +112,8 @@ do j = 1, NNN
 
 ! rotate ellipsoid matrixes according to current rotation matrix
 
+
+
  call rotv(AAA(:,:,j), rotmatrix(:,:,j))
  call rotv(AAAS(:,:,j), rotmatrix(:,:,j))
  call rotv(AAAL(:,:,j), rotmatrix(:,:,j))
@@ -122,8 +127,8 @@ do j = 1, NNN
 
  call integrate(AAAL(:,:,j),AellL(:,j), Rell(:,j),npoints, voleps1 , sumvoleps1, flag)
  flag = .false. ! not a problem if eps lays outside boundaries
- call integrate(AAA(:,:,j),Aell(:,j), Rell(:,j),npoints, volprot1, sumvolprot1, flag)
 
+ call integrate(AAA(:,:,j),Aell(:,j), Rell(:,j),npoints, volprot1, sumvolprot1, flag)
  call integrate(AAAS(:,:,j),AellS(:,j), Rell(:,j),npoints, volq1, sumvolq1, flag)
 
  npoints = 100000000
@@ -131,6 +136,9 @@ do j = 1, NNN
 
 !! volume
  temp = 4.0/3.0*pi*Aell(1,j)*Aell(2,j)*Aell(3,j)/(sumvolprot1*delta**3) ! rescales volume
+
+ print*, 'temp', temp, 4.0/3.0*pi*Aell(1,j)*Aell(2,j)*Aell(3,j), (sumvolprot1*delta**3)
+
  volprot1 = volprot1*temp                                                 ! OJO: transformation should mantain cell volumen
  sumvolprot1 = sumvolprot1*temp
 
@@ -169,6 +177,7 @@ do j = 1, NNN
  volprot1 = volprot1 * 0.99
  volprot = volprot+volprot1 ! sum particle to channel
 
+
 ! CHECK COLLISION HERE...
  if(maxval(volprot).gt.1.0) then ! collision
    flag=.true.
@@ -180,9 +189,6 @@ do j = 1, NNN
 
 enddo ! j
 
-title = 'avpro'
-counter = 1
-call savetodisk(volprot, title, counter)
 
 counter = 1
 call savetodisk(voleps, title, counter)
@@ -190,6 +196,10 @@ call savetodisk(voleps, title, counter)
 title = 'avcha'
 counter = 1
 call savetodisk(volq, title, counter)
+
+title = 'avpro'
+counter = 1
+call savetodisk(volprot, title, counter)
 
 title = 'avgrf'
 counter = 1

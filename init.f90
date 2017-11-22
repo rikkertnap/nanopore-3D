@@ -212,12 +212,16 @@ if(rank.eq.0) then ! solo el jefe escribe a disco....
 ! fdis
 !  title = 'frdis'
 !  call savetodisk(fdis, title, cccc)
+
+
 ! Potencial electrostatico
 
-!  temp(1:dimx,1:dimy, 1:dimz) = psi(1:dimx,1:dimy, 1:dimz)
+  temp(1:dimx,1:dimy, 1:dimz) = psi(1:dimx,1:dimy, 1:dimz)
 
-!  title = 'poten'
-!  call savetodisk(temp, title, cccc)
+  title = 'poten'
+  call savetodisk(temp, title, cccc)
+
+
 ! Particle
 !  title = 'avpar'
 !  call savetodisk(volprot, title, cccc)
