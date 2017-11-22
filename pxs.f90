@@ -60,6 +60,19 @@ case (1)
          stop
        endif
 
+
+case (6)
+       if(testsystem(x).eq.-1) then ! if testsystem = -1,  there is a collision with all or particle 
+         flag = -1
+         exit
+       endif
+
+       if(testsystem(x).eq.-2) then ! if testsystem = -2, the polymer goes out-of-system
+         write(stdout,*) 'pxs: out-of-system'
+         stop
+       endif
+
+
 case (2, 3, 4, 41, 42)
 
 

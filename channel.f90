@@ -1152,3 +1152,92 @@ com1(i,2) = com1(i,2) - 0.5*lseg*((com1(i,2)-originc(2)))/rchannel
 enddo
 end
 
+subroutine update_matrix_planar(flag)
+use system
+use channel
+use ematrix
+use MPI
+use const
+use chainsdat
+use molecules
+use channel
+use transform, only : MAT, IMAT
+use rotchain
+
+implicit none
+
+real*8, external :: rands
+integer counter
+character*5 title
+logical flag
+integer j,ix,iy,iz
+real*8 volx1(maxvolx)
+real*8 com1(maxvolx,3)
+integer p1(maxvolx,3)
+integer i
+real*8 volxx(dimx,dimy,dimz)
+real*8 x(3), v(3)
+integer nbands
+real*8 spacex, spacey
+
+! clear all
+voleps = 0.0
+volprot = 0.0
+volq = 0.0
+volx = 0.0
+volxx = 0.0
+com = 0.0
+ncha = 0
+
+voleps(:,:,1) = eepsc ! polymer-wall interaction only for segments in the first layer
+volq = 0.0 ! charge not implemented for planar surfaces yet
+
+!! grafting
+
+! add com1 and volx to list
+
+spacex = float(dimx)*delta/float(Npolx) ! space in the x direction in nm
+spacey = float(dimy)*delta/float(Npoly) ! space in the y direction in nm
+
+com = 0.0
+ncha = 0
+do i = 1, Npolx
+ do j = 1, Npoly
+ ncha = ncha + 1
+
+ v(1) = spacex*float(i)-spacex/2.0
+ v(2) = spacey*float(j)-spacey/2.0
+ v(3) = lseg
+
+! v in transformed space, x in real space
+
+ x = MATMUL(IMAT,v)
+
+ com(ncha,:) = x(:)
+ p0(ncha,:) = int(v(:)/delta)+1
+
+ volxx(p0(ncha,1),p0(ncha,2), p0(ncha,3)) = 1.0
+ volx(ncha) = 1.0
+ enddo
+enddo
+
+title = 'avpro'
+counter = 1
+call savetodisk(volprot, title, counter)
+
+title = 'aveps'
+counter = 1
+call savetodisk(voleps, title, counter)
+
+!title = 'avcha'
+!counter = 1
+!call savetodisk(volq, title, counter)
+
+title = 'avgrf'
+counter = 1
+call savetodisk(volxx, title, counter)
+
+flag=.false.
+
+end subroutine
+

@@ -105,6 +105,10 @@ do jx = 0, dimx+1
 do jy = 0, dimy+1
 do jz = 0, dimz+1
 
+ix=jx
+iy=jy
+iz=jz ! these lines are necessary for PBC = 0 or 2
+
 if (PBC(1).eq.1)ix = PBCSYMI(jx,dimx)
 if (PBC(3).eq.1)iy = PBCSYMI(jy,dimy)
 if (PBC(5).eq.1)iz = PBCSYMI(jz,dimz)
