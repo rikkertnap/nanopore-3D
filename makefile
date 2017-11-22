@@ -8,6 +8,11 @@ HOST=$(shell hostname)
 $(info HOST is ${HOST})
 
 
+ifeq ($(HOST),carapa)
+LFLAGS = -lsundials_fkinsol -lsundials_fnvecserial -lsundials_kinsol -lsundials_nvecserial -lm
+endif
+
+
 # some definitions
 SHELL = /bin/bash
 FFLAGS=-O3#  -fbacktrace -fbounds-check # -O3
