@@ -735,7 +735,7 @@ case (4) ! uniformed coated cylinder
    npointz = nint(float(NBRUSH)*hcyl/(2.0*pi*rchannel)/cos(30.0/180.0*pi))   ! number of sites along the z - coordinate, first site is at bdist
 case (41) ! only one row
    npointz = 1
-case (42, 52)
+case (42, 52, 60)
    npointz = Nrings
 endselect
 
@@ -809,7 +809,7 @@ select case (randominput)
 endselect
 
 
-if ((systemtype.eq.42).or.(systemtype.eq.52)) then
+if ((systemtype.eq.42).or.(systemtype.eq.52).or.(systemtype.eq.60)) then
  tethaadd = 0.0
 else
  tethaadd = mod(jjjz,2)*2.0*pi/float(npointt)*0.5
@@ -824,13 +824,13 @@ case(4)
 x(3) = float(jjjz-1)/float(npointz)*hcyl+rz+hcyl0
 case(41)
 x(3) = float(jjjz-1)/float(npointz)*hcyl+hcyl0 ! for systemtype = 41 shift only in tetha, no in z
-case(42, 52)
+case(42, 52, 60)
 x(3) = ringpos(jjjz)*hcyl+hcyl0 
 end select
 
 !x in  real space
 v = MATMUL(MAT,x)
-if((systemtype.eq.42).or.(systemtype.eq.52)) then
+if((systemtype.eq.42).or.(systemtype.eq.52).or.(systemtype.eq.60)) then
 v(3) = v(3) + float((dimz-RdimZ*2))/2.0*delta ! centers the first row of polymers at the middle of the layer, useful to avoid numerical rounding errors.
 else
 v(3) = v(3) + float((dimz-RdimZ*2)/npointz)/2.0*delta ! centers the first row of polymers at the middle of the layer, useful to avoid numerical rounding errors.
@@ -881,7 +881,7 @@ enddo ! jjjz
 do i = 1, ncha1
 ! Moves the position of the first segment lseg/2 away from the surface to prevent collision due to round errors.
 select case (systemtype)
-case (2, 3, 4, 41, 42)
+case (2, 3, 4, 41, 42, 60)
 com1(i,1) = com1(i,1) - lseg*((com1(i,1)-originc(1)))/rchannel 
 com1(i,2) = com1(i,2) - lseg*((com1(i,2)-originc(2)))/rchannel 
 case (52)

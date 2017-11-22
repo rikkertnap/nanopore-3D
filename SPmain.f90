@@ -87,6 +87,8 @@ elseif (systemtype.eq.52) then
 call update_matrix_channel_4(flag) ! updates 'the matrix'
 elseif (systemtype.eq.6) then
 call update_matrix_planar(flag) ! updates 'the matrix'
+elseif (systemtype.eq.60) then
+call update_matrix_60(flag) ! channel + particles
 endif
 
   if(flag.eqv..true.) then
