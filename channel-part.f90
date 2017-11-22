@@ -98,6 +98,9 @@ p0(i,:)=p1(i,:)
 rotangle(i) = atan2(com1(i,1)-originc(1), com1(i,2)-originc(2))
 enddo
 
+ volprot = volprot+volprot1*0.99 ! sum channel
+
+
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! ADD PARTICLE
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!

@@ -420,11 +420,13 @@ do while (ios == 0)
 
      call allocateell
 
-     read(fh, *), basura
+     read(fh, *), basura  
      do j = 1, NNN
      read(fh, *), Rellf(1,j), Rellf(2,j), Rellf(3,j)
      if(rank.eq.0)write(stdout,*) 'parser:','Set particle',j,'pos to',  Rellf(1,j), Rellf(2,j), Rellf(3,j)
      enddo
+
+    
 
      read(fh, *), basura
      do j = 1, NNN
