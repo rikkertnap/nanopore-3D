@@ -7,7 +7,7 @@ implicit none
 integer i
 
 N_poorsol = 1 ! number of different kais
-N_monomer = 2
+N_monomer = 1
 
 ALLOCATE (st_matrix(N_poorsol, N_poorsol)) ! interaction between monomer types in fraction of st, scaled by st-scale during running....
 ALLOCATE (zpol(N_monomer))    ! charge of monomer segment: 1: base, -1: acid, 0:neutral
@@ -21,14 +21,14 @@ st_matrix(1,1)=1.0
 ! Segment type 1 for NPC, positive base, hydrophilic
 
 i = 1
-zpol(i) = 0
+zpol(i) = 1
 hydroph(i) = 0
-pKa(i) = 11.0
+pKa(i) = 5.0
 
-i = 2
-zpol(i) = 0
-hydroph(i) = 1
-pKa(i) = 11.0
+!i = 2
+!zpol(i) = 0
+!hydroph(i) = 1
+!pKa(i) = 11.0
 
 !! Segment type 2 for NPC, negative , hydrophilic
 !

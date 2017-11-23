@@ -137,7 +137,6 @@ do j = 1, NNN
 !! volume
  temp = 4.0/3.0*pi*Aell(1,j)*Aell(2,j)*Aell(3,j)/(sumvolprot1*delta**3) ! rescales volume
 
- print*, 'temp', temp, 4.0/3.0*pi*Aell(1,j)*Aell(2,j)*Aell(3,j), (sumvolprot1*delta**3)
 
  volprot1 = volprot1*temp                                                 ! OJO: transformation should mantain cell volumen
  sumvolprot1 = sumvolprot1*temp
