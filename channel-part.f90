@@ -188,7 +188,7 @@ do j = 1, NNN
 
 enddo ! j
 
-
+if (rank.eq.0) then
 title = 'aveps'
 counter = 1
 call savetodisk(voleps, title, counter)
@@ -201,6 +201,7 @@ call savetodisk(volprot, title, counter)
 title = 'avgrf'
 counter = 1
 call savetodisk(volxx, title, counter)
+endif
 
 sumpolseg = ncha
 
