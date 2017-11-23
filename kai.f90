@@ -31,21 +31,20 @@ real*8 or
 real*8 volume
 real*8 xx(3), vv(3)
 integer temp
-character*21 filename
 
 Xulimit = int(cutoff/delta)+1
 limit = Xulimit + 5 ! make it much larger, will check at the end.
 
 ALLOCATE (matriz(-limit:limit, -limit:limit, -limit:limit)) ! matriz de kai
-if(rank.eq.0)write(stdout,*)'kais: Kai calculation'
+if(rank.eq.0)print*,'kais: Kai calculation'
 suma = 0.0
 matriz = 0.0
 MCsteps = 200*Xulimit
 volume = dfloat(MCsteps)**3
 
-!if(rank.eq.0)write(stdout,*) 'kais: CORREGIR MCSTEPS!!!!'
+!if(rank.eq.0)print*, 'kais: CORREGIR MCSTEPS!!!!'
 
-l = rpol*2 !(((vpol*vsol)/(4/3*3.14)))**(1/3) !lseg 
+l = lseg 
 
 do jx = 1, MCsteps
 do jy = 1, MCsteps
@@ -58,6 +57,7 @@ z = 2.0*cutoff*(((float(jz)-0.5)/float(MCsteps))-0.5)
  radio = sqrt(x**2 + y**2 + z**2) ! espacio real
 
  if(radio.gt.cutoff) cycle ! No esta dentro de la esfera del cut-off   
+ if(radio.lt.l) cycle ! esta dentro de la esfera del segmento
 
  ! celda 
 
@@ -71,14 +71,7 @@ z = 2.0*cutoff*(((float(jz)-0.5)/float(MCsteps))-0.5)
  iy = int(anint(xx(2)/delta))
  iz = int(anint(xx(3)/delta))
 
-select case (potential)
-case(1)
- if(radio.lt.(1.122*l)) radio = 1.122*l ! esta dentro de la esfera del segmento
- matriz(ix, iy, iz) = matriz(ix, iy, iz) + (l/radio)**6 - (l/radio)**12
-case(2)
- if(radio.lt.l) radio = l ! esta dentro de la esfera del segmento
- matriz(ix, iy, iz) = matriz(ix, iy, iz) + exp((l-radio)/lambda)
-endselect
+ matriz(ix, iy, iz) = matriz(ix, iy, iz) + (l/radio)**6
 
 enddo
 enddo
@@ -100,12 +93,12 @@ enddo
 enddo
 
 if(Xulimit.eq.limit) then
-write(stdout,*) 'kais: error Xulimit = limit'
+print*, 'kais: error Xulimit = limit'
 call MPI_FINALIZE(ierr)
 stop
 endif
 
-if(rank.eq.0)write(stdout,*)'kais: New Xulimit', Xulimit
+if(rank.eq.0)print*,'kais: New Xulimit', Xulimit
 
 ALLOCATE (Xu(-Xulimit:Xulimit,-Xulimit:Xulimit,-Xulimit:Xulimit))
 Xu = 0.0
@@ -120,7 +113,7 @@ enddo
 enddo
 enddo
 
-if(rank.eq.0)write(stdout,*) 'kais: Sum Xulimit', suma
+if(rank.eq.0)print*, 'kais: Sum Xulimit', suma
 
 suma = 0.0
 do ix = -limit, limit
@@ -131,7 +124,7 @@ enddo
 enddo
 enddo
 
-if(rank.eq.0)write(stdout,*) 'kais: Total Sum', suma
+if(rank.eq.0)print*, 'kais: Total Sum', suma
 
 do ix = -Xulimit, Xulimit
 do iy = -Xulimit, Xulimit
@@ -141,20 +134,6 @@ enddo
 enddo
 enddo
 
-if(rank.eq.0) then
-write(filename,'(A7)') 'kai.dat'
-open(unit=122, file=filename)
-
-do ix = -Xulimit, Xulimit
-do iy = -Xulimit, Xulimit
-do iz = -Xulimit, Xulimit
-write(122,*)ix,iy,iz,Xu(ix, iy, iz)
-enddo
-enddo
-enddo
-
-close(122)
-endif
  
 end
 
