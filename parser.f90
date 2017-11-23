@@ -52,7 +52,6 @@ sigmar = 0.0 ! random sigma
 !
 
 vscan = ndi
-potential = ndi
 scx = ndi
 scy = ndi
 scz = ndi
@@ -83,7 +82,6 @@ rpol = ndr
 vsol0 = ndr
 gama0 = ndr
 benergy = ndr
-lambda = ndr
 
 nsc = 1
 scs(1) = 1.0
@@ -268,14 +266,6 @@ do while (ios == 0)
 
  case ('vscan')
    read(buffer, *, iostat=ios) vscan
-   if(rank.eq.0)write(stdout,*) 'parser:','Set ',trim(label),' = ',trim(buffer)
-
- case ('potential')
-   read(buffer, *, iostat=ios) potential
-   if(rank.eq.0)write(stdout,*) 'parser:','Set ',trim(label),' = ',trim(buffer)
-
- case ('lambda')
-   read(buffer, *, iostat=ios) lambda
    if(rank.eq.0)write(stdout,*) 'parser:','Set ',trim(label),' = ',trim(buffer)
 
  case ('sigmar')
