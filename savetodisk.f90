@@ -55,8 +55,6 @@ do iz=1,dimz
       enddo
 enddo
 
-print*, title
-
 titlez = title // 'z'
 write(filename,'(A6,A1, I3.3, A4)') titlez,'.', counter, '.dat' 
 open(unit=45, file=filename)
