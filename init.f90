@@ -209,8 +209,9 @@ if(rank.eq.0) then ! solo el jefe escribe a disco....
 !  title = 'avOHm'
 !  call savetodisk(xOHmin, title, cccc)
 ! fdis
-!  title = 'frdis'
-!  call savetodisk(fdis, title, cccc)
+  title = 'frdis'
+  temp(1:dimx,1:dimy, 1:dimz) = fdis(1:dimx,1:dimy, 1:dimz,1)
+  call savetodisk(temp, title, cccc)
 
 
 ! Potencial electrostatico
