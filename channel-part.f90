@@ -189,17 +189,15 @@ do j = 1, NNN
 enddo ! j
 
 
+title = 'aveps'
 counter = 1
 call savetodisk(voleps, title, counter)
-
 title = 'avcha'
 counter = 1
 call savetodisk(volq, title, counter)
-
 title = 'avpro'
 counter = 1
 call savetodisk(volprot, title, counter)
-
 title = 'avgrf'
 counter = 1
 call savetodisk(volxx, title, counter)

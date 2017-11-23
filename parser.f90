@@ -78,7 +78,7 @@ dy = ndr
 dz = ndr
 cdiva = ndr
 csalt = ndr
-rpol = ndr
+vpol = ndr
 vsol0 = ndr
 gama0 = ndr
 benergy = ndr
@@ -260,8 +260,8 @@ do while (ios == 0)
    read(buffer, *, iostat=ios) benergy
    if(rank.eq.0)write(stdout,*) 'parser:','Set ',trim(label),' = ',trim(buffer)
 
- case ('rpol')
-   read(buffer, *, iostat=ios) rpol
+ case ('vpol')
+   read(buffer, *, iostat=ios) vpol
    if(rank.eq.0)write(stdout,*) 'parser:','Set ',trim(label),' = ',trim(buffer)
 
  case ('vscan')

@@ -22,7 +22,6 @@ zpos = 1.0
 zneg = -1.0
 vsol = vsol0
 vsalt=((4.0/3.0)*pi*(0.2)**3)/vsol  ! volume salt in units of vsol 0.2=radius salt  
-vpol= ((4.0/3.0)*pi*(rpol)**3)/vsol
 constq=delta*delta*4.0*pi*lb/vsol   ! multiplicative factor in poisson eq  
 pKw = 14
 error = 1e-4 ! para comparar con la norma...

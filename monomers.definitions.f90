@@ -23,7 +23,7 @@ st_matrix(1,1)=1.0
 i = 1
 zpol(i) = 1
 hydroph(i) = 0
-pKa(i) = 5.0
+pKa(i) = 10.0
 
 !i = 2
 !zpol(i) = 0
