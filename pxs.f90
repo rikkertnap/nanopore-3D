@@ -92,7 +92,6 @@ case (60)
          write(stdout,*) 'pxs: out-of-system'
          stop
        endif
-endif
 
 case (2, 3, 4, 41, 42)
 
