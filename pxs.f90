@@ -72,8 +72,29 @@ case (6)
          stop
        endif
 
+case (60)
+       if(testsystemc(x).eq.-1) then ! if testsystem = -1,  there is a collision with channel
+         flag = -1
+         exit
+       endif
 
-case (2, 3, 4, 41, 42, 60)
+       if(testsystemc(x).eq.-2) then ! if testsystem = -2, the polymer goes out-of-system
+         write(stdout,*) 'pxs: out-of-system'
+         stop
+       endif
+
+       if(testsystem(x).eq.-1) then ! if testsystem = -1,  there is a collision with all or one particle 
+         flag = -1
+         exit
+       endif
+
+       if(testsystem(x).eq.-2) then ! if testsystem = -2, the polymer goes out-of-system
+         write(stdout,*) 'pxs: out-of-system'
+         stop
+       endif
+endif
+
+case (2, 3, 4, 41, 42)
 
 
        if(testsystemc(x).eq.-1) then ! if testsystem = -1,  there is a collision with all or particle 
