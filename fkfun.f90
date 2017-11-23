@@ -200,6 +200,7 @@ do ix=1,dimx
 enddo
 
 
+
 ! Compute dielectric permitivity
 
 xtotalsum = 0.0 ! sum of all polymers
