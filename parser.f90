@@ -78,7 +78,13 @@ dy = ndr
 dz = ndr
 cdiva = ndr
 csalt = ndr
+
+print*, 'vpol in units of vsol' 
+stop
+
 vpol = ndr
+
+
 vsol0 = ndr
 gama0 = ndr
 benergy = ndr
