@@ -5,8 +5,8 @@ subroutine dielectfcn(phi,prot,epsfcn,Depsfcn)
 use const
 use system
 implicit none
-integer ix,iy,iz
-
+integer ix,iy,iz, jx,jy,jz
+integer, external :: PBCSYMI, PBCREFI
 real*8 phi(dimx,dimy,dimz)
 
 real*8 epsfcn(0:dimx+1,0:dimy+1,0:dimz+1)
@@ -18,7 +18,6 @@ real*8 Depsfcn(0:dimx+1,0:dimy+1,0:dimz+1)
 print*, 'Check boundary conditions'
 stop
 
-
 do ix = 1, dimx
 do iy = 1, dimy
 do iz = 1, dimz
@@ -28,31 +27,87 @@ enddo
 enddo
 enddo
 
-do ix = 1, dimx
-do iy = 1, dimy
-epsfcn(ix,iy,0) = epsfcn(ix,iy,1)
-epsfcn(ix,iy,dimz+1) = epsfcn(ix,iy,dimz)
-Depsfcn(ix,iy,0) = Depsfcn(ix,iy,1)
-Depsfcn(ix,iy,dimz+1) = Depsfcn(ix,iy,dimz)
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!      
+! Boundary conditions for dielectric function
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! Reflection or PBC, (PBC = 1 or 3)
+
+do jx = 0, dimx+1
+do jy = 0, dimy+1
+do jz = 0, dimz+1
+
+ix=jx
+iy=jy
+iz=jz ! these lines are necessary for PBC = 0 or 2
+
+if (PBC(1).eq.1)ix = PBCSYMI(jx,dimx) ! STANDARD PBC
+if (PBC(3).eq.1)iy = PBCSYMI(jy,dimy)
+if (PBC(5).eq.1)iz = PBCSYMI(jz,dimz)
+
+if (PBC(1).eq.3)ix = PBCREFI(jx,dimx) ! REFLECTING PBC
+if (PBC(3).eq.3)iy = PBCREFI(jy,dimy)
+if (PBC(5).eq.3)iz = PBCREFI(jz,dimz)
+
+   epsfcn(jx, jy, jz) = epsfcn(ix, iy, iz)
+   Depsfcn(jx, jy, jz) = Depsfcn(ix, iy, iz)
+enddo
 enddo
 enddo
 
-do ix = 1, dimx
-do iz = 1, dimz
-epsfcn(ix,0,iz) = epsfcn(ix,dimy,iz)
-epsfcn(ix,dimy+1,iz) = epsfcn(ix,1,iz)
-Depsfcn(ix,0,iz) = Depsfcn(ix,dimy,iz)
-Depsfcn(ix,dimy+1,iz) = Depsfcn(ix,1,iz)
-enddo
-enddo
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! Bulk or Wall, PBC = 0 or 2
 
-do iy = 1, dimy
-do iz = 1, dimz
-epsfcn(0,iy,iz) = epsfcn(dimx,iy,iz)
-epsfcn(dimx+1,iy,iz) = epsfcn(1,iy,iz)
-Depsfcn(0,iy,iz) = Depsfcn(dimx,iy,iz)
-Depsfcn(dimx+1,iy,iz) = Depsfcn(1,iy,iz)
-enddo
-enddo
+select case (PBC(1)) ! x = 0
+case(0) ! set bulk 
+   epsfcn(0,:,:) = 1.0 ! water dielectric
+   Depsfcn(0,:,:) = 0.0 ! irrevant, shouldn't be polymer in bulk
+case(2)
+   epsfcn(0,:,:) = 0.0 ! dielectric is zero at wall
+   Depsfcn(0,:,:) = 0.0 ! irrevant, shouldn't be polymer in wall
+endselect
 
+select case (PBC(2)) ! x = dimx
+case(0) ! set bulk 
+   epsfcn(dimx+1,:,:) = 1.0 ! water dielectric
+   Depsfcn(dimx+1,:,:) = 0.0 ! irrevant, shouldn't be polymer in bulk
+case(2)
+   epsfcn(dimx+1,:,:) = 0.0 ! dielectric is zero at wall
+   Depsfcn(dimx+1,:,:) = 0.0 ! irrevant, shouldn't be polymer in wall
+endselect
+
+select case (PBC(3)) ! y = 0
+case(0) ! set bulk 
+   epsfcn(:,0,:) = 1.0 ! water dielectric
+   Depsfcn(:,0,:) = 0.0 ! irrevant, shouldn't be polymer in bulk
+case(2)
+   epsfcn(:,0,:) = 0.0 ! dielectric is zero at wall
+   Depsfcn(:,0,:) = 0.0 ! irrevant, shouldn't be polymer in wall
+endselect
+
+select case (PBC(4)) ! y = dimy
+case(0) ! set bulk 
+   epsfcn(:,dimy+1,:) = 1.0 ! water dielectric
+   Depsfcn(:,dimy+1,:) = 0.0 ! irrevant, shouldn't be polymer in bulk
+case(2)
+   epsfcn(:,dimy+1,:) = 0.0 ! dielectric is zero at wall
+   Depsfcn(:,dimy+1,:) = 0.0 ! irrevant, shouldn't be polymer in wall
+endselect
+
+select case (PBC(5)) ! z = 0
+case(0)
+   epsfcn(:,:,0) = 1.0 ! water dielectric
+   Depsfcn(:,:,0) = 0.0 ! irrevant, shouldn't be polymer in bulk
+case(2)
+   epsfcn(:,:,0) = 0.0 ! dielectric is zero at wall
+   Depsfcn(:,:,0) = 0.0 ! irrevant, shouldn't be polymer in wall
+endselect
+
+select case (PBC(6)) ! z = dimz
+case(0) ! set bulk 
+   epsfcn(:,:,dimz+1) = 1.0 ! water dielectric
+   Depsfcn(:,:,dimz+1) = 0.0 ! irrevant, shouldn't be polymer in bulk
+case(2)
+   epsfcn(:,:,dimz+1) = 0.0 ! dielectric is zero at wall
+   Depsfcn(:,:,dimz+1) = 0.0 ! irrevant, shouldn't be polymer in wall
+endselect
 end subroutine

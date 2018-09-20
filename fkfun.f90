@@ -98,7 +98,6 @@ enddo
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!      
 ! Boundary conditions electrostatic potential
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
 ! Reflection or PBC, (PBC = 1 or 3)
  
 do jx = 0, dimx+1
@@ -113,19 +112,11 @@ if (PBC(1).eq.1)ix = PBCSYMI(jx,dimx)
 if (PBC(3).eq.1)iy = PBCSYMI(jy,dimy)
 if (PBC(5).eq.1)iz = PBCSYMI(jz,dimz)
 
-
-if ((PBC(1).eq.3).and.(ix.lt.1))ix = PBCREFI(jx,dimx)
-if ((PBC(2).eq.3).and.(ix.gt.dimx))ix = PBCREFI(jx,dimx)
-
-if ((PBC(3).eq.3).and.(iy.lt.1))iy = PBCREFI(jy,dimy)
-if ((PBC(4).eq.3).and.(iy.gt.dimy))iy = PBCREFI(jy,dimy)
-
-if ((PBC(5).eq.3).and.(iz.lt.1))iz = PBCREFI(jz,dimz)
-if ((PBC(6).eq.3).and.(iz.gt.dimz))iz = PBCREFI(jz,dimz)
-
+if (PBC(1).eq.3)ix = PBCREFI(jx,dimx)
+if (PBC(3).eq.3)iy = PBCREFI(jy,dimy)
+if (PBC(5).eq.3)iz = PBCREFI(jz,dimz)
 
    psi(jx, jy, jz) = psi(ix, iy, iz)
-
 enddo
 enddo
 enddo
