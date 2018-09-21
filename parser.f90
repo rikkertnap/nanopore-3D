@@ -79,9 +79,6 @@ dz = ndr
 cdiva = ndr
 csalt = ndr
 
-print*, 'vpol in units of vsol' 
-stop
-
 vpol = ndr
 
 
@@ -531,7 +528,6 @@ if (branched.eq.2) then
  longbb = long
  long = long + longb(2) - longb(1)
 endif 
-
 
 
 if(vtkflag.eq.ndi)call stopundef('vtkflag')

@@ -71,6 +71,8 @@ endif
 ! Input-dependent variables
 !!!!!!!!!!!!!!!!!!!!!!!!!!!
 
+
+vpol = vpol/vsol ! vpol in units of vsol
 constqE = vpol/(2.0d0*constq)
 dielW = 78.54
 dielPr = dielP/dielW

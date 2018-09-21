@@ -15,9 +15,6 @@ real*8 prot(dimx,dimy,dimz)
 
 real*8 Depsfcn(0:dimx+1,0:dimy+1,0:dimz+1)
 
-print*, 'Check boundary conditions'
-stop
-
 do ix = 1, dimx
 do iy = 1, dimy
 do iz = 1, dimz
