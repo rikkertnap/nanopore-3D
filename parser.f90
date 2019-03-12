@@ -413,25 +413,25 @@ do while (ios == 0)
 
      call allocateell
 
-     read(fh, *), basura  
+     read(fh, *) basura  
      do j = 1, NNN
-     read(fh, *), Rellf(1,j), Rellf(2,j), Rellf(3,j)
+     read(fh, *) Rellf(1,j), Rellf(2,j), Rellf(3,j)
      if(rank.eq.0)write(stdout,*) 'parser:','Set particle',j,'pos to',  Rellf(1,j), Rellf(2,j), Rellf(3,j)
      enddo
 
     
 
-     read(fh, *), basura
+     read(fh, *) basura
      do j = 1, NNN
-     read(fh, *), Aell(1,j), Aell(2,j), Aell(3,j)
+     read(fh, *) Aell(1,j), Aell(2,j), Aell(3,j)
      if(rank.eq.0)write(stdout,*) 'parser:','Set particle',j,'axis to',  Aell(1,j), Aell(2,j), Aell(3,j)
      enddo
-     read(fh, *), basura
+     read(fh, *) basura
 
      do j = 1, NNN
-     read(fh, *), rotmatrix(1,1,j), rotmatrix(1,2,j), rotmatrix(1,3,j)
-     read(fh, *), rotmatrix(2,1,j), rotmatrix(2,2,j), rotmatrix(2,3,j)
-     read(fh, *), rotmatrix(3,1,j), rotmatrix(3,2,j), rotmatrix(3,3,j)
+     read(fh, *) rotmatrix(1,1,j), rotmatrix(1,2,j), rotmatrix(1,3,j)
+     read(fh, *) rotmatrix(2,1,j), rotmatrix(2,2,j), rotmatrix(2,3,j)
+     read(fh, *) rotmatrix(3,1,j), rotmatrix(3,2,j), rotmatrix(3,3,j)
      if(rank.eq.0) then
          write(stdout,*) 'parser:','Set particle',j,'rotation to:'
          write(stdout,*) 'parser:', rotmatrix(1,1,j), rotmatrix(1,2,j), rotmatrix(1,3,j)
@@ -440,14 +440,14 @@ do while (ios == 0)
      endif
      enddo
 
-     read(fh, *), basura
+     read(fh, *) basura
      do j = 1, NNN
-     read(fh, *), echarge(j)
+     read(fh, *) echarge(j)
      if(rank.eq.0)write(stdout,*) 'parser:','Set particle',j,'charge to', echarge(j)
      enddo
-     read(fh, *), basura
+     read(fh, *) basura
      do j = 1, NNN
-     read(fh, *), eeps(j)
+     read(fh, *) eeps(j)
      if(rank.eq.0)write(stdout,*) 'parser:','Set particle',j,'hydrophobicity to', eeps(j)
      enddo
 
@@ -458,21 +458,21 @@ do while (ios == 0)
      if(NNN.ne.0) then
 
      call allocateell
-     read(fh, *), basura
+     read(fh, *) basura
      do j = 1, NNN
-     read(fh, *), Rellf(1,j), Rellf(2,j), Rellf(3,j)
+     read(fh, *) Rellf(1,j), Rellf(2,j), Rellf(3,j)
      if(rank.eq.0)write(stdout,*) 'parser:','Set particle',j,'pos to',  Rellf(1,j), Rellf(2,j), Rellf(3,j)
      enddo
-     read(fh, *), basura
+     read(fh, *) basura
      do j = 1, NNN
-     read(fh, *), Aell(1,j), Aell(2,j), Aell(3,j)
+     read(fh, *) Aell(1,j), Aell(2,j), Aell(3,j)
      if(rank.eq.0)write(stdout,*) 'parser:','Set particle',j,'axis to',  Aell(1,j), Aell(2,j), Aell(3,j)
      enddo
-     read(fh, *), basura
+     read(fh, *) basura
      do j = 1, NNN
-     read(fh, *), rotmatrix(1,1,j), rotmatrix(1,2,j), rotmatrix(1,3,j)
-     read(fh, *), rotmatrix(2,1,j), rotmatrix(2,2,j), rotmatrix(2,3,j)
-     read(fh, *), rotmatrix(3,1,j), rotmatrix(3,2,j), rotmatrix(3,3,j)
+     read(fh, *) rotmatrix(1,1,j), rotmatrix(1,2,j), rotmatrix(1,3,j)
+     read(fh, *) rotmatrix(2,1,j), rotmatrix(2,2,j), rotmatrix(2,3,j)
+     read(fh, *) rotmatrix(3,1,j), rotmatrix(3,2,j), rotmatrix(3,3,j)
      if(rank.eq.0) then
          write(stdout,*) 'parser:','Set particle',j,'rotation to:'
          write(stdout,*) 'parser:', rotmatrix(1,1,j), rotmatrix(1,2,j), rotmatrix(1,3,j)
@@ -481,20 +481,20 @@ do while (ios == 0)
      endif
      enddo
 
-     read(fh, *), basura
+     read(fh, *) basura
      do j = 1, NNN
-     read(fh, *), sigma(j)
+     read(fh, *) sigma(j)
      if(rank.eq.0)write(stdout,*) 'parser:','Set particle',j,'surface coverage to', sigma(j)
      enddo
 
-     read(fh, *), basura
+     read(fh, *) basura
      do j = 1, NNN
-     read(fh, *), echarge(j)
+     read(fh, *) echarge(j)
      if(rank.eq.0)write(stdout,*) 'parser:','Set particle',j,'charge to', echarge(j)
      enddo
-     read(fh, *), basura
+     read(fh, *) basura
      do j = 1, NNN
-     read(fh, *), eeps(j)
+     read(fh, *) eeps(j)
      if(rank.eq.0)write(stdout,*) 'parser:','Set particle',j,'hydrophobicity to', eeps(j)
      enddo
 
