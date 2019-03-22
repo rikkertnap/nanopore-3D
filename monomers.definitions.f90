@@ -18,12 +18,17 @@ ALLOCATE (pKa(N_monomer), Ka(N_monomer), K0(N_monomer))
 
 st_matrix(1,1)=1.0
 
-! Segment type 1 for NPC, positive base, hydrophilic
+!Segmento carga+1
+i=1
+zpol(i) = 1 !carga positiva
+hydroph(i)= 1 ! sv pobre
+pka(i)=8
 
-i = 1
-zpol(i) = 1
-hydroph(i) = 0
-pKa(i) = 10.0
+! Segment type 1 for NPC, positive base, hydrophilic
+!i = 1
+!zpol(i) = 0
+!hydroph(i) = 1
+!pKa(i) = 10.0
 
 !i = 2
 !zpol(i) = 0
