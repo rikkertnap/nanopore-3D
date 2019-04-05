@@ -6,8 +6,19 @@ use branches
 implicit none
 integer i, ii
 ALLOCATE (segtype(long)) 
-
-segtype = 1
+!l=0
+open(file="sequence.in",unit=333)
+do i=1,long
+ read(333,*) segtype(i)
+! l=l+1
+enddo
+!if(l.ne.long) then
+!    write(6,*) "error in sequence.in"
+!    call MPI_FINALIZE(ierr) ! finaliza MPI
+!    stop
+!endif
+close(333)
+!segtype = 1
 
 
 !if(branched.eq.1) then
