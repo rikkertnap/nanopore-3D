@@ -101,6 +101,7 @@ real*8 vsol0
 real*8 vsalt
 real*8 zpos,zneg
 real*8 benergy
+real*8 fz
 endmodule
 
 module kaist
@@ -138,6 +139,7 @@ integer*2, allocatable :: px(:,:,:)
 integer*2, allocatable :: py(:,:,:)
 integer*2, allocatable :: pz(:,:,:)
 integer*2, allocatable :: ngauche(:,:)
+real*4 , allocatable :: zfinal(:,:,:)
 endmodule
 
 module MPI

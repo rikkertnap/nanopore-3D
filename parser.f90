@@ -80,7 +80,7 @@ cdiva = ndr
 csalt = ndr
 
 vpol = ndr
-
+fz=ndr !yamila
 
 vsol0 = ndr
 gama0 = ndr
@@ -329,6 +329,10 @@ do while (ios == 0)
    read(buffer, *, iostat=ios) cutoff
    if(rank.eq.0)write(stdout,*) 'parser:','Set ',trim(label),' = ',trim(buffer)
 
+ case('fz') !yamila 
+   read(buffer, *, iostat=ios) fz
+   if(rank.eq.0)write(stdout,*) 'parser:','Set ',trim(label),' = ',trim(buffer)
+
  case ('systemtype')
    read(buffer, *, iostat=ios) systemtype
    if(rank.eq.0)write(stdout,*) 'parser:','Set ',trim(label),' = ',trim(buffer)
@@ -560,6 +564,7 @@ if(vpol0.eq.ndr)call stopundef('vpol')
 if(vsol0.eq.ndr)call stopundef('vsol')
 if(benergy.eq.ndr)call stopundef('benergy')
 if(gama0.eq.ndr)call stopundef('gama')
+if(fz.eq.ndr)call stopundef('fz') !yamila
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 

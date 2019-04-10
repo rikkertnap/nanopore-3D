@@ -84,12 +84,12 @@ psi = 0.0
 do ix=1,dimx
  do iy=1,dimy
   do iz=1,dimz
-     xh(ix,iy,iz)=x(ix+dimx*(iy-1)+dimx*dimy*(iz-1))
+     xh(ix,iy,iz)=x(ix+dimx*(iy-1)+dimx*dimy*(iz-1)) !fraccion solvente
 
      do ip = 1, N_poorsol
-      xtotal(ix,iy,iz,ip) = x(ix+dimx*(iy-1)+dimx*dimy*(iz-1)+ ip*ncells)
+      xtotal(ix,iy,iz,ip) = x(ix+dimx*(iy-1)+dimx*dimy*(iz-1)+ ip*ncells) !fraccion polimero de tipo ip
      enddo
-     if(electroflag.eq.1)psi(ix,iy,iz)=x(ix+dimx*(iy-1)+dimx*dimy*(iz-1)+(N_poorsol+1)*ncells)   
+     if(electroflag.eq.1)psi(ix,iy,iz)=x(ix+dimx*(iy-1)+dimx*dimy*(iz-1)+(N_poorsol+1)*ncells)   !potencial electrostatico
 
   enddo
  enddo
@@ -173,14 +173,14 @@ avpol = 0.0
 do ix=1,dimx
  do iy=1,dimy
   do iz=1,dimz
-    xpos(ix, iy, iz) = expmupos*(xh(ix, iy, iz)**vsalt)*dexp(-psi(ix, iy, iz)*zpos) ! ion plus volume fraction 
+    xpos(ix, iy, iz) = expmupos*(xh(ix, iy, iz)**vsalt)*dexp(-psi(ix, iy, iz)*zpos) ! ion plus volume fraction vsalt=vsal/vsv
     xneg(ix, iy, iz) = expmuneg*(xh(ix, iy, iz)**vsalt)*dexp(-psi(ix, iy, iz)*zneg) ! ion neg volume fraction
     xHplus(ix, iy, iz) = expmuHplus*(xh(ix, iy, iz))*dexp(-psi(ix, iy, iz))           ! H+ volume fraction
     xOHmin(ix, iy,iz) = expmuOHmin*(xh(ix,iy,iz))*dexp(+psi(ix,iy,iz))           ! OH-  volume fraction
 
      do im =1,N_monomer
         if (zpol(im).eq.1) then !BASE
-          fdis(ix,iy,iz,im) = 1.0 /(1.0 + xOHmin(ix,iy,iz)/(K0(im)*xh(ix,iy,iz)))
+          fdis(ix,iy,iz,im) = 1.0 /(1.0 + xOHmin(ix,iy,iz)/(K0(im)*xh(ix,iy,iz))) !k0 k en fraccion de volumen
         else if (zpol(im).eq.-1) then !ACID
           fdis(ix,iy,iz,im) = 1.0 /(1.0 + xHplus(ix,iy,iz)/(K0(im)*xh(ix,iy,iz)))
         endif
@@ -242,18 +242,19 @@ do ix=1,dimx
       hfactor = dexp(-(kp**2)*hd)
 
      end if
+!xpot=exp(-Uj(rj)) para P(alpha)
 
-     fv = (1.0 - volprot(ix,iy,iz))
-     xpot(ix, iy, iz, im) = xh(ix,iy,iz)**vpol
-     xpot(ix, iy, iz, im) = xpot(ix,iy,iz, im)*dexp(voleps(ix,iy,iz))
+     fv = (1.0 - volprot(ix,iy,iz)) !fraccion de volumen de la celda que es sc volprot->fraccion pared
+     xpot(ix, iy, iz, im) = xh(ix,iy,iz)**vpol ! im:tipo de segmento, término de presion osmotica
+     xpot(ix, iy, iz, im) = xpot(ix,iy,iz, im)*dexp(voleps(ix,iy,iz))  !termino de interaccion con sup de la particula
 
-! Electrostatics
+ ! Electrostatics
 
      if(zpol(im).ne.0.0) then
-         xpot(ix,iy,iz,im) =  xpot(ix,iy,iz,im)/fdis(ix,iy,iz,im)*dexp(-psi(ix,iy,iz)*zpol(im))
+         xpot(ix,iy,iz,im) =  xpot(ix,iy,iz,im)/fdis(ix,iy,iz,im)*dexp(-psi(ix,iy,iz)*zpol(im))  !fdis: por eq ac. base...  
      endif
   
-! Dielectrics
+ ! Dielectrics
 
      gradpsi2 = (psi(ix+1,iy,iz)-psi(ix,iy,iz))**2+(psi(ix,iy+1,iz)-psi(ix,iy,iz))**2+(psi(ix,iy,iz+1)-psi(ix,iy,iz))**2 
 
@@ -262,7 +263,7 @@ do ix=1,dimx
 
      xpot(ix,iy,iz,im) = xpot(ix,iy,iz,im)*exp(Depsfcn(ix,iy,iz)*(gradpsi2)/constq/2.0*vpol/fv)
 
-! Poor solvent
+ ! Poor solvent depende de la grilla donde esta y de sus vecinos
 
      if(hydroph(im).ne.0) then
 
@@ -339,29 +340,30 @@ avpol_tosend = 0.0
 q = 0.0
 sumgauche = 0.0
 
-do jj = 1, cpp(rank+1)
+do jj = 1, cpp(rank+1)    !punto de anclaje
    ii = cppini(rank+1)+jj
 
    q_tosend=0.0
    sumgauche_tosend = 0.0
    avpol_temp = 0.0
 
- do i=1,newcuantas(ii)
+ do i=1,newcuantas(ii)  !conformaciones 
    pro(i, jj)=shift
-   do j=1,long
+   do j=1,long   ! segmentos
     ax = px(i, j, jj) ! cada uno para su cadena...
     ay = py(i, j, jj)
     az = pz(i, j, jj)         
     pro(i, jj) = pro(i, jj) * xpot(ax, ay, az, segtype(j))
+    pro(i, jj) = pro(i, jj) * dexp(-fz*zfinal(i,j,jj)*zpol(segtype(j)))  ! termino Fz 
    enddo
-    pro(i,jj) = pro(i,jj)*exp(-benergy*ngauche(i,ii)) ! energy of gauche bonds
+    pro(i,jj) = pro(i,jj)*exp(-benergy*ngauche(i,ii)) ! energy of gauche bonds P(alpha).q-> sin normalizar
 
    do j=1,long
    fv = (1.0-volprot(px(i,j, jj),py(i,j, jj),pz(i,j, jj)))
    im = segtype(j)
     avpol_temp(px(i,j, jj),py(i,j, jj),pz(i,j, jj), im)= &
     avpol_temp(px(i,j, jj),py(i,j, jj),pz(i,j, jj), im)+pro(i, jj)*vpol*vsol/(delta**3)/fv* &
-    ngpol(ii)*sc ! ngpol(ii) has the number of chains grafted to the point ii
+    ngpol(ii)*sc !ngpol(ii) has the number of chains grafted to the point ii. fraccion de vol de pol sin norm
    enddo
 
    q_tosend=q_tosend+pro(i, jj)
@@ -370,7 +372,7 @@ do jj = 1, cpp(rank+1)
  enddo ! i
 ! norma 
     
-avpol_tosend=avpol_tosend + avpol_temp/q_tosend
+avpol_tosend=avpol_tosend + avpol_temp/q_tosend  !normalizar por q
 
 q(ii) = q_tosend ! no la envia ahora
 sumgauche(ii) = sumgauche_tosend/q_tosend
@@ -433,10 +435,10 @@ do iz=1,dimz
 
 f(ix+dimx*(iy-1)+dimx*dimy*(iz-1))= xh(ix,iy,iz) + &
       xneg(ix, iy, iz) + xpos(ix, iy, iz) + xHplus(ix, iy, iz) + &
-      xOHmin(ix, iy, iz) -1.000000d0
+      xOHmin(ix, iy, iz) -1.000000d0  !packing iones+sv
 
  do im = 1, N_monomer
-  f(ix+dimx*(iy-1)+dimx*dimy*(iz-1)) = f(ix+dimx*(iy-1)+dimx*dimy*(iz-1)) + avpol(ix,iy,iz,im)
+  f(ix+dimx*(iy-1)+dimx*dimy*(iz-1)) = f(ix+dimx*(iy-1)+dimx*dimy*(iz-1)) + avpol(ix,iy,iz,im) !packing ...+polimero
  enddo
 
 enddo
@@ -444,8 +446,6 @@ enddo
 enddo
 
 ! Poor solvent
-
-
 
 do ix=1,dimx
 do iy=1,dimy
@@ -469,7 +469,7 @@ enddo ! iz
 if(electroflag.eq.1) then
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-! Poisson equatio
+! Poisson equation
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 !

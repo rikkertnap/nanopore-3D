@@ -22,7 +22,7 @@ integer testsystemc
 real*8 maxx(3)
 integer flag
 integer aa
-
+real*4 ztemp(long)
 integer, external :: PBCREFI, PBCSYMI
 
 maxx(1) = float(dimx)*delta
@@ -42,6 +42,7 @@ do jj = 1, cpp(rank+1)
        .or.(systemtype.eq.42).or.(systemtype.eq.52).or.(systemtype.eq.60))call rot_chain_cyl(x,ii)
 
        x = x + posicion(ii,:)
+       ztemp(j)=x(3)
        v = MATMUL(MAT,x)
        pxtemp(:,j) = v(:)
 
@@ -124,10 +125,11 @@ endselect
 
 
     enddo ! j
-
+    
     if(flag.eq.0) then
 
     newcuantas(ii) = newcuantas(ii)+1
+    zfinal(newcuantas(ii),:,jj)=ztemp
     ngauche(newcuantas(ii),ii) = ing
 
             do j = 1, long

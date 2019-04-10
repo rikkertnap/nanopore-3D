@@ -8,4 +8,5 @@ ALLOCATE(px(cuantas, long, maxcpp))
 ALLOCATE(py(cuantas, long, maxcpp))
 ALLOCATE(pz(cuantas, long, maxcpp))
 ALLOCATE(pro(cuantas, maxcpp))
+ALLOCATE(zfinal(cuantas, long, maxcpp))
 end subroutine
