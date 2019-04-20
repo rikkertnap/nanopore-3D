@@ -9,6 +9,7 @@ use chainsdat
 use conformations
 use const
 use transform
+use mparameters_monomer
 implicit none
     
 integer j, ii, jj,i
@@ -22,7 +23,7 @@ integer testsystemc
 real*8 maxx(3)
 integer flag
 integer aa
-real*4 ztemp(long)
+real*4 ztemp
 integer, external :: PBCREFI, PBCSYMI
 
 maxx(1) = float(dimx)*delta
@@ -33,6 +34,7 @@ do jj = 1, cpp(rank+1)
   ii = cppini(rank+1)+jj
   flag = 0
 
+    ztemp = 0.0
     do j=1,long
        x(1) = in1(j ,2)
        x(2) = in1(j, 3)
@@ -42,7 +44,7 @@ do jj = 1, cpp(rank+1)
        .or.(systemtype.eq.42).or.(systemtype.eq.52).or.(systemtype.eq.60))call rot_chain_cyl(x,ii)
 
        x = x + posicion(ii,:)
-       ztemp(j)=x(3)
+       ztemp=ztemp+x(3)*zpol(segtype(j))
        v = MATMUL(MAT,x)
        pxtemp(:,j) = v(:)
 
@@ -129,7 +131,7 @@ endselect
     if(flag.eq.0) then
 
     newcuantas(ii) = newcuantas(ii)+1
-    zfinal(newcuantas(ii),:,jj)=ztemp
+    zfinal(newcuantas(ii),jj)=ztemp
     ngauche(newcuantas(ii),ii) = ing
 
             do j = 1, long

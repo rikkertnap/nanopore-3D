@@ -354,8 +354,8 @@ do jj = 1, cpp(rank+1)    !punto de anclaje
     ay = py(i, j, jj)
     az = pz(i, j, jj)         
     pro(i, jj) = pro(i, jj) * xpot(ax, ay, az, segtype(j))
-    pro(i, jj) = pro(i, jj) * dexp(-fz*zfinal(i,j,jj)*zpol(segtype(j)))  ! termino Fz 
    enddo
+    pro(i, jj) = pro(i, jj) * dexp(-fz*zfinal(i,jj))  ! termino Fz 
     pro(i,jj) = pro(i,jj)*exp(-benergy*ngauche(i,ii)) ! energy of gauche bonds P(alpha).q-> sin normalizar
 
    do j=1,long
