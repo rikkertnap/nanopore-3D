@@ -184,7 +184,7 @@ real*8 t
 
 t = rotangle(ii)
 y = x
-x(1) = cos(t)*y(1)-sin(t)*y(2)
-x(2) = sin(t)*y(1)+cos(t)*y(2)
+x(1) = cos(t)*y(1)+sin(t)*y(2)
+x(2) = -sin(t)*y(1)+cos(t)*y(2)
 x(3) = y(3)
 end

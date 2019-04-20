@@ -57,7 +57,7 @@ hds = -1
 !-----------------------------------------------------
 ! Common variables
 
-shift = 1.0d-100
+shift = 1.0
 
 ncells = dimx*dimy*dimz ! numero de celdas
 
