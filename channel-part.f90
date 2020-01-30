@@ -85,10 +85,6 @@ hcyl = x(3) ! height of the cylinder
 
 area = 2.0*pi*rchannel*hcyl
 
-
- voleps = voleps + voleps1
- volq = volq + volq1 
-
 ! add com1 and volx to list
 
  volxx = volxx1
