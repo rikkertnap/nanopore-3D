@@ -51,6 +51,7 @@ sigmar = 0.0 ! random sigma
 ! Check validity of input
 !
 
+mkl = 0
 vscan = ndi
 scx = ndi
 scy = ndi
@@ -138,6 +139,10 @@ do while (ios == 0)
 
  case ('verbose')
    read(buffer, *, iostat=ios) verbose
+   if(rank.eq.0)write(stdout,*) 'parser:','Set ',trim(label),' = ',trim(buffer)
+
+ case ('mkl')
+   read(buffer, *, iostat=ios) mkl
    if(rank.eq.0)write(stdout,*) 'parser:','Set ',trim(label),' = ',trim(buffer)
 
  case ('seed')

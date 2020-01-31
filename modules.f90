@@ -1,3 +1,35 @@
+
+
+module mkl
+
+type compressed_matrix
+ real*8, allocatable :: inc_values(:,:)
+ integer, allocatable :: inc_columns(:,:)
+ integer, allocatable :: pntrb(:)
+ integer, allocatable :: pntre(:)
+ integer nonzeros
+ integer :: gidx
+endtype
+
+type compressed_prob
+ real*8, allocatable :: pro(:)
+ real*8, allocatable :: lnpro(:)
+endtype
+
+type(compressed_prob), allocatable :: promkl(:)
+
+type(compressed_matrix), allocatable :: csrm(:,:) ! csr matrix, first index is grafing point, second index is monomer type
+integer mkl
+integer :: sumnewcuantas
+real*8, allocatable :: promkl(:)
+endmodule
+
+module maps
+integer, allocatable :: imap(:,:,:)
+integer, allocatable :: mapx(:), mapy(:), mapz(:)
+endmodule
+ 
+
 module mparameters_monomer
 integer N_poorsol ! number of different kais
 integer N_monomer ! number of different monomer types
@@ -43,6 +75,8 @@ integer, parameter :: maxvolx = 50000
 real*8 volx(maxvolx)
 real*8 com(maxvolx,3)
 integer p0(maxvolx,3)
+real*8, allocatable :: fvstd(:,:,:)
+real*8 allocatable :: fvmkl(:,:,:)
 end module
 
 
