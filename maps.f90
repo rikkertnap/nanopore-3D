@@ -33,7 +33,7 @@ integer ix,iy,iz,i
 
 do ix = 1, dimx
 do iy = 1, dimy
-do iz = 1, dimy
+do iz = 1, dimz
 fvstd(ix,iy,iz) = 1.0-volprot(ix,iy,iz)
 fvmkl(imap(ix,iy,iz))=1.0-volprot(ix,iy,iz)
 enddo

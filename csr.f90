@@ -201,6 +201,7 @@ avpol_tmp(:) * vpol*vsol/(delta**3)/fvmkl(:)*sc/q(ii)*ngpol(ii)
 enddo ! jj
 enddo ! im
 
+  call MPI_Barrier(MPI_COMM_WORLD, err)
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! 5.  MPI 
@@ -211,10 +212,10 @@ if (rank.eq.0) then
 ! Junta avpol       
   call MPI_REDUCE(avpol_tosend, avpolmkl, dimx*dimy*dimz*N_monomer, MPI_DOUBLE_PRECISION, MPI_SUM,0, MPI_COMM_WORLD, err)
 endif
+
 ! Subordinados
 if(rank.ne.0) then
 ! Junta avpol       
-  call MPI_Barrier(MPI_COMM_WORLD, err)
   call MPI_REDUCE(avpol_tosend, avpolmkl, dimx*dimy*dimz*N_monomer, MPI_DOUBLE_PRECISION, MPI_SUM,0, MPI_COMM_WORLD, err)
 endif
 
