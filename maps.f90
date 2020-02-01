@@ -6,6 +6,11 @@ use ematrix
 implicit none
 integer ix,iy,iz,i
 
+ALLOCATE(imap(dimx,dimy,dimz))
+ALLOCATE(mapx(dimx*dimy*dimz))
+ALLOCATE(mapy(dimx*dimy*dimz))
+ALLOCATE(mapz(dimx*dimy*dimz))
+
 do ix = 1, dimx
 do iy = 1, dimy
 do iz = 1, dimy

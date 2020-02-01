@@ -116,7 +116,7 @@ ii = cppini(rank+1)+jj   ! grafting point
  enddo ! i
 
 csrm(ii,im)%pntre(1:newcuantas(ii)-1) = csrm(ii,im)%pntrb(2:newcuantas(ii))
-csrm(ii,im)%pntre(sumnewcuantas) =  csrm(ii,im)%gidx + 1
+csrm(ii,im)%pntre(newcuantas(ii)) =  csrm(ii,im)%gidx + 1
 
 enddo ! im
 enddo ! jj

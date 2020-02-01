@@ -42,6 +42,8 @@ ALLOCATE (voleps(dimx,dimy,dimz))
 ALLOCATE (voleps1(dimx,dimy,dimz))
 ALLOCATE (volq(dimx,dimy,dimz))
 ALLOCATE (volq1(dimx,dimy,dimz))
+ALLOCATE (fvstd(dimx,dimy,dimz))
+ALLOCATE (fvmkl(dimx*dimy*dimz))
 ! mkinsol
 ALLOCATE (pp(eqs*dimx*dimy*dimz))
 
@@ -49,4 +51,7 @@ ALLOCATE (pp(eqs*dimx*dimy*dimz))
 allocate(in1(long,3))
 allocate(cpp(size))
 allocate(cppini(size))
+
+
+
 end subroutine
