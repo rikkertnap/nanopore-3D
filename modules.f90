@@ -9,6 +9,10 @@ type compressed_matrix
  integer, allocatable :: pntre(:)
  integer nonzeros
  integer :: gidx
+ integer, allocatable :: localmap(:)
+ integer :: mapsize
+ real*8, allocatable :: lnxpot(:)
+ real*8, allocatable :: avpol_tmp(:)
 endtype
 
 type compressed_prob
