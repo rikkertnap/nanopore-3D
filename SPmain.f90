@@ -108,7 +108,7 @@ if(rank.eq.0)write(stdout,*) 'Graftpoints OK'
 call creador ! Genera cadenas
 if(rank.eq.0)write(stdout,*) 'Creador OK'
 
-if (mkl.eq.1) then ! use compressed MKL CSR format to store chains
+if (flagmkl.eq.1) then ! use compressed MKL CSR format to store chains
 call px2csr
 if(rank.eq.0)print*, 'PX2CSR OK'
 endif

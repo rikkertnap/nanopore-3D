@@ -42,7 +42,6 @@ real*8 sttemp
 integer tag
 parameter(tag = 0)
 integer err
-real*8 avpol_tosend(dimx,dimy,dimz,N_monomer)
 real*8 avpol_temp(dimx,dimy,dimz,N_monomer)
 real*8 q_tosend
 real*8 gradpsi2
@@ -490,7 +489,7 @@ return
 end
 
 
-subroutine calcavpol_std(xpot)
+subroutine calc_std(xpot)
 
 use MPI
 use fields_fkfun
@@ -500,15 +499,19 @@ use molecules
 use ematrix
 use kaist
 use mparameters_monomer
+use results
 
 implicit none
-real*8 avpol_tosend(dimx,dimy,dimz)
-real*8 xpot(dimx, dimy, dimz)
+real*8 avpol_tosend(dimx,dimy,dimz, N_monomer)
+real*8 xpot(dimx, dimy, dimz, N_monomer)
 real*8 fv
 real*8 q_tosend
-real*8 avpol_temp(dimx,dimy,dimz)
-
-
+real*8 avpol_temp(dimx,dimy,dimz,N_monomer)
+integer im,jj,i,j, ix, iy, iz, ii, ax, ay, az
+! MPI
+integer tag
+parameter(tag = 0)
+integer err
 shift = 1.0
 avpol_tosend = 0.0
 q = 0.0
@@ -545,7 +548,7 @@ do jj = 1, cpp(rank+1)
  do ix=1,dimx
   do iy=1,dimy
    do iz=1,dimz
-    avpol_tosend(ix,iy,iz)=avpol_tosend(ix, iy, iz) + avpol_temp(ix,iy,iz)/q_tosend
+    avpol_tosend(ix,iy,iz,im)=avpol_tosend(ix, iy, iz,im) + avpol_temp(ix,iy,iz,im)/q_tosend
     enddo
    enddo
  enddo
@@ -558,25 +561,21 @@ enddo ! jj
 
 call MPI_Barrier(MPI_COMM_WORLD, err)
 
-! Jefe
-if (rank.eq.0) then
 ! Junta avpol       
   call MPI_REDUCE(avpol_tosend, avpol, dimx*dimy*dimz*N_monomer, MPI_DOUBLE_PRECISION, MPI_SUM,0, MPI_COMM_WORLD, err)
-! Subordinados
-if(rank.ne.0) then
-! Junta avpol       
-  call MPI_REDUCE(avpol_tosend, avpol, dimx*dimy*dimz, MPI_DOUBLE_PRECISION, MPI_SUM,0, MPI_COMM_WORLD, err)
 
 end
 
 
-ubroutine calcavpol(xpot)
-implicit none
+subroutine calcavpol(xpot)
 use mparameters_monomer
-use mmkl
+use mkl
+use system
+implicit none
 real*8 xpot(dimx, dimy, dimz, N_monomer)
-if(mkl.eq.0)call calc_std(xpot)
-if(mkl.eq.1)call calc_mkl(xpot)
+
+if(flagmkl.eq.0)call calc_std(xpot)
+if(flagmkl.eq.1)call calc_mkl(xpot)
 end
 
 

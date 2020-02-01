@@ -21,6 +21,7 @@ use transform
 use kaist
 use conformations
 use mparameters_monomer
+use mkl
 implicit none
 
 integer looped
@@ -69,7 +70,7 @@ q0 = 0.0
 q_tosend = 0.0
 sumgauche_tosend = 0.0
 
-if(mkl.eq.1)pro=0.0 ! clean pro for mkl
+if(flagmkl.eq.1)pro=0.0 ! clean pro for mkl
 
 if(rank.ne.0) then
        dest = 0
@@ -87,13 +88,14 @@ if(rank.ne.0) then
 
 ! Envia pro
 
-      if(mkl.eq.1) then
+      if(flagmkl.eq.1) then
        do jj = 1, cpp(rank+1)
        iii = cppini(rank+1)+jj
        do i = 1, newcuantas(iii)
         pro(i,jj) = promkl(iii)%pro(i)
        enddo ! i
        enddo ! jj
+       endif
 
         CALL MPI_SEND(pro, cuantas*cpp(rank+1) , MPI_DOUBLE_PRECISION, dest, tag, MPI_COMM_WORLD,err)
 
