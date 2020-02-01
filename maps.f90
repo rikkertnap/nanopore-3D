@@ -13,7 +13,7 @@ ALLOCATE(mapz(dimx*dimy*dimz))
 
 do ix = 1, dimx
 do iy = 1, dimy
-do iz = 1, dimy
+do iz = 1, dimz
 imap(ix,iy,iz) = ix+dimx*(iy-1)+dimx*dimy*(iz-1)
 mapx(imap(ix,iy,iz))=ix
 mapy(imap(ix,iy,iz))=iy

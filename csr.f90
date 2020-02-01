@@ -152,7 +152,7 @@ CHARACTER matdescra(6)
 integer im,ix,iy,iz
 real*8 avpol_tosend(dimx*dimy*dimz, N_monomer), avpol_tmp(dimx*dimy*dimz)
 real*8 avpolmkl(dimx*dimy*dimz, N_monomer)
-real*8 xpot(dimx, dimy, dimz), lnxpot(dimx*dimy*dimz)
+real*8 xpot(dimx, dimy, dimz,N_monomer), lnxpot(dimx*dimy*dimz, N_monomer)
 real*8 q_tosend
 
 matdescra(1) = "G"
@@ -165,7 +165,9 @@ avpol_tosend = 0.0
 do ix = 1, dimx
 do iy = 1, dimy
 do iz = 1, dimz
-lnxpot(imap(ix,iy,iz))=log(xpot(ix,iy,iz))
+do im = 1, N_monomer
+lnxpot(imap(ix,iy,iz),im)=log(xpot(ix,iy,iz,im))
+enddo
 enddo
 enddo
 enddo
@@ -178,7 +180,7 @@ ii = cppini(rank+1)+jj   ! grafting point
 
  call mkl_dcsrmv('N', newcuantas(ii), dimx*dimy*dimz, 1.0d+0, matdescra, &
   csrm(ii,im)%inc_values(:), csrm(ii,im)%inc_columns(:), csrm(ii,im)%pntrb(:), &
-  csrm(ii,im)%pntre(:),lnxpot, 0.0d+0, promkl(ii)%lnpro(:))
+  csrm(ii,im)%pntre(:),lnxpot(:,im), 0.0d+0, promkl(ii)%lnpro(:))
   
 promkl(ii)%pro(:) = exp(promkl(ii)%lnpro(:))
 
