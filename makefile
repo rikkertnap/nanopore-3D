@@ -9,7 +9,10 @@ $(info HOST is ${HOST})
 
 ifeq ($(HOST),skay)
 LFLAGS = -lm /usr/lib/x86_64-linux-gnu/librt.so  -L/usr/local/lib  -lsundials_fkinsol -lsundials_kinsol -lsundials_fnvecserial -lsundials_nvecserial ${LIBS} -Wl,-rpath,/usr/local/lib
-LFLAGS += -L${MKLROOT}/lib/intel64 -lmkl_intel_lp64 -lmkl_core -lmkl_sequential -lpthread -lm -ldl
+#LFLAGS += -L${MKLROOT}/lib/intel64 -lmkl_intel_lp64 -lmkl_core -liomp5 -lpthread -lm -ldl
+
+LFLAGS += -m64 -I "/opt/intel/mkl/include" -Wl,--start-group "/opt/intel/mkl/lib/intel64"/libmkl_gf_lp64.a "/opt/intel/mkl/lib/intel64"/libmkl_intel_thread.a "/opt/intel/mkl/lib/intel64"/libmkl_core.a -Wl,--end-group -L"/opt/intel/mkl/../compiler/lib/intel64" -liomp5 -lpthread -lm -ldl 
+
 endif
 
 
@@ -23,7 +26,7 @@ endif
 
 # some definitions
 SHELL = /bin/bash
-FFLAGS= -fbacktrace -fbounds-check # -O3
+FFLAGS= -O3 # -fbacktrace -fbounds-check # -O3
 
 ifeq ($(HOST),piluso.rosario-conicet.gov.ar)
 LFLAGS = -L/home/mtagliazucchi.inquimae/software/kinsol/lib -lsundials_fkinsol -lsundials_kinsol -lsundials_fnvecserial -lsundials_nvecserial -lm -L/usr/lib/gcc/x86_64-redhat-linux/4.4.7 -L/usr/lib/gcc/x86_64-redhat-linux/4.4.7/../../../../lib64 -L/lib/../lib64 -L/usr/lib/../lib64 -L/usr/lib/gcc/x86_64-redhat-linux/4.4.7/../../.. -lgfortranbegin -lgfortran -lm -lgcc_s

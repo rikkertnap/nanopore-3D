@@ -26,6 +26,7 @@ character*10 filename
 integer j, i, ii, iii
 integer flagcrash
 real*8 stOK,kpOK
+real*8 time0, timeF
 
 stdout = 6
 
@@ -143,7 +144,10 @@ do i = 1, nkp
   flagcrash = 1
   do while(flagcrash.eq.1)
    flagcrash = 0
+   call CPU_TIME(time0)
    call solve(flagcrash)
+   call CPU_TIME(timeF)
+   if(rank.eq.0)print*,'Timer:',timeF-time0
    if(flagcrash.eq.1) then
     if(i.eq.1)stop
     kp = (kp + kpOK)/2.0
