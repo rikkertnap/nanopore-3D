@@ -11,7 +11,7 @@ ifeq ($(HOST),skay)
 LFLAGS = -lm /usr/lib/x86_64-linux-gnu/librt.so  -L/usr/local/lib  -lsundials_fkinsol -lsundials_kinsol -lsundials_fnvecserial -lsundials_nvecserial ${LIBS} -Wl,-rpath,/usr/local/lib
 #LFLAGS += -L${MKLROOT}/lib/intel64 -lmkl_intel_lp64 -lmkl_core -liomp5 -lpthread -lm -ldl
 
-LFLAGS += -m64 -I "/opt/intel/mkl/include" -Wl,--start-group "/opt/intel/mkl/lib/intel64"/libmkl_gf_lp64.a "/opt/intel/mkl/lib/intel64"/libmkl_intel_thread.a "/opt/intel/mkl/lib/intel64"/libmkl_core.a -Wl,--end-group -L"/opt/intel/mkl/../compiler/lib/intel64" -liomp5 -lpthread -lm -ldl 
+LFLAGS += -I/opt/intel/mkl/include -w -fcray-pointer -cpp -Wl,--no-as-needed -lpthread -ldl  -Wl,--start-group "/opt/intel/mkl/lib/intel64"/libmkl_intel_lp64.a "/opt/intel/mkl/lib/intel64"/libmkl_core.a "/opt/intel/mkl/lib/intel64"/libmkl_gnu_thread.a -Wl,--end-group -L "/opt/intel/mkl/../compiler/lib/intel64" -liomp5 -lm
 
 endif
 
