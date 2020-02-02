@@ -65,15 +65,17 @@ ii = cppini(rank+1)+jj   ! grafting point
    csrm(ii,im)%nonzeros = nonzero
    csrm(ii,im)%mapsize = sum(sparseall)
 
-   allocate(crsm(ii,im)%localmap(csrm(ii,im)%mapsize))
-   allocate(crsm(ii,im)%localmapr(dimx*dimy*dimz))
+   allocate(csrm(ii,im)%localmap(csrm(ii,im)%mapsize))
+   allocate(csrm(ii,im)%localmapr(dimx*dimy*dimz))
 
-   crsm(ii,im)%localmapr = 0
+   csrm(ii,im)%localmapr = 0
+   csrm(ii,im)%localmap = 0
+
    j = 1
    do i = 1, dimx*dimy*dimz
    if(sparseall(i).eq.1) then 
-    crsm(ii,im)%localmap(j) = i
-    crsm(ii,im)%localmapr(i) = j
+    csrm(ii,im)%localmap(j) = i
+    csrm(ii,im)%localmapr(i) = j
     j = j + 1
    endif
    enddo     
@@ -181,21 +183,22 @@ matdescra(4) = "F"
 
 avpol_tosend = 0.0
 
-! 1. Reindex xpot and take log 
+! 2. Get lnpro from xpotpos and CSR compressed matrix
 
+
+do im = 1, N_monomer
+do jj = 1, cpp(rank+1)     ! local grafting point
+ii = cppini(rank+1)+jj   ! grafting point
+
+! 1. Reindex xpot and take log 
 do j = 1, csrm(ii,im)%mapsize
 i = csrm(ii,im)%localmap(j)
 ix = mapx(i)
 iy = mapy(i)
 iz = mapz(i)
-csrm(ii,im)%lnxpot(j,im)=log(xpot(ix,iy,iz,im))
+csrm(ii,im)%lnxpot(j)=log(xpot(ix,iy,iz,im))
 enddo
 
-! 2. Get lnpro from xpotpos and CSR compressed matrix
-
-do im = 1, N_monomer
-do jj = 1, cpp(rank+1)     ! local grafting point
-ii = cppini(rank+1)+jj   ! grafting point
 
  call mkl_dcsrmv('N', newcuantas(ii), csrm(ii,im)%mapsize, 1.0d+0, matdescra, &
   csrm(ii,im)%inc_values(:), csrm(ii,im)%inc_columns(:), csrm(ii,im)%pntrb(:), &

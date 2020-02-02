@@ -10,6 +10,7 @@ type compressed_matrix
  integer nonzeros
  integer :: gidx
  integer, allocatable :: localmap(:)
+ integer, allocatable :: localmapr(:)
  integer :: mapsize
  real*8, allocatable :: lnxpot(:)
  real*8, allocatable :: avpol_tmp(:)
