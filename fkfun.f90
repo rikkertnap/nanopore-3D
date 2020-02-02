@@ -42,9 +42,8 @@ real*8 sttemp
 integer tag
 parameter(tag = 0)
 integer err
-real*8 avpol_tosend(dimx,dimy,dimz,N_monomer)
 real*8 avpol_temp(dimx,dimy,dimz,N_monomer)
-real*8 q_tosend, sumgauche_tosend
+real*8 q_tosend
 real*8 gradpsi2
 real*8 fv
 
@@ -336,70 +335,13 @@ enddo !iz
 
 enddo ! N_monomer
 
-avpol_tosend = 0.0
-q = 0.0
-sumgauche = 0.0
-
-do jj = 1, cpp(rank+1)    !punto de anclaje
-   ii = cppini(rank+1)+jj
-
-   q_tosend=0.0
-   sumgauche_tosend = 0.0
-   avpol_temp = 0.0
-
- do i=1,newcuantas(ii)  !conformaciones 
-   pro(i, jj)=shift
-   do j=1,long   ! segmentos
-    ax = px(i, j, jj) ! cada uno para su cadena...
-    ay = py(i, j, jj)
-    az = pz(i, j, jj)         
-    pro(i, jj) = pro(i, jj) * xpot(ax, ay, az, segtype(j))
-   enddo
-    pro(i, jj) = pro(i, jj) * dexp(-fz*zfinal(i,jj))  ! termino Fz 
-    pro(i,jj) = pro(i,jj)*exp(-benergy*ngauche(i,ii)) ! energy of gauche bonds P(alpha).q-> sin normalizar
-
-   do j=1,long
-   fv = (1.0-volprot(px(i,j, jj),py(i,j, jj),pz(i,j, jj)))
-   im = segtype(j)
-    avpol_temp(px(i,j, jj),py(i,j, jj),pz(i,j, jj), im)= &
-    avpol_temp(px(i,j, jj),py(i,j, jj),pz(i,j, jj), im)+pro(i, jj)*vpol*vsol/(delta**3)/fv* &
-    ngpol(ii)*sc !ngpol(ii) has the number of chains grafted to the point ii. fraccion de vol de pol sin norm
-   enddo
-
-   q_tosend=q_tosend+pro(i, jj)
-   sumgauche_tosend = sumgauche_tosend+ngauche(i, ii)*pro(i,jj)
-
- enddo ! i
-! norma 
-    
-avpol_tosend=avpol_tosend + avpol_temp/q_tosend  !normalizar por q
-
-q(ii) = q_tosend ! no la envia ahora
-sumgauche(ii) = sumgauche_tosend/q_tosend
-
-!write(stdout,*) rank+1,jj,ii,q(ii)
-enddo ! jj
-
-!------------------ MPI ----------------------------------------------
-!1. Todos al jefe
-
-
-call MPI_Barrier(MPI_COMM_WORLD, err)
-
-! Jefe
-if (rank.eq.0) then
-! Junta avpol       
-  call MPI_REDUCE(avpol_tosend, avpol, ncells*N_monomer, MPI_DOUBLE_PRECISION, MPI_SUM,0, MPI_COMM_WORLD, err)
-endif
-! Subordinados
-if(rank.ne.0) then
-! Junta avpol       
-  call MPI_REDUCE(avpol_tosend, avpol, ncells*N_monomer, MPI_DOUBLE_PRECISION, MPI_SUM,0, MPI_COMM_WORLD, err) 
-!!!!!!!!!!! IMPORTANTE, LOS SUBORDINADOS TERMINAN ACA... SINO VER !MPI_allreduce!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1
-  goto 3333
-endif
-
+!!!!!!!!!!!!!!!!!!!!!! Calculate pro from xpot !!!!!!!!!!!!!
+call calcavpol(xpot)
+!!!!!!!!!!! IMPORTANTE, LOS SUBORDINADOS TERMINAN ACA... 
+if(rank.ne.0)goto 3333
 !!!!!!!!!!!!!!!!!!!!!!! FIN MPI !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+
 !----------------------------------------------------------------------------------------------
 !   Construye Ecuaciones a resolver 
 !----------------------------------------------------------------------------------------------
@@ -545,3 +487,98 @@ ier2 = 0.0
 
 return
 end
+
+
+subroutine calc_std(xpot)
+
+use MPI
+use fields_fkfun
+use chainsdat
+use conformations
+use molecules
+use ematrix
+use kaist
+use mparameters_monomer
+use results
+
+implicit none
+real*8 avpol_tosend(dimx,dimy,dimz, N_monomer)
+real*8 xpot(dimx, dimy, dimz, N_monomer)
+real*8 fv
+real*8 q_tosend
+real*8 avpol_temp(dimx,dimy,dimz,N_monomer)
+integer im,jj,i,j, ix, iy, iz, ii, ax, ay, az
+! MPI
+integer tag
+parameter(tag = 0)
+integer err
+shift = 1.0
+avpol_tosend = 0.0
+q = 0.0
+
+do jj = 1, cpp(rank+1)
+   ii = cppini(rank+1)+jj
+
+
+   q_tosend=0.0
+   avpol_temp = 0.0
+
+ do i=1,newcuantas(ii)
+   pro(i, jj)=shift
+   do j=1,long
+    ax = px(i, j, jj) ! cada uno para su cadena...
+    ay = py(i, j, jj)
+    az = pz(i, j, jj)
+    pro(i, jj) = pro(i, jj) * xpot(ax, ay, az, segtype(j))
+   enddo
+    pro(i,jj) = pro(i,jj)*exp(-benergy*ngauche(i,ii)) ! energy of gauche bonds
+    pro(i, jj) = pro(i, jj) * dexp(-fz*zfinal(i,jj))  ! termino Fz
+   do j=1,long
+   fv = fvstd(px(i,j, jj),py(i,j, jj),pz(i,j, jj))
+    im = segtype(j)
+    avpol_temp(px(i,j, jj),py(i,j, jj),pz(i,j, jj),im)= &
+    avpol_temp(px(i,j, jj),py(i,j, jj),pz(i,j, jj),im)+pro(i, jj)*vpol*vsol/(delta**3)/fv* &
+    ngpol(ii)*sc ! ngpol(ii) has the number of chains grafted to the point ii
+   enddo
+
+   q_tosend=q_tosend+pro(i, jj)
+
+ enddo ! i
+! norma 
+ do ix=1,dimx
+  do iy=1,dimy
+   do iz=1,dimz
+    avpol_tosend(ix,iy,iz,im)=avpol_tosend(ix, iy, iz,im) + avpol_temp(ix,iy,iz,im)/q_tosend
+    enddo
+   enddo
+ enddo
+q(ii) = q_tosend ! no la envia ahora
+
+enddo ! jj
+!------------------ MPI ----------------------------------------------
+!1. Todos al jefe
+
+
+call MPI_Barrier(MPI_COMM_WORLD, err)
+
+! Junta avpol       
+  call MPI_REDUCE(avpol_tosend, avpol, dimx*dimy*dimz*N_monomer, MPI_DOUBLE_PRECISION, MPI_SUM,0, MPI_COMM_WORLD, err)
+
+end
+
+
+subroutine calcavpol(xpot)
+use mparameters_monomer
+use mkl
+use system
+implicit none
+real*8 xpot(dimx, dimy, dimz, N_monomer)
+
+if(flagmkl.eq.0)call calc_std(xpot)
+#ifdef _MKL
+if(flagmkl.eq.1)call calc_mkl(xpot)
+if(flagmkl.eq.2)call calc_mkl_map(xpot)
+#endif
+end
+
+

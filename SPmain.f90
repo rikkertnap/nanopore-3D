@@ -8,6 +8,7 @@ use const
 use montecarlo
 use ematrix
 use kaist
+use mkl
 
 implicit none
 integer counter, counterr
@@ -25,6 +26,7 @@ character*10 filename
 integer j, i, ii, iii
 integer flagcrash
 real*8 stOK,kpOK
+real*8 time0, timeF
 
 stdout = 6
 
@@ -46,6 +48,7 @@ call readinput
 
 call monomer_definitions
 call chains_definitions
+call makemaps
 
 call initconst
 call inittransf ! Create transformation matrixes
@@ -90,6 +93,7 @@ call update_matrix_planar(flag) ! updates 'the matrix'
 elseif (systemtype.eq.60) then
 call update_matrix_60(flag) ! channel + particles
 endif
+call calcfv ! calc fv matrix ! IMPORTANT
 
   if(flag.eqv..true.) then
     write(stdout,*) 'Initial position of particle does not fit in z'
@@ -105,13 +109,23 @@ if(rank.eq.0)write(stdout,*) 'Graftpoints OK'
 call creador ! Genera cadenas
 if(rank.eq.0)write(stdout,*) 'Creador OK'
 
+
+#ifdef _MKL
+if (flagmkl.eq.1) then ! use compressed MKL CSR format to store chains
+call px2csr
+if(rank.eq.0)print*, 'PX2CSR OK'
+elseif (flagmkl.eq.2) then
+call px2csr_map
+if(rank.eq.0)print*, 'PX2CSR MAP OK'
+endif
+#endif
+
 if(infile.ne.0) then
    call retrivefromdisk(counter)
    if(rank.eq.0)write(stdout,*) 'Load input from file'
    if(rank.eq.0)write(stdout,*) 'Free energy', free_energy
    if(infile.eq.3)call mirror
    if(infile.ne.-1)infile = 2
-!   call update_matrix(flag)
    if(flag.eqv..true.) then
     write(stdout,*) 'Initial position of particle does not fit in z'
     write(stdout,*) 'or particles collide'
@@ -135,7 +149,10 @@ do i = 1, nkp
   flagcrash = 1
   do while(flagcrash.eq.1)
    flagcrash = 0
+   call CPU_TIME(time0)
    call solve(flagcrash)
+   call CPU_TIME(timeF)
+   if(rank.eq.0)print*,'Timer:',timeF-time0
    if(flagcrash.eq.1) then
     if(i.eq.1)stop
     kp = (kp + kpOK)/2.0

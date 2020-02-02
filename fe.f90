@@ -21,6 +21,7 @@ use transform
 use kaist
 use conformations
 use mparameters_monomer
+use mkl
 implicit none
 
 integer looped
@@ -69,6 +70,16 @@ q0 = 0.0
 q_tosend = 0.0
 sumgauche_tosend = 0.0
 
+if(flagmkl.ne.0) then
+       pro = 0.0
+       do jj = 1, cpp(rank+1)
+       iii = cppini(rank+1)+jj
+       do i = 1, newcuantas(iii)
+        pro(i,jj) = promkl(iii)%pro(i)
+       enddo ! i
+       enddo ! jj
+endif
+
 if(rank.ne.0) then
        dest = 0
 ! Envia q
@@ -84,14 +95,18 @@ if(rank.ne.0) then
         call MPI_REDUCE(newcuantas, newcuantas0, ncha, MPI_INTEGER, MPI_SUM,0, MPI_COMM_WORLD, err)
 
 ! Envia pro
+
         CALL MPI_SEND(pro, cuantas*cpp(rank+1) , MPI_DOUBLE_PRECISION, dest, tag, MPI_COMM_WORLD,err)
 
 ! sum gauche
 
        do jj = 1, cpp(rank+1)
        iii = cppini(rank+1)+jj
-       sumgauche_tosend(iii) = sumgauche(iii)
-       enddo
+       sumgauche_tosend(iii) = 0.0
+       do i = 1, newcuantas(iii)
+       sumgauche_tosend(iii) = sumgauche_tosend(iii)+ ngauche(i,iii)*pro(i,jj)/q(iii)
+       enddo ! i
+       enddo ! jj
 
         call MPI_REDUCE(sumgauche_tosend, sumgauche0, ncha, MPI_DOUBLE_PRECISION, MPI_SUM,0, MPI_COMM_WORLD, err)
 
@@ -278,10 +293,13 @@ endif
 
        if (rank.eq.0) then ! Igual tiene que serlo, ver arriba
 
-       do jj = 1, cpp(rank+1) ! sumgauche in rank 0
-       iii = jj
-       sumgauche_tosend(iii) = sumgauche(iii)
-       enddo
+       do jj = 1, cpp(rank+1)
+       iii = cppini(rank+1)+jj
+       sumgauche_tosend(iii) = 0.0
+       do i = 1, newcuantas(iii)
+       sumgauche_tosend(iii) = sumgauche_tosend(iii)+ ngauche(i,iii)*pro(i,jj)/q(iii)
+       enddo ! i
+       enddo ! jj
 
         call MPI_REDUCE(sumgauche_tosend, sumgauche0, ncha, &
         MPI_DOUBLE_PRECISION, MPI_SUM,0, MPI_COMM_WORLD, err)

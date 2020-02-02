@@ -14,6 +14,7 @@ use kaist
 use s2d
 use channel
 use branches
+use mkl
 implicit none
 
 ! Input related variables
@@ -51,6 +52,7 @@ sigmar = 0.0 ! random sigma
 ! Check validity of input
 !
 
+flagmkl = 0
 vscan = ndi
 scx = ndi
 scy = ndi
@@ -138,6 +140,10 @@ do while (ios == 0)
 
  case ('verbose')
    read(buffer, *, iostat=ios) verbose
+   if(rank.eq.0)write(stdout,*) 'parser:','Set ',trim(label),' = ',trim(buffer)
+
+ case ('mkl')
+   read(buffer, *, iostat=ios) flagmkl
    if(rank.eq.0)write(stdout,*) 'parser:','Set ',trim(label),' = ',trim(buffer)
 
  case ('seed')
