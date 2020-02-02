@@ -575,8 +575,10 @@ implicit none
 real*8 xpot(dimx, dimy, dimz, N_monomer)
 
 if(flagmkl.eq.0)call calc_std(xpot)
+#ifdef _MKL
 if(flagmkl.eq.1)call calc_mkl(xpot)
+if(flagmkl.eq.2)call calc_mkl_map(xpot)
+#endif
 end
-
 
 

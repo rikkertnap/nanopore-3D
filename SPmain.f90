@@ -109,11 +109,16 @@ if(rank.eq.0)write(stdout,*) 'Graftpoints OK'
 call creador ! Genera cadenas
 if(rank.eq.0)write(stdout,*) 'Creador OK'
 
+
+#ifdef _MKL
 if (flagmkl.eq.1) then ! use compressed MKL CSR format to store chains
 call px2csr
 if(rank.eq.0)print*, 'PX2CSR OK'
+elseif (flagmkl.eq.2) then
+call px2csr_map
+if(rank.eq.0)print*, 'PX2CSR MAP OK'
 endif
-
+#endif
 
 if(infile.ne.0) then
    call retrivefromdisk(counter)

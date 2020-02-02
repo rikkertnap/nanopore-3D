@@ -70,7 +70,7 @@ q0 = 0.0
 q_tosend = 0.0
 sumgauche_tosend = 0.0
 
-if(flagmkl.eq.1) then
+if(flagmkl.ne.0) then
        pro = 0.0
        do jj = 1, cpp(rank+1)
        iii = cppini(rank+1)+jj
