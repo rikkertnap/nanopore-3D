@@ -49,8 +49,9 @@ real*8 fv
 
 ! hamiltonian inception
 real*8 hfactor, hd
-real*8, allocatable :: hds(:)
-ALLOCATE(hds(100))
+real*8 hds(100)
+
+
 hds = -1
 
 !-----------------------------------------------------
