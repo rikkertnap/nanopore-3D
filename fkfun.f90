@@ -545,6 +545,7 @@ do jj = 1, cpp(rank+1)
 
  enddo ! i
 ! norma 
+do im = 1, N_monomer
  do ix=1,dimx
   do iy=1,dimy
    do iz=1,dimz
@@ -552,6 +553,7 @@ do jj = 1, cpp(rank+1)
     enddo
    enddo
  enddo
+enddo
 q(ii) = q_tosend ! no la envia ahora
 
 enddo ! jj
