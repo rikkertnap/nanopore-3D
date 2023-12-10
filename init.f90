@@ -236,8 +236,8 @@ enddo
 enddo
 enddo
 
-  title = 'qpol_'
-  call savetodisk(temp, title, cccc)
+!  title = 'qpol_'
+!  call savetodisk(temp, title, cccc)
 
 ! Potencial electrostatico
 
