@@ -162,6 +162,8 @@ character*5  title
 real*8 temp(dimx,dimy,dimz)
 real*8 sumpol
 integer ix,iy,iz, im
+real*8 fv
+
 !----------------------------------------------------------
 !  OUTPUT
 !----------------------------------------------------------
@@ -200,11 +202,11 @@ if(rank.eq.0) then ! solo el jefe escribe a disco....
 !  title = 'avsol'
 !  call savetodisk(temp, title, cccc)
 ! Cationes
-!  title = 'avpos'
-!  call savetodisk(xpos, title, cccc)
+  title = 'avpos'
+  call savetodisk(xpos, title, cccc)
 ! Aniones
-!  title = 'avneg'
-!  call savetodisk(xneg, title, cccc)
+  title = 'avneg'
+  call savetodisk(xneg, title, cccc)
 ! H+
 !  title = 'avHpl'
 !  call savetodisk(xHplus, title, cccc)
@@ -216,6 +218,26 @@ if(rank.eq.0) then ! solo el jefe escribe a disco....
   temp(1:dimx,1:dimy, 1:dimz) = fdis(1:dimx,1:dimy, 1:dimz,1)
   call savetodisk(temp, title, cccc)
 
+! polymer charge
+
+temp = 0.0
+
+do ix=1,dimx
+do iy=1,dimy
+do iz=1,dimz
+  
+ fv = (1.0-volprot(ix,iy,iz))
+
+ do im = 1, N_monomer
+     temp(ix, iy, iz) =  temp(ix,iy,iz) + avpol(ix,iy,iz,im)*zpol(im)/vpol/vsol*fdis(ix,iy,iz,im)! units of |e|/nm^3 
+ enddo
+
+enddo
+enddo
+enddo
+
+!  title = 'qpol_'
+!  call savetodisk(temp, title, cccc)
 
 ! Potencial electrostatico
 

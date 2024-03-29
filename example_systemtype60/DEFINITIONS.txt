@@ -1,0 +1,126 @@
+branched 0
+
+! stdout to file
+stdout 6
+
+sigmar 0.0
+
+electroflag 1
+
+!verbose
+verbose 5
+
+!system size
+dimx 80
+dimy 80
+dimz 100
+
+delta 0.5
+
+dx 0.0
+dy 0.0
+dz 0.0
+
+gama 90.0
+cdiva 1.0
+
+!PBC PBC xmin xmax ymin ymax zmin zmax, 1=yes, 2=wall, 0=bulk
+PBC 0 0 0 0 0 0
+
+!infile
+infile 0
+!what to scan: (hamiltonian inception parameter kp always scanned), 1, pH, 2, attraction strength st. If 1 then the system will use the first st value.
+vscan 1
+
+!hamiltonian inception 
+!hguess: rotational symmetry, hring: initial attractive zone distance to the wall (in xy plane), oval: 3D shape of the growing zone 1 means spherical  
+hguess 3
+hring 6
+oval 0.8
+nkp 1
+0.0
+
+!hydroph
+nst 1
+0.0
+
+npH 3
+5
+6
+7
+
+
+neps 1
+0.0
+
+!gauche
+benergy 0.0
+
+! xu cut off
+Xucutoff 0.0
+
+!chains
+long 20
+lseg 0.5
+cuantas 100000
+
+!solution
+csalt 0.1
+pHbulk 8.0
+
+!volume
+vpol 0.11
+vsol 0.03
+
+!output
+
+!save vtk?
+vtkflag 1
+
+! supercell
+scx 1
+scy 1
+scz 1
+
+!dielectric
+dielP 78.54
+dielS 10.0
+
+!systemtype
+systemtype 60
+! channel radii in nm
+7.5
+! Reservoir size in delta units
+20
+! number of polymers in circunference
+10
+! number of rings
+3
+! position of rings inside the pore in fractional positions along the pore (0 and 1 are the entrances)
+0
+0.5
+1.0
+! particle position in nm ! center at 20 20 25
+20 20 25
+! particle axis in nm
+1.0 1.0 1.0
+! particle rotation matrix
+1.0 0.0 0.0
+0.0 1.0 0.0
+0.0 0.0 1.0
+! charge
+0
+! eps
+0
+
+!readchains, -1: save chains, 1: load chains
+readchains 0
+
+!randominput, not in use
+randominput 0
+
+!seed
+seed 938121
+
+! fz
+fz 0.0
