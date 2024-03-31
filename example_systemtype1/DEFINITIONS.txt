@@ -1,0 +1,99 @@
+fz 0.0
+
+!gauche
+benergy 0.84195
+
+electroflag 0
+
+!verbose
+verbose 2
+
+!system size
+dimx 32
+dimy 32
+dimz 32
+
+delta 0.15
+
+dx 0.0
+dy 0.0
+dz 0.0
+
+gama 90.0
+cdiva 1.0
+
+!PBC PBC xmin xmax ymin ymax zmin zmax, 1=yes, 0=wall, 2=bulk
+PBC 1 1 1 1 1 1
+
+!infile
+infile 2
+
+!hydroph
+nst 1
+0.0
+
+Xucutoff 0.0
+
+!chains
+long 12
+lseg 0.15
+cuantas 100000
+zpol -1
+pKa 14.0
+
+!solution
+csalt 0.00001
+pHbulk 5.0
+
+!volume
+vpol 0.027
+vsol 0.217
+
+!output
+
+!save vtk?
+vtkflag 1
+
+! supercell
+scx 1
+scy 1
+scz 1
+
+!dielectric
+dielP 3.0
+dielS 10.0
+
+
+transform_type 1
+!kaptype
+systemtype 1
+!number of particles
+2
+!particle initial position x y z in nm
+0.0 0.0 0.0
+2.4 2.4 2.4
+!particle semiaxis x y z in nm
+1.5 1.5 1.5
+1.5 1.5 1.5
+!initial rotation matrix
+1.0 0.0 0.0
+0.0 1.0 0.0
+0.0 0.0 1.0
+1.0 0.0 0.0
+0.0 1.0 0.0
+0.0 0.0 1.0
+!particle surface coverage 1/nm^2
+4.0
+4.0
+!particle total charge
+0.0
+0.0
+!particle-monomer interaction energy in kBT (positive is attraction)
+0.0
+0.0
+!readchains, -1: save chains, 1: load chains
+readchains 0
+
+!randominput, not in use
+randominput 0
+

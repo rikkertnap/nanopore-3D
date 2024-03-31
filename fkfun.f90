@@ -531,6 +531,9 @@ do jj = 1, cpp(rank+1)
     ay = py(i, j, jj)
     az = pz(i, j, jj)
     pro(i, jj) = pro(i, jj) * xpot(ax, ay, az, segtype(j))
+
+
+
    enddo
     pro(i,jj) = pro(i,jj)*exp(-benergy*ngauche(i,ii)) ! energy of gauche bonds
     pro(i, jj) = pro(i, jj) * dexp(-fz*zfinal(i,jj))  ! termino Fz
