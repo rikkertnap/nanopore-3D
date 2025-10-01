@@ -40,6 +40,13 @@ LFLAGS = -L/home/mtagliazucchi.inquimae/software/kinsol/lib -lsundials_fkinsol -
 endif
 
 
+ifeq ($(HOST),ensalada)
+LDFLAGS=-lm /usr/lib/x86_64-linux-gnu/librt.so -L/opt/local/sundials-2.6.1-openmpi/lib -lsundials_fkinsol -lsundials_kinsol -lsundials_fnvecserial -lsundials_nvecserial     -Wl,-rpath,/opt/local/sundials-2.6.1-openmpi/lib
+
+LFLAGS=-lm /usr/lib/x86_64-linux-gnu/librt.so -L/opt/local/sundials-2.6.1-openmpi/lib -lsundials_fkinsol -lsundials_kinsol -lsundials_fnvecserial -lsundials_nvecserial     -Wl,-rpath,/opt/local/sundials-2.6.1-openmpi/lib
+endif
+
+
 ifeq ($(HOST),pear)
 LFLAGS=-L/home/mario/software/KINSOL/lib -lsundials_fkinsol -lsundials_kinsol -lsundials_fnvecserial -lsundials_nvecserial -lm -L/usr/lib/gcc/x86_64-linux-gnu/4.6 -L/usr/lib/gcc/x86_64-linux
 endif
