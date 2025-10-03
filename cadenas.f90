@@ -1,96 +1,96 @@
 subroutine creador
 
-use system
-use const
-use system
-use chainsdat
-use MPI
-use branches
-implicit none
-integer i,il,ll
-integer j
-real*8 indax, inday, indaz
-real*8 chains(3,200,100), gauches(100)
-real*8 altx,alty,altz,x(200),y(200),xp(200),yp(200)
-real*8 theta,theta1
-integer iglobal
-integer nchas
-integer ii, jj
+    use system
+    use const
+    use system
+    use chainsdat
+    use MPI
+    use branches
+    implicit none
+    integer i,il,ll
+    integer j
+    real*8 indax, inday, indaz
+    real*8 chains(3,200,100), gauches(100)
+    real*8 altx,alty,altz,x(200),y(200),xp(200),yp(200)
+    real*8 theta,theta1
+    integer iglobal
+    integer nchas
+    integer ii, jj
 
-indexncha = 1
+    indexncha = 1
 
-newcuantas = 0
+    newcuantas = 0
 
-if((readchains.eq.-1).and.(rank.eq.0)) then
-write(stdout,*) 'creador:', 'Saving conformations...'
-open(file='cadenas.dat',unit=3113)
-endif
+    if((readchains.eq.-1).and.(rank.eq.0)) then
+        write(stdout,*) 'creador:', 'Saving conformations...'
+        open(file='cadenas.dat',unit=3113)
+    endif
 
-if(readchains.eq.1) then
- if(rank.eq.0)write(stdout,*) 'creador:', 'Loading conformations'
- open(file='cadenas.dat',unit=3113)
- do i = 1, cuantas
- do j = 1, long
-  read(3113,*)in1(j,1),in1(j,2),in1(j,3)
- enddo
- call pxs
-! write(stdout,*) 'creador:', i, newcuantas(1)
- enddo
+    if(readchains.eq.1) then
+        if(rank.eq.0) write(stdout,*) 'creador:', 'Loading conformations'
+        open(file='cadenas.dat',unit=3113)
+        do i = 1, cuantas
+            do j = 1, long
+                read(3113,*)in1(j,1),in1(j,2),in1(j,3)
+            enddo
+            call pxs
+                ! write(stdout,*) 'creador:', i, newcuantas(1)
+        enddo
 
-! do il = 1, ncha
-! write(stdout,*) 'creador:', newcuantas(il)
-! enddo
-! stop
+        ! do il = 1, ncha
+        ! write(stdout,*) 'creador:', newcuantas(il)
+        ! enddo
+        ! stop
 
-close(3113)
- return
-endif
+        close(3113)
+        
+        return ! alernate return : chain generation by reading 
+    
+    endif
 
-il=0
-iglobal=1
+    il=0
+    iglobal=1
 
-do while (il.lt.cuantas)
+    do while (il.lt.cuantas)
 
- select case (branched)
+        select case (branched)
+        case (0)
+            call cadenas72mr(chains,nchas,gauches)
+        case (1)
+            call cadenas_b(chains,nchas,gauches) ! branched chains
+        case (2)
+            call cadenas_b2(chains,nchas,gauches) ! branched chains type 2
+        end select
 
- case (0)
-  call cadenas72mr(chains,nchas,gauches)
- case (1)
-  call cadenas_b(chains,nchas,gauches) ! branched chains
- case (2)
-  call cadenas_b2(chains,nchas,gauches) ! branched chains type 2
+        do i=1,nchas
+            il=il+1
+            if(il.gt.cuantas) goto 100
+            ing = gauches(i)
+            do j=1,long
+                in1(j,2)=chains(2,j,i)
+                in1(j,3)=chains(3,j,i)
+                in1(j,1)=chains(1,j,i)
+                if((readchains.eq.-1).and.(rank.eq.0))write(3113,*)in1(j,1),in1(j,2),in1(j,3)
+            enddo
+            call pxs
+        enddo
+    enddo
 
+    ! do il = 1, ncha
+    ! write(stdout,*) 'creador:', newcuantas(il)
+    ! enddo
+    ! stop
 
-endselect
-
-  do i=1,nchas
-      il=il+1
-      if(il.gt.cuantas) goto 100
-      ing = gauches(i)
-      do j=1,long
-         in1(j,2)=chains(2,j,i)
-         in1(j,3)=chains(3,j,i)
-         in1(j,1)=chains(1,j,i)
-         if((readchains.eq.-1).and.(rank.eq.0))write(3113,*)in1(j,1),in1(j,2),in1(j,3)
-      enddo
-         call pxs
-  enddo
-enddo
-
-! do il = 1, ncha
-! write(stdout,*) 'creador:', newcuantas(il)
-! enddo
-! stop
-
- if((readchains.eq.-1).and.(rank.eq.0))close(3113)
+    if((readchains.eq.-1).and.(rank.eq.0))close(3113)
 
 
- 100 do jj = 1, cpp(rank+1)
-  ii = cppini(rank+1)+jj
-  write(9988,*)ii,newcuantas(ii)
-enddo
+ 100    do jj = 1, cpp(rank+1)
+            ii = cppini(rank+1)+jj
+            write(9988,*)ii,newcuantas(ii)
+        enddo
 
-return
+    return
+
 end
 
 subroutine cadenas72mr(chains,nchas,gauches)
@@ -313,46 +313,46 @@ return
 end 
         
 subroutine graftpoints
-use system
-use chainsdat
-use const
-use MPI
-use ematrix
-implicit none
-integer ix,iy,iz,j
-integer i
+    use system
+    use chainsdat
+    use const
+    use MPI
+    use ematrix
+    implicit none
+    integer ix,iy,iz,j
+    integer i
 
-cpp = 0
+    cpp = 0
 
-call allocatencha
+    call allocatencha
 
-do i = 1, ncha
-  ngpol(i) = volx(i)
-  posicion(i, :) = com(i,:)
-  cpp(mod(i,size)+1) = cpp(mod(i,size)+1) + 1
-enddo
+    do i = 1, ncha
+        ngpol(i) = volx(i)
+        posicion(i, :) = com(i,:)
+        cpp(mod(i,size)+1) = cpp(mod(i,size)+1) + 1
+    enddo
 
-maxcpp = maxval(cpp)
+    maxcpp = maxval(cpp)
 
-cppini(1) = 0
-do j = 2,size
-cppini(j)=cppini(j-1)+cpp(j-1)
-enddo
+    cppini(1) = 0
+    do j = 2,size
+        cppini(j)=cppini(j-1)+cpp(j-1)
+    enddo
 
-if(rank.eq.0) then
-if(verbose.ge.1) then
- write(stdout,*) 'creador:', 'graftingpoints:'
- write(stdout,*) 'creador:', 'ncha = ', ncha
- do j = 1, size
- write(stdout,*) 'creador:', ' cpp    ', j, ' = ', cpp(j)
- write(stdout,*) 'creador:', ' cppini ', j, ' = ', cppini(j)+1
- write(stdout,*) 'creador:', ' cppfin ', j, ' = ', cppini(j)+cpp(j)
- write(stdout,*) 'creador:', '!!!!!!!!!!!!!!!!!!!!!!!!!'
- enddo
-endif
-endif
+    if(rank.eq.0) then
+        if(verbose.ge.1) then
+            write(stdout,*) 'creador:', 'graftingpoints:'
+            write(stdout,*) 'creador:', 'ncha = ', ncha
+            do j = 1, size
+                write(stdout,*) 'creador:', ' cpp    ', j, ' = ', cpp(j)
+                write(stdout,*) 'creador:', ' cppini ', j, ' = ', cppini(j)+1
+                write(stdout,*) 'creador:', ' cppfin ', j, ' = ', cppini(j)+cpp(j)
+                write(stdout,*) 'creador:', '!!!!!!!!!!!!!!!!!!!!!!!!!'
+            enddo
+        endif
+    endif
 
-call allocatecpp
+    call allocatecpp
 
 end
 
