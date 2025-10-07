@@ -15,7 +15,7 @@ subroutine inittransf
     real*8 :: cdivl
     real*8, external :: NORMA
 
-    gama0 = gama0/180.0*pi              ! == angle basis  vecor in radians
+    gama0 = gama0/180.0*pi              ! == angle basis  vector in radians
 
     beta = (pi/2.0 - gama0)/2.0         ! == angele between  u and x axis
 

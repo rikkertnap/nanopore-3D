@@ -51,7 +51,7 @@ subroutine pxs
             x = x + posicion(ii,:)               ! == translate to graft position given by ii
 
             ztemp = ztemp+ x(3)*zpol(segtype(j)) ! == charge of z position * segtype(j)=segment_number of segment j
-                                                 ! == dipole moment ???
+                                                 ! == auxilary varaible
 
             v = MATMUL(MAT,x)                    ! == coordinate transform from xyz to uvz 
             pxtemp(:,j) = v(:)                   ! == assgin v to pxtemp   
@@ -136,7 +136,7 @@ subroutine pxs
     
         if(flag.eq.0) then        ! == no conflict :location good 
 
-            newcuantas(ii) = newcuantas(ii)+1. ! == increase newcuats for ii
+            newcuantas(ii) = newcuantas(ii)+1  ! == increase newcuats for ii
             zfinal(newcuantas(ii),jj) = ztemp
             ngauche(newcuantas(ii),ii) = ing
 

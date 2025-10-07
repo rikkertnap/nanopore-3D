@@ -1,99 +1,104 @@
 subroutine fkfun(x,f,ier2)
 
-use system
-use chainsdat
-use molecules
-use const
-use results
-use bulk
-use kai
-use MPI
-use fields_fkfun
-use kinsol
-use conformations
-use ematrix
-use ellipsoid
-use transform
-use kaist
-use mparameters_monomer
-implicit none
+    use system
+    use chainsdat
+    use molecules
+    use const
+    use results
+    use bulk
+    use kai
+    use MPI
+    use fields_fkfun
+    use kinsol
+    use conformations
+    use ematrix
+    use ellipsoid
+    use transform
+    use kaist
+    use mparameters_monomer
+    implicit none
 
-integer*4 ier2
-integer ncells
-real*8 x(*),f(*)
-real*8 protemp
-integer i,j, ix, iy, iz, ii, ax, ay, az
-integer im, ip
-integer jx, jy, jz, jj
-real*8 xpot(dimx, dimy, dimz, N_monomer)
-! Charge
-real*8 psitemp
-real*8 MV(3),MU(3),MW(3)
-real*8 MVV,MUU,MWW,MVU,MVW,MUW
-real*8 psivv,psiuu,psiww, psivu,psivw,psiuw
-real*8 psiv(3), epsv(3)
-real*8 xtotalsum(dimx,dimy,dimz)
+    ! input arguments 
+    integer*4, intent(inout) :: ier2
+    real*8, intent(in) :: x(*)
+    real*8, intent(inout) :: f(*)
 
-integer, external :: PBCSYMI, PBCREFI
+    ! local arguments
 
-! poor solvent 
-real*8 sttemp
-! MPI
-integer tag
-parameter(tag = 0)
-integer err
-real*8 avpol_temp(dimx,dimy,dimz,N_monomer)
-real*8 q_tosend
-real*8 gradpsi2
-real*8 fv
+    integer ncells
+    real*8 protemp
+    integer i,j, ix, iy, iz, ii, ax, ay, az
+    integer im, ip
+    integer jx, jy, jz, jj
+    real*8 xpot(dimx, dimy, dimz, N_monomer)
+    ! Charge
+    real*8 psitemp
+    real*8 MV(3),MU(3),MW(3)
+    real*8 MVV,MUU,MWW,MVU,MVW,MUW
+    real*8 psivv,psiuu,psiww, psivu,psivw,psiuw
+    real*8 psiv(3), epsv(3)
+    real*8 xtotalsum(dimx,dimy,dimz)
 
-! hamiltonian inception
-real*8 hfactor, hd
-real*8 hds(100)
+    integer, external :: PBCSYMI, PBCREFI
 
+    ! poor solvent 
+    real*8 sttemp
+    ! MPI
+    integer tag
+    parameter(tag = 0)
+    integer err
+    real*8 avpol_temp(dimx,dimy,dimz,N_monomer)
+    real*8 q_tosend
+    real*8 gradpsi2
+    real*8 fv
 
-hds = -1
-
-!-----------------------------------------------------
-! Common variables
-
-shift = 1.0
-
-ncells = dimx*dimy*dimz ! numero de celdas
-
-! Jefe
-
-if(rank.eq.0) then ! llama a subordinados y pasa vector x
-   flagsolver = 1
-   CALL MPI_BCAST(flagsolver, 1, MPI_INTEGER, 0, MPI_COMM_WORLD,err)
-   CALL MPI_BCAST(x, eqs*ncells , MPI_DOUBLE_PRECISION,0, MPI_COMM_WORLD,err)
-endif
-
-!------------------------------------------------------
-! DEBUG
-!      if(iter.gt.2000) then
-!      do i = 1, n
-!      write(stdout,*)i, x(i)
-!      enddo
-!      endif
+    ! hamiltonian inception
+    real*8 hfactor, hd
+    real*8 hds(100)
 
 
-! Recupera xh y psi desde x()
+    hds = -1
 
-psi = 0.0
-do ix=1,dimx
- do iy=1,dimy
-  do iz=1,dimz
-     xh(ix,iy,iz)=x(ix+dimx*(iy-1)+dimx*dimy*(iz-1)) !fraccion solvente
+    !-----------------------------------------------------
+    ! Common variables
 
-     do ip = 1, N_poorsol
-      xtotal(ix,iy,iz,ip) = x(ix+dimx*(iy-1)+dimx*dimy*(iz-1)+ ip*ncells) !fraccion polimero de tipo ip
-     enddo
-     if(electroflag.eq.1)psi(ix,iy,iz)=x(ix+dimx*(iy-1)+dimx*dimy*(iz-1)+(N_poorsol+1)*ncells)   !potencial electrostatico
+    shift = 1.0
 
-  enddo
- enddo
-enddo
+    ncells = dimx*dimy*dimz ! numero de celdas
+
+    ! Jefe
+
+    if(rank.eq.0) then ! llama a subordinados y pasa vector x
+    flagsolver = 1
+    CALL MPI_BCAST(flagsolver, 1, MPI_INTEGER, 0, MPI_COMM_WORLD,err)
+    CALL MPI_BCAST(x, eqs*ncells , MPI_DOUBLE_PRECISION,0, MPI_COMM_WORLD,err)
+    endif
+
+    !------------------------------------------------------
+    ! DEBUG
+    !      if(iter.gt.2000) then
+    !      do i = 1, n
+    !      write(stdout,*)i, x(i)
+    !      enddo
+    !      endif
+
+
+    ! Recupera xh y psi desde x()
+
+    psi = 0.0
+    do ix=1,dimx
+        do iy=1,dimy
+            do iz=1,dimz
+                xh(ix,iy,iz)=x(ix+dimx*(iy-1)+dimx*dimy*(iz-1))  !fraccion solvente == solvent 
+
+                do ip = 1, N_poorsol
+                    xtotal(ix,iy,iz,ip) = x(ix+dimx*(iy-1)+dimx*dimy*(iz-1)+ ip*ncells) !fraccion polimero de tipo ip
+                enddo
+                if(electroflag.eq.1) psi(ix,iy,iz)=x(ix+dimx*(iy-1)+dimx*dimy*(iz-1)+(N_poorsol+1)*ncells)   !potencial electrostatico
+
+            enddo
+        enddo
+    enddo
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!      
 ! Boundary conditions electrostatic potential
@@ -101,24 +106,24 @@ enddo
 ! Reflection or PBC, (PBC = 1 or 3)
  
 do jx = 0, dimx+1
-do jy = 0, dimy+1
-do jz = 0, dimz+1
+    do jy = 0, dimy+1
+        do jz = 0, dimz+1
 
-ix=jx
-iy=jy
-iz=jz ! these lines are necessary for PBC = 0 or 2
+            ix=jx
+            iy=jy
+            iz=jz ! these lines are necessary for PBC = 0 or 2
 
-if (PBC(1).eq.1)ix = PBCSYMI(jx,dimx)
-if (PBC(3).eq.1)iy = PBCSYMI(jy,dimy)
-if (PBC(5).eq.1)iz = PBCSYMI(jz,dimz)
+            if (PBC(1).eq.1)ix = PBCSYMI(jx,dimx)
+            if (PBC(3).eq.1)iy = PBCSYMI(jy,dimy)
+            if (PBC(5).eq.1)iz = PBCSYMI(jz,dimz)
 
-if (PBC(1).eq.3)ix = PBCREFI(jx,dimx)
-if (PBC(3).eq.3)iy = PBCREFI(jy,dimy)
-if (PBC(5).eq.3)iz = PBCREFI(jz,dimz)
+            if (PBC(1).eq.3)ix = PBCREFI(jx,dimx)
+            if (PBC(3).eq.3)iy = PBCREFI(jy,dimy)
+            if (PBC(5).eq.3)iz = PBCREFI(jz,dimz)
 
-   psi(jx, jy, jz) = psi(ix, iy, iz)
-enddo
-enddo
+            psi(jx, jy, jz) = psi(ix, iy, iz)
+            enddo
+    enddo
 enddo
 
 ! Bulk or Wall, PBC = 0 or 2

@@ -326,16 +326,16 @@ subroutine graftpoints
 
     call allocatencha
 
-    do i = 1, ncha
-        ngpol(i) = volx(i)
-        posicion(i, :) = com(i,:)
-        cpp(mod(i,size)+1) = cpp(mod(i,size)+1) + 1
+    do i = 1, ncha                     ! ncha = number of graft point  
+        ngpol(i) = volx(i)             ! number of polyemr or number per unit areea 
+        posicion(i, :) = com(i,:)             ! position real in space    
+        cpp(mod(i,size)+1) = cpp(mod(i,size)+1) + 1. ! = distrubetion chain per processore 
     enddo
 
     maxcpp = maxval(cpp)
-
-    cppini(1) = 0
-    do j = 2,size
+ 
+    cppini(1) = 0                        ! book kkeping of where graft point 
+    do j = 2,size                        ! cppini(2) first of the graft chain at second 
         cppini(j)=cppini(j-1)+cpp(j-1)
     enddo
 

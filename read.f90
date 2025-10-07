@@ -1,3 +1,5 @@
+! == older input routine not used/compilee
+
 
 subroutine readinput
 use molecules

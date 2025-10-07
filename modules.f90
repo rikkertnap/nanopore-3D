@@ -57,10 +57,11 @@ endmodule
 
 module system 
     integer :: systemtype   ! == descriptor of system, see parser.f90
+    integer :: method       ! == select solver method
     integer :: vscan        ! == select type of loop of VdW variable ?? 
     real*8 :: delta         ! == unit of length volume cell  in nm ?? 
     real*8 :: dx,dy,dz      ! == 
-    real*8 :: cdiva         ! == cdiva ???
+    real*8 :: cdiva         ! == cdiva not cubic :  length c axis divided by a-axis tetragonal latice
     integer :: dimx         ! == number of volume cell  in x-directions
     integer :: dimy 
     integer :: dimz       
@@ -189,7 +190,7 @@ endmodule
 
 module MPI
     !include 'mpif.h' ! librerias MPI
-    use mpi_f08  
+    use mpi_f08
     integer :: rank       ! local rank node
     integer :: size       ! number of nodes, size of mpi size override intrinic function size 
     integer :: ierr       ! output flag  

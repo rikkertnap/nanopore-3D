@@ -82,7 +82,8 @@ subroutine solve(flagcrash)
         write(stdout,*) 'solve: Enter solver ', eqs*ncells, ' eqs'
 
         if(infile.ge.0) then
-            call call_kinsol(x1, xg1, ier)
+            ! call call_kinsol(x1, xg1, ier)
+            call solver(x1, xg1, ier)
         endif
         if(infile.eq.-1) then
             call fkfun(x1, f, ier)

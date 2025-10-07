@@ -24,8 +24,10 @@ subroutine Free_Energy_Calc(looped)
     use mkl
     implicit none
 
+    ! == input argement 
     integer, intent(inout) ::  looped  !! input : is case number ??
 
+    ! == local variables
 
     real*8 :: q_tosend(ncha), sumgauche_tosend(ncha)
     real*8 ::  q0(ncha), sumgauche0(ncha)
@@ -99,7 +101,8 @@ subroutine Free_Energy_Calc(looped)
 
         ! Envia pro
 
-        CALL MPI_SEND(pro, cuantas*cpp(rank+1) , MPI_DOUBLE_PRECISION, dest, tag, MPI_COMM_WORLD,err)
+        print*,"warning mpi_send disable !!"  
+        ! CALL MPI_SEND(pro, cuantas*cpp(rank+1) , MPI_DOUBLE_PRECISION, dest, tag, MPI_COMM_WORLD,err)
 
         ! sum gauche
 
@@ -237,8 +240,7 @@ subroutine Free_Energy_Calc(looped)
             q_tosend(iii) = q(iii)
         enddo
 
-        call MPI_REDUCE(q_tosend, q0, ncha, &
-            MPI_DOUBLE_PRECISION, MPI_SUM,0, MPI_COMM_WORLD, err)
+        call MPI_REDUCE(q_tosend, q0, ncha, MPI_DOUBLE_PRECISION, MPI_SUM,0, MPI_COMM_WORLD, err)
 
         call MPI_REDUCE(newcuantas, newcuantas0, ncha, MPI_INTEGER, MPI_SUM,0, MPI_COMM_WORLD, err)
 
@@ -253,12 +255,12 @@ subroutine Free_Energy_Calc(looped)
             enddo
         enddo 
 
-        do ii = 2, size ! loop sobre los procesadores restantes
+        do ii = 2, size ! loop sobre los procesadores restantes 
+                        ! == loop over the remaining processors
 
             source = ii-1
-
-            call MPI_RECV(pro0, cuantas*cpp(ii), &
-                MPI_DOUBLE_PRECISION, source, tag, MPI_COMM_WORLD,stat, err)
+            print*,"warning mpi_recv  disabled !!"  
+            ! call MPI_RECV(pro0, cuantas*cpp(ii), MPI_DOUBLE_PRECISION, source, tag, MPI_COMM_WORLD,stat, err)
 
 
             do jj = 1, cpp(ii)
@@ -275,7 +277,7 @@ subroutine Free_Energy_Calc(looped)
 
         enddo ! ii
 
-    endif ! rank
+    endif ! rank  == end rank ==0 
 
     Free_Energy = Free_Energy + F_Conf
 
@@ -297,7 +299,7 @@ subroutine Free_Energy_Calc(looped)
 
     ! Jefe
 
-    if (rank.eq.0) then ! Igual tiene que serlo, ver arriba
+    if (rank.eq.0) then ! Igual tiene que serlo, ver arriba == Same process see above. Has to do the same thing 
 
         do jj = 1, cpp(rank+1)
             iii = cppini(rank+1)+jj

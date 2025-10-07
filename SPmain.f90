@@ -28,7 +28,7 @@ program main
     real*8  :: temp
     real*8  :: theta
     real*8, external :: rands
-    logical :: flag              
+    logical :: flag              ! == ??
     character*10 :: filename
     integer :: j, i, ii, iii
     integer :: flagcrash
@@ -69,7 +69,7 @@ program main
     !!! General files
 
     if(systemtype.eq.1) then
-        do j = 1, NNN
+        do j = 1, NNN                                   ! == Nmuber nanopartilces N
             write(filename,'(A3,I3.3, A4)')'pos',j,'.dat'
             open(file=filename, unit=5000+j)
             write(filename,'(A3,I3.3, A4)')'orn',j,'.dat'
@@ -92,13 +92,13 @@ program main
     elseif (systemtype.eq.2) then
         call update_matrix_channel(flag)    ! == channel 
     elseif (systemtype.eq.3) then
-        call update_matrix_channel_3(flag)  ! updates 'the matrix'
-    elseif (systemtype.eq.4) then
-        call update_matrix_channel_4(flag)  ! updates 'the matrix'
+        call update_matrix_channel_3(flag)  
+    elseif (systemtype.eq.4) then           ! == channel without reservoir 
+        call update_matrix_channel_4(flag)  
     elseif (systemtype.eq.41) then
-        call update_matrix_channel_4(flag)  ! 
+        call update_matrix_channel_4(flag)  ! == channel with one ring 
     elseif (systemtype.eq.42) then
-        call update_matrix_channel_4(flag)  ! == channel
+        call update_matrix_channel_4(flag)  ! == channel with two row ??
     elseif (systemtype.eq.52) then
         call update_matrix_channel_4(flag)  ! == rod
     elseif (systemtype.eq.6) then
