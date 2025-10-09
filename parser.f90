@@ -168,6 +168,19 @@ subroutine readinput
                 read(buffer, *, iostat=ios) electroflag
                 if(rank.eq.0)write(stdout,*) 'parser:','Set ',trim(label),' = ',trim(buffer)
 
+            case ('fluxflag') ! == new flag to be used in Steady State
+                read(buffer, *, iostat=ios) fluxflag
+                if(rank.eq.0)write(stdout,*) 'parser:','Set ',trim(label),' = ',trim(buffer)
+
+            case ('curvedflag') ! == new flag for hourglass shaped  channel
+                read(buffer, *, iostat=ios) fluxflag
+                if(rank.eq.0)write(stdout,*) 'parser:','Set ',trim(label),' = ',trim(buffer)
+ 
+            case ('method') ! == new flag to select non-linear solver
+                read(buffer, *, iostat=ios) method
+                if(rank.eq.0)write(stdout,*) 'parser:','Set ',trim(label),' = ',trim(buffer)
+
+
             case ('branched')
                 read(buffer, *, iostat=ios) branched
         

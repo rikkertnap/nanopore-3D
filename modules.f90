@@ -56,19 +56,23 @@ module branches
 endmodule
 
 module system 
-    integer :: systemtype   ! == descriptor of system, see parser.f90
-    integer :: method       ! == select solver method
-    integer :: vscan        ! == select type of loop of VdW variable ?? 
-    real*8 :: delta         ! == unit of length volume cell  in nm ?? 
+
+    integer :: systemtype   ! == descriptor of system, see parser.f90 
+    integer :: method       ! == select solver method :  1= kinsol 2=anderson 3= simple mixing
+    integer :: vscan        ! == select type of loop of VdW variable 
+    real*8 :: delta         ! == unit of length volume cell  in nm  
     real*8 :: dx,dy,dz      ! == 
     real*8 :: cdiva         ! == cdiva not cubic :  length c axis divided by a-axis tetragonal latice
     integer :: dimx         ! == number of volume cell  in x-directions
     integer :: dimy 
     integer :: dimz       
     integer :: PBC(6)       ! == Periodic bondary conditions 
-    integer :: vtkflag      ! == if flag ==1 make vtk output formatted file ?? 
+    integer :: vtkflag      ! == if flag ==1 make vtk output formatted file  
     integer :: electroflag  ! == if flag ==1 use electrostatics i.e. solve Poisson Eq
     integer :: eqs          ! == number of set of equations, total number of non-linear equatios eqs * (nsize = dimx *dimy *dimz)  
+    integer :: curvedflag   ! == if flag ==1 use to control shape of nanochannel 0 : straight cylindrical shape 1: hourglass shaped nanopore 
+    integer :: fluxflag     ! == if flag ==1 add flux equation : steady system instead of equilibrium
+
 endmodule
 
 
@@ -76,7 +80,7 @@ endmodule
 module ematrix
     use system
 
-    real*8, allocatable :: volprot(:,:,:)
+    real*8, allocatable :: volprot(:,:,:)    ! == volume not accesible by polymer, solvent, ions: volume of membrane and proteins
     real*8, allocatable :: volprot1(:,:,:)
     real*8, allocatable :: voleps(:,:,:)
     real*8, allocatable :: voleps1(:,:,:)
@@ -86,7 +90,7 @@ module ematrix
     real*8 volx(maxvolx)
     real*8 com(maxvolx,3)
     integer p0(maxvolx,3)
-    real*8, allocatable :: fvstd(:,:,:)
+    real*8, allocatable :: fvstd(:,:,:)      ! ==  fv  = 1 -volprot
     real*8, allocatable :: fvmkl(:)
 
 end module
@@ -110,7 +114,7 @@ module channel
 endmodule
 
 module s2d        
-    integer scx,scy,scz                  ! == ranges in vtk file 
+    integer scx,scy,scz                     ! == dimensional ranges in vtk file 
 endmodule
 
 module mkinsol
@@ -123,19 +127,19 @@ endmodule
 
 module chainsdat
     integer :: cuantas                    ! == number of conformations
-    integer, allocatable :: newcuantas(:) ! == ???
+    integer, allocatable :: newcuantas(:) ! == number of conformations per graft point accepted ???
     integer :: long                       ! == length of polymer chain /number of segments
     integer, allocatable :: segtype(:)    ! sequence of the chain 
-    integer :: ncha 
+    integer :: ncha                       ! == number of conformations  
     real*8, ALLOCATABLE :: in1(:,:)       ! segment positions 
     integer :: ing                        ! number of gauches in current chain
     real*8, ALLOCATABLE :: posicion(:,:)  ! posicion graft de la cadena ncha
     real*8, ALLOCATABLE :: ngpol(:)       ! posicion graft de la cadena ncha
-    integer, ALLOCATABLE :: cpp(:)
-    integer, ALLOCATABLE :: cppini(:)
-    integer :: maxcpp                     ! == ??
+    integer, ALLOCATABLE :: cpp(:)        ! == conformation per processor 
+    integer, ALLOCATABLE :: cppini(:)     !   
+    integer :: maxcpp                     ! == max number of conformation per processor
     real*8 :: lseg                        ! == length segment 
-    integer ::  readchains                ! == variable that select reading stored conformation 
+    integer ::  readchains                ! == variable that selects reading stored conformation 
 endmodule
 
 module molecules
@@ -150,33 +154,33 @@ module molecules
     real*8 :: fz                          ! == ?  
 endmodule
 
-module kaist
-    integer hguess
-    real*8 hring
-    real*8 oval
-    integer nkp
-    real*8 kp
-    real*8 kps(100)
+module kaist                              ! == varaible related to hamilton inception method:  for solving poor solvent condition
+    integer :: hguess
+    real*8 :: hring
+    real*8 :: oval
+    integer :: nkp
+    real*8 :: kp
+    real*8 :: kps(100)
 
-    integer nst
-    real*8 st
-    real*8 sts(100)
+    integer :: nst
+    real*8 :: st
+    real*8 :: sts(100)
 
-    integer nsc
-    real*8 sc
-    real*8 scs(100)
+    integer :: nsc
+    real*8 :: sc
+    real*8 :: scs(100)
 
 endmodule
 
-module fields_fkfun
+module fields_fkfun                             ! == density 
     use system
     use chainsdat
-    real*8, allocatable :: xtotal(:, :, :, :) ! xtotal para poor solvent
-    real*8, allocatable :: psi(:, :, :) 
-    real*8, allocatable :: q(:)
+    real*8, allocatable :: xtotal(:, :, :, :)   ! xtotal para poor solvent
+    real*8, allocatable :: psi(:, :, :)         ! == electrostatic potential
+    real*8, allocatable :: q(:)                 ! == part function 
     real*8, allocatable :: sumgauche(:)
-    real*8, allocatable :: pro(:,:)
-    real*8, allocatable :: xh(:, :, :)
+    real*8, allocatable :: pro(:,:)             ! == probability
+    real*8, allocatable :: xh(:, :, :)          ! == solvent volume fraction 
     real*8 shift
 endmodule
 
@@ -213,8 +217,8 @@ module const
     real*8 :: dielPr, dielSr         ! == relative dielectric constant ?? 
     real*8 :: pKw, Kw
     real*8 :: pi 
-    real*8, parameter :: Na = 6.02d23                    ! == Avogadro's number  
-   ! real*8, parameter :: Na = 6.022140857e23_dp          ! == Avogadro's number unit 
+   ! real*8, parameter :: Na = 6.02d23                    ! == Avogadro's number  
+    real*8, parameter :: Na = 6.022140857e23              ! == Avogadro's number unit 
     real*8 :: constq                 ! == pre factor in Poisson Eq 
     real*8 :: lb                     ! == Bjerrum length 
     integer :: seed                                 
@@ -226,10 +230,10 @@ module const
     integer :: randominput
     integer :: epstype
     integer :: verbose     
-    integer :: stdout             ! == unit number of write of stdout
+    integer :: stdout                ! == unit number of write of stdout
 endmodule
 
-module kai
+module kai                                  ! == poor solvent/ Van der Waals interaction variables 
     integer :: Xulimit
     real*8 :: cutoff
     real*8, allocatable :: Xu(:,:,:)
@@ -287,5 +291,5 @@ module transform               ! == coordinate transformation
     real*8 :: MAT(3,3)
     real*8 :: TMAT(3,3)
     real*8 :: IMAT(3,3)
-endmodule
+end module
 

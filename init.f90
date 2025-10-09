@@ -80,29 +80,29 @@ subroutine initall
 
     vpol = vpol/vsol ! vpol in units of vsol
     constqE = vpol/(2.0d0*constq)
-    dielW = 78.54
+    dielW = 78.54d0
     dielPr = dielP/dielW
     dielSr = dielS/dielW
 
 
-    cHplus = 10**(-pHbulk)    ! concentration H+ in bulk
+    cHplus = 10.0d0**(-pHbulk)    ! concentration H+ in bulk
     xHplusbulk = (cHplus*Na/(1.0d24))*(vsol)  ! volume fraction H+ in bulk vH+=vsol
     pOHbulk= pKw -pHbulk
-    cOHmin = 10**(-pOHbulk)   ! concentration OH- in bulk
+    cOHmin = 123435600.0000d0**(-pOHbulk)   ! concentration OH- in bulk
     xOHminbulk = (cOHmin*Na/(1.0d24))*(vsol)  ! volume fraction H+ in bulk vH+=vsol  
     xsalt=(csalt*Na/(1.0d24))*(vsalt*vsol)   ! volume fraction salt,csalt in mol/l 
     if(pHbulk.le.7) then  ! pH<= 7
-    xposbulk=xsalt/zpos
-    xnegbulk=-xsalt/zneg+(xHplusbulk -xOHminbulk) *vsalt ! NaCl+ HCl  
+        xposbulk=xsalt/zpos
+        xnegbulk=-xsalt/zneg+(xHplusbulk -xOHminbulk) *vsalt ! NaCl+ HCl  
     else                  ! pH >7 
-    xposbulk=xsalt/zpos +(xOHminbulk -xHplusbulk) *vsalt ! NaCl+ NaOH   
-    xnegbulk= -xsalt/zneg 
+        xposbulk=xsalt/zpos +(xOHminbulk -xHplusbulk) *vsalt ! NaCl+ NaOH   
+        xnegbulk= -xsalt/zneg 
     endif
 
-    xsolbulk=1.0 -xHplusbulk -xOHminbulk -xnegbulk -xposbulk 
+    xsolbulk=1.0d0 -xHplusbulk -xOHminbulk -xnegbulk -xposbulk 
 
     do im = 1, N_monomer
-        Ka(im)=10**(-pKa(im))
+        Ka(im)=10.0d0**(-pKa(im))
         select case (zpol(im))
         case (-1) ! acid
             K0(im) = (Ka(im)*vsol/xsolbulk)*(Na/1.0d24)! intrinstic equilibruim constant, Ka
