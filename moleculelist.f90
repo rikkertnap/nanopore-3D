@@ -68,7 +68,6 @@ contains
         ! at T= 25 C
         ! all values are in 10-5 cm^2/sec 10-9 m^2/sec
 
-       
         Diffcoeff%pos    = 1.33d-9 ! Na
         Diffcoeff%neg    = 2.03d-9 ! Cl 
         Diffcoeff%Hplus = 9.31d-9
@@ -78,6 +77,46 @@ contains
         Diffcoeff%sol   = 0.0d-9   
         
     end subroutine  init_diffusion_coeff
+
+
+    subroutine init_vol()
+
+        use molecules, only : vsol, vsalt
+
+        vol%sol   = 1.0d0
+        vol%pos   = vsalt ! == deivide by vsol
+        vol%neg   = vsalt 
+        vol%Hplus = 1.0d0
+        vol%OHmin = 1.0d0
+
+    end subroutine init_vol    
+
+
+    subroutine init_zval()
+
+        use molecules, only : zpos, zneg 
+
+        zval%sol   = 0.0d0
+        zval%pos   = 1.0d0*zpos
+        zval%neg   = 1.0d0*zneg 
+        zval%Hplus = 1.0d0
+        zval%OHmin = -1.0d0
+
+    end subroutine init_zval
+
+    subroutine init_xvolmin()
+        
+        use bulk, only : xsolbulk, xposbulk, xnegbulk, xHplusbulk,xOHminbulk
+
+        xvolmin%sol   = xsolbulk
+        xvolmin%pos   = xposbulk
+        xvolmin%neg   = xnegbulk
+        xvolmin%Hplus = xHplusbulk
+        xvolmin%OHmin = xOHminbulk
+ 
+    end subroutine init_xvolmin
+
+
 
 end module moleculeslist
 

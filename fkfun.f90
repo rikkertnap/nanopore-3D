@@ -16,6 +16,8 @@ subroutine fkfun(x,f,ier2)
     use transform
     use kaist
     use mparameters_monomer
+    use flux, only : divJ, div_flux, niontypes, iontype
+
     implicit none
 
     ! input arguments 
@@ -25,19 +27,20 @@ subroutine fkfun(x,f,ier2)
 
     ! local arguments
 
-    integer ncells
-    real*8 protemp
-    integer i,j, ix, iy, iz, ii, ax, ay, az
-    integer im, ip
-    integer jx, jy, jz, jj
-    real*8 xpot(dimx, dimy, dimz, N_monomer)
+    integer :: ncells
+    real*8 :: protemp
+    integer :: i,j, ix, iy, iz, ii, ax, ay, az
+    integer :: im, ip
+    integer :: jx, jy, jz, jj
+    real*8 :: xpot(dimx, dimy, dimz, N_monomer)
+    integer id, noffset ! == indices used for flux contrubution to f
     ! Charge
-    real*8 psitemp
-    real*8 MV(3),MU(3),MW(3)
-    real*8 MVV,MUU,MWW,MVU,MVW,MUW
-    real*8 psivv,psiuu,psiww, psivu,psivw,psiuw
-    real*8 psiv(3), epsv(3)
-    real*8 xtotalsum(dimx,dimy,dimz)
+    real*8 :: psitemp
+    real*8 :: MV(3),MU(3),MW(3)
+    real*8 :: MVV,MUU,MWW,MVU,MVW,MUW
+    real*8 :: psivv,psiuu,psiww, psivu,psivw,psiuw
+    real*8 :: psiv(3), epsv(3)
+    real*8 :: xtotalsum(dimx,dimy,dimz)
 
     integer, external :: PBCSYMI, PBCREFI
 
@@ -64,14 +67,14 @@ subroutine fkfun(x,f,ier2)
 
     shift = 1.0
 
-    ncells = dimx*dimy*dimz ! numero de celdas
+    ncells = dimx*dimy*dimz ! numero de celdas == number of cells
 
     ! Jefe
 
-    if(rank.eq.0) then ! llama a subordinados y pasa vector x
-    flagsolver = 1
-    CALL MPI_BCAST(flagsolver, 1, MPI_INTEGER, 0, MPI_COMM_WORLD,err)
-    CALL MPI_BCAST(x, eqs*ncells , MPI_DOUBLE_PRECISION,0, MPI_COMM_WORLD,err)
+    if(rank.eq.0) then ! llama a subordinados y pasa vector x  == calls subordinates and passes vector x
+        flagsolver = 1
+        CALL MPI_BCAST(flagsolver, 1, MPI_INTEGER, 0, MPI_COMM_WORLD,err)
+        CALL MPI_BCAST(x, eqs*ncells , MPI_DOUBLE_PRECISION,0, MPI_COMM_WORLD,err)
     endif
 
     !------------------------------------------------------
@@ -83,9 +86,12 @@ subroutine fkfun(x,f,ier2)
     !      endif
 
 
-    ! Recupera xh y psi desde x()
+    ! Recupera xh y psi desde x() 
+    ! == Retrieve xh and psi from x()
 
-    psi = 0.0
+    !  psi = 0.0 
+    psi = 0.0d0 ! == without d0 significant number loss can ocur but value overwritten below !!!
+
     do ix=1,dimx
         do iy=1,dimy
             do iz=1,dimz
@@ -137,68 +143,70 @@ subroutine fkfun(x,f,ier2)
 
     select case (PBC(1)) ! x = 0
     case(0) ! set bulk 
-        psi(0,:,:) = 0.0 
+        psi(0,:,:) = 0.0d0        ! == added  d0 
     case(2)
         psi(0,:,:) = psi(1,:,:) ! zero charge
     end select
 
     select case (PBC(2)) ! x = dimx
     case(0) ! set bulk 
-        psi(dimx+1,:,:) = 0.0  
+        psi(dimx+1,:,:) = 0.0d0  
     case(2)
         psi(dimx+1,:,:) = psi(dimx,:,:) ! zero charge
     end select
 
     select case (PBC(3)) ! y = 0
     case(0) ! set bulk 
-        psi(:,0,:) = 0.0  
+        psi(:,0,:) = 0.0d0  
     case(2)
         psi(:,0,:) = psi(:,1,:) ! zero charge
     end select
 
     select case (PBC(4)) ! y = dimy
     case(0) ! set bulk 
-        psi(:,dimy+1,:) = 0.0
+        psi(:,dimy+1,:) = 0.0d0
     case(2)
         psi(:,dimy+1,:) = psi(:,dimy,:) ! zero charge
     end select
 
     select case (PBC(5)) ! z = 0
     case(0) ! set bulk 
-        psi(:,:,0) = 0.0  
+        psi(:,:,0) = 0.0d0  
     case(2)
         psi(:,:,0) = psi(:,:,1) ! zero charge
     end select
 
     select case (PBC(6)) ! z = dimz
     case(0) ! set bulk 
-        psi(:,:,dimz+1) = 0.0
+        psi(:,:,dimz+1) = 0.0d0
     case(2)
         psi(:,:,dimz+1) = psi(:,:,dimz) ! zero charge
     end select
 
     ! volume fraction and frdir
 
-    fdis = 0.0
-    avpol = 0.0
+    fdis = 0.0d0    ! == added  d0 
+    avpol = 0.0d0
 
     do ix=1,dimx
         do iy=1,dimy
             do iz=1,dimz
+
                 if(fluxflag.eq.0) then ! Equilibrium  
 
-                    xpos(ix, iy, iz) = expmupos*(xh(ix, iy, iz)**vsalt)*dexp(-psi(ix, iy, iz)*zpos) ! ion plus volume fraction vsalt=vsal/vsv
-                    xneg(ix, iy, iz) = expmuneg*(xh(ix, iy, iz)**vsalt)*dexp(-psi(ix, iy, iz)*zneg) ! ion neg volume fraction
-                    xHplus(ix, iy, iz) = expmuHplus*(xh(ix, iy, iz))*dexp(-psi(ix, iy, iz))         ! H+ volume fraction
-                    xOHmin(ix, iy,iz) = expmuOHmin*(xh(ix,iy,iz))*dexp(+psi(ix,iy,iz))              ! OH-  volume fraction
+                    xpos(ix, iy, iz)   = expmupos*(xh(ix, iy, iz)**vsalt)*dexp(-psi(ix, iy, iz)*zpos) ! ion plus volume fraction vsalt=vsal/vsv
+                    xneg(ix, iy, iz)   = expmuneg*(xh(ix, iy, iz)**vsalt)*dexp(-psi(ix, iy, iz)*zneg) ! ion neg volume fraction
+                    xHplus(ix, iy, iz) = expmuHplus*(xh(ix, iy, iz))*dexp(-psi(ix, iy, iz))           ! H+ volume fraction
+                    xOHmin(ix, iy, iz) = expmuOHmin*(xh(ix,iy,iz))*dexp(+psi(ix,iy,iz))               ! OH-  volume fraction
                 
                 endif 
 
                 do im =1,N_monomer
+
                     if (zpol(im).eq.1) then !BASE
-                        fdis(ix,iy,iz,im) = 1.0 /(1.0 + xOHmin(ix,iy,iz)/(K0(im)*xh(ix,iy,iz))) !k0 k en fraccion de volumen
+                        fdis(ix,iy,iz,im) = 1.0d0 /(1.0d0 + xOHmin(ix,iy,iz)/(K0(im)*xh(ix,iy,iz))) !k0 k en fraccion de volumen
                     else if (zpol(im).eq.-1) then !ACID
-                        fdis(ix,iy,iz,im) = 1.0 /(1.0 + xHplus(ix,iy,iz)/(K0(im)*xh(ix,iy,iz)))
+                        fdis(ix,iy,iz,im) = 1.0d0 /(1.0d0 + xHplus(ix,iy,iz)/(K0(im)*xh(ix,iy,iz)))
                     endif
 
                 enddo
@@ -211,7 +219,7 @@ subroutine fkfun(x,f,ier2)
 
     ! Compute dielectric permitivity
 
-    xtotalsum = 0.0 ! sum of all polymers
+    xtotalsum = 0.0d0 ! sum of all polymers
     do ip = 1, N_poorsol
         xtotalsum(:,:,:) = xtotalsum(:,:,:) + xtotal(:,:,:,ip)
     enddo
@@ -219,12 +227,12 @@ subroutine fkfun(x,f,ier2)
     call dielectfcn(xtotalsum,volprot,epsfcn,Depsfcn)
 
     !------------------------------------------------------------------------
-    ! PDFs polimero
+    ! PDFs polimero // == polymer 
     !------------------------------------------------------------------------
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     !
-    ! PARALELO: Cada procesador trabaja sobre una cadena...
-    !
+    ! PARALELO: Cada procesador trabaja sobre una cadena... /== Each processor works on a chain...
+    !         
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
     ! Calcula xpot
@@ -262,15 +270,27 @@ subroutine fkfun(x,f,ier2)
                     end if
 
                     !   xpot=exp(-Uj(rj)) para P(alpha)
+                    !   == xpot is the exponent of the effective Energy function in P(alpha)
 
-                    fv = (1.0 - volprot(ix,iy,iz)) !fraccion de volumen de la celda que es sc volprot->fraccion pared
-                    xpot(ix, iy, iz, im) = xh(ix,iy,iz)**vpol ! im:tipo de segmento, término de presion osmotica
-                    xpot(ix, iy, iz, im) = xpot(ix,iy,iz, im)*dexp(voleps(ix,iy,iz))  !termino de interaccion con sup de la particula
+                    fv = (1.0 - volprot(ix,iy,iz)) 
+                    !   fraccion de volumen de la celda que es sc volprot->fraccion pared
+                    !   == volume fraction of the cell that is sc volprot->wall fraction             
+
+                    xpot(ix, iy, iz, im) = xh(ix,iy,iz)**vpol 
+                    
+                    ! im:tipo de segmento, término de presion osmotica
+                    ! == im: segment type, osmotic pressure term
+
+                    xpot(ix, iy, iz, im) = xpot(ix,iy,iz, im)*dexp(voleps(ix,iy,iz))  
+                    
+                    ! termino de interaccion con sup de la particula
+                    ! == interaction term with the particle's sup =surface ???
 
                     ! Electrostatics
 
                     if(zpol(im).ne.0.0) then
-                        xpot(ix,iy,iz,im) =  xpot(ix,iy,iz,im)/fdis(ix,iy,iz,im)*dexp(-psi(ix,iy,iz)*zpol(im))  !fdis: por eq ac. base...  
+                        xpot(ix,iy,iz,im) =  xpot(ix,iy,iz,im)/fdis(ix,iy,iz,im)*dexp(-psi(ix,iy,iz)*zpol(im))  
+                        ! fdis: por eq ac. base...  
                     endif
         
                     ! Dielectrics
@@ -281,9 +301,10 @@ subroutine fkfun(x,f,ier2)
                     !     gradpsi2 = (psi(ix+1,iy,iz)-psi(ix-1,iy,iz))**2+(psi(ix,iy+1,iz)-psi(ix,iy-1,iz))**2+(psi(ix,iy,iz+1)-psi(ix,iy,iz-1))**2 
                     !     xpot(ix, iy, iz) = xpot(ix,iy,iz)*exp(-Depsfcn(ix,iy,iz)*(gradpsi2)*constqE)
 
-                    xpot(ix,iy,iz,im) = xpot(ix,iy,iz,im)*exp(Depsfcn(ix,iy,iz)*(gradpsi2)/constq/2.0*vpol/fv)
+                    xpot(ix,iy,iz,im) = xpot(ix,iy,iz,im)*exp(Depsfcn(ix,iy,iz)*(gradpsi2)/constq/2.0d0*vpol/fv)
 
                     ! Poor solvent depende de la grilla donde esta y de sus vecinos
+                    ! == Poor solvent depends on the grid where it is and its neighbors
 
                     if(hydroph(im).ne.0) then
 
@@ -367,18 +388,19 @@ subroutine fkfun(x,f,ier2)
 
     !----------------------------------------------------------------------------------------------
     !   Construye Ecuaciones a resolver 
+    !    == Build Equations to solve
     !----------------------------------------------------------------------------------------------
 
     ! Qtot
 
 
-    qtot = 0.0
+    qtot = 0.0d0 ! == added  d0 
 
     do ix=1,dimx
         do iy=1,dimy
             do iz=1,dimz
             
-            fv = (1.0-volprot(ix,iy,iz))
+            fv = (1.0-volprot(ix,iy,iz))     ! fv == free volume 
 
             qtot(ix, iy, iz) =  (zpos*xpos(ix, iy, iz)+zneg*xneg(ix, iy, iz))/vsalt + &
                 xHplus(ix, iy, iz) - xOHmin(ix, iy, iz)
@@ -465,47 +487,83 @@ subroutine fkfun(x,f,ier2)
         MUW = DOT_PRODUCT(MU,MW)
 
         do ix=1,dimx
-        do iy=1,dimy
-        do iz=1,dimz
+            do iy=1,dimy
+                do iz=1,dimz
 
-        psivv = psi(ix+1,iy,iz)-2*psi(ix,iy,iz)+psi(ix-1,iy,iz)
-        psiuu = psi(ix,iy+1,iz)-2*psi(ix,iy,iz)+psi(ix,iy-1,iz)
-        psiww = psi(ix,iy,iz+1)-2*psi(ix,iy,iz)+psi(ix,iy,iz-1)
+                    psivv = psi(ix+1,iy,iz)-2*psi(ix,iy,iz)+psi(ix-1,iy,iz)
+                    psiuu = psi(ix,iy+1,iz)-2*psi(ix,iy,iz)+psi(ix,iy-1,iz)
+                    psiww = psi(ix,iy,iz+1)-2*psi(ix,iy,iz)+psi(ix,iy,iz-1)
 
-        psivu = (psi(ix+1,iy+1,iz)+psi(ix-1,iy-1,iz)-psi(ix+1,iy-1,iz)-psi(ix-1,iy+1,iz))/4.0
-        psivw = (psi(ix+1,iy,iz+1)+psi(ix-1,iy,iz-1)-psi(ix+1,iy,iz-1)-psi(ix-1,iy,iz+1))/4.0
-        psiuw = (psi(ix,iy+1,iz+1)+psi(ix,iy-1,iz-1)-psi(ix,iy+1,iz-1)-psi(ix,iy-1,iz+1))/4.0
+                    psivu = (psi(ix+1,iy+1,iz)+psi(ix-1,iy-1,iz)-psi(ix+1,iy-1,iz)-psi(ix-1,iy+1,iz))/4.0d0
+                    psivw = (psi(ix+1,iy,iz+1)+psi(ix-1,iy,iz-1)-psi(ix+1,iy,iz-1)-psi(ix-1,iy,iz+1))/4.0d0
+                    psiuw = (psi(ix,iy+1,iz+1)+psi(ix,iy-1,iz-1)-psi(ix,iy+1,iz-1)-psi(ix,iy-1,iz+1))/4.0d0
 
-        psiv(1) = (psi(ix+1,iy,iz)-psi(ix-1,iy,iz))/2.0
-        psiv(2) = (psi(ix,iy+1,iz)-psi(ix,iy-1,iz))/2.0
-        psiv(3) = (psi(ix,iy,iz+1)-psi(ix,iy,iz-1))/2.0
+                    psiv(1) = (psi(ix+1,iy,iz)-psi(ix-1,iy,iz))/2.0d0
+                    psiv(2) = (psi(ix,iy+1,iz)-psi(ix,iy-1,iz))/2.0d0
+                    psiv(3) = (psi(ix,iy,iz+1)-psi(ix,iy,iz-1))/2.0d0
 
-        epsv(1) = (epsfcn(ix+1,iy,iz)-epsfcn(ix-1,iy,iz))/2.0
-        epsv(2) = (epsfcn(ix,iy+1,iz)-epsfcn(ix,iy-1,iz))/2.0
-        epsv(3) = (epsfcn(ix,iy,iz+1)-epsfcn(ix,iy,iz-1))/2.0
+                    epsv(1) = (epsfcn(ix+1,iy,iz)-epsfcn(ix-1,iy,iz))/2.0d0
+                    epsv(2) = (epsfcn(ix,iy+1,iz)-epsfcn(ix,iy-1,iz))/2.0d0
+                    epsv(3) = (epsfcn(ix,iy,iz+1)-epsfcn(ix,iy,iz-1))/2.0d0
 
-        psitemp = epsfcn(ix,iy,iz)*(MVV*psivv+MUU*psiuu+MWW*psiww+2.0*MVU*psivu+2.0*MVW*psivw+2.0*MUW*psiuw)
-        psitemp = psitemp + DOT_PRODUCT(MATMUL(TMAT,epsv),MATMUL(TMAT,psiv))
+                    psitemp = epsfcn(ix,iy,iz)*&
+                        (MVV*psivv+MUU*psiuu+MWW*psiww+2.0*MVU*psivu+2.0*MVW*psivw+2.0*MUW*psiuw)
+                    psitemp = psitemp + DOT_PRODUCT(MATMUL(TMAT,epsv),MATMUL(TMAT,psiv))
 
-        ! OJO CHECK!!!!
+                    ! OJO CHECK!!!!
 
-        f(ix+dimx*(iy-1)+dimx*dimy*(iz-1)+(N_poorsol+1)*ncells)=(psitemp + qtot(ix, iy, iz)*constq)/(-2.0)
+                    f(ix+dimx*(iy-1)+dimx*dimy*(iz-1)+(N_poorsol+1)*ncells)=&
+                        (psitemp + qtot(ix, iy, iz)*constq)/(-2.0d0)
 
-        enddo
-        enddo
+                enddo
+            enddo
         enddo
 
     endif ! electroflag
+
+    if(fluxflag.eq.1) then
+        do i=1,niontypes 
+            select case (iontype(i))
+            case ("Hplus")
+                call div_flux(divJ(:,:,:,i),xh,xHplus,psi,"Hplus")
+            case ( "OHmin") 
+                call div_flux(divJ(:,:,:,i),xh,xOHmin,psi,"OHmin") 
+            case("pos")
+                call div_flux(divJ(:,:,:,i),xh,xpos,psi,"pos")
+            case("neg")
+                call div_flux(divJ(:,:,:,i),xh,xneg,psi,"neg")
+            case default
+                write(stdout,*)"fkfun: error reached unspecified iontype"
+                stop 
+            end select
+        enddo    
+
+        noffset=(N_poorsol+2)*ncells 
+        
+
+        do i=1,niontypes
+            do iz=1,dimz
+                do iy=1,dimy
+                    do ix=1,dimx
+                        id=ix+dimx*(iy-1)+dimx*dimy*(iz-1)+noffset +(i-1)*ncells 
+                        f(id)  =  divJ(ix,iy,iz,i)
+                    enddo
+                enddo    
+            enddo    
+        enddo
+        
+    endif !fluxflag 
  
-    norma = 0.0
+    ! == norma = 0.0 
+    norma = 0.0d0      ! == added  d0  without d0 significant number loss can occur
 
     do i = 1, eqs*ncells
-    norma = norma + (f(i))**2
+        norma = norma + (f(i))**2
     enddo
 
     iter = iter + 1
     if(verbose.ge.3) then
-    if(rank.eq.0)write(stdout,*)'fkfun:', iter, norma, q(1)
+        if(rank.eq.0) write(stdout,*)'fkfun:', iter, norma, q(1)
     endif
 
     3333 continue
@@ -518,100 +576,104 @@ end subroutine fkfun
 
 subroutine calc_std(xpot)
 
-use MPI
-use fields_fkfun
-use chainsdat
-use conformations
-use molecules
-use ematrix
-use kaist
-use mparameters_monomer
-use results
+    use MPI
+    use fields_fkfun
+    use chainsdat
+    use conformations
+    use molecules
+    use ematrix
+    use kaist
+    use mparameters_monomer
+    use results
 
-implicit none
-real*8 avpol_tosend(dimx,dimy,dimz, N_monomer)
-real*8 xpot(dimx, dimy, dimz, N_monomer)
-real*8 fv
-real*8 q_tosend
-real*8 avpol_temp(dimx,dimy,dimz,N_monomer)
-integer im,jj,i,j, ix, iy, iz, ii, ax, ay, az
-! MPI
-integer tag
-parameter(tag = 0)
-integer err
-shift = 1.0
-avpol_tosend = 0.0
-q = 0.0
+    implicit none
+    real*8 avpol_tosend(dimx,dimy,dimz, N_monomer)
+    real*8 xpot(dimx, dimy, dimz, N_monomer)
+    real*8 fv
+    real*8 q_tosend
+    real*8 avpol_temp(dimx,dimy,dimz,N_monomer)
+    integer im,jj,i,j, ix, iy, iz, ii, ax, ay, az
+    ! MPI
+    integer tag
+    parameter(tag = 0)
+    integer err
 
-do jj = 1, cpp(rank+1)
-   ii = cppini(rank+1)+jj
+    shift = 1.0d0 ! == added  d0  ! uniform shift in P(alpha)
+    avpol_tosend = 0.0d0
+    q = 0.0d0
 
+    do jj = 1, cpp(rank+1)          ! == loop graft  on processor??
+        ii = cppini(rank+1)+jj      ! == graft point ii ??
 
-   q_tosend=0.0
-   avpol_temp = 0.0
+        q_tosend=0.0d0
+        avpol_temp = 0.0d0
 
- do i=1,newcuantas(ii)
-   pro(i, jj)=shift
-   do j=1,long
-    ax = px(i, j, jj) ! cada uno para su cadena...
-    ay = py(i, j, jj)
-    az = pz(i, j, jj)
-    pro(i, jj) = pro(i, jj) * xpot(ax, ay, az, segtype(j))
+        do i=1,newcuantas(ii)       ! loop of chains
+       
+            pro(i, jj)= shift
+            
+            do j=1,long
+                ax = px(i, j, jj) ! cada uno para su cadena... == each to his own chain...
+                ay = py(i, j, jj)
+                az = pz(i, j, jj)
+                pro(i, jj) = pro(i, jj) * xpot(ax, ay, az, segtype(j))
+            enddo
+            
+            pro(i, jj) = pro(i, jj) * dexp(-benergy*ngauche(i,ii)) ! energy of gauche bonds
+            pro(i, jj) = pro(i, jj) * dexp(-fz*zfinal(i,jj))  ! termino Fz
 
+            do j=1,long
+                fv = fvstd(px(i,j, jj),py(i,j, jj),pz(i,j, jj))
+                im = segtype(j)
+                avpol_temp(px(i,j, jj),py(i,j, jj),pz(i,j, jj),im)= &
+                avpol_temp(px(i,j, jj),py(i,j, jj),pz(i,j, jj),im)+pro(i, jj)*vpol*vsol/(delta**3)/fv* &
+                    ngpol(ii)*sc ! ngpol(ii) has the number of chains grafted to the point ii
+            enddo
 
+            q_tosend=q_tosend+pro(i, jj)
 
-   enddo
-    pro(i,jj) = pro(i,jj)*exp(-benergy*ngauche(i,ii)) ! energy of gauche bonds
-    pro(i, jj) = pro(i, jj) * dexp(-fz*zfinal(i,jj))  ! termino Fz
-   do j=1,long
-   fv = fvstd(px(i,j, jj),py(i,j, jj),pz(i,j, jj))
-    im = segtype(j)
-    avpol_temp(px(i,j, jj),py(i,j, jj),pz(i,j, jj),im)= &
-    avpol_temp(px(i,j, jj),py(i,j, jj),pz(i,j, jj),im)+pro(i, jj)*vpol*vsol/(delta**3)/fv* &
-    ngpol(ii)*sc ! ngpol(ii) has the number of chains grafted to the point ii
-   enddo
+        enddo ! i
+        ! norma 
+        do im = 1, N_monomer
+            do ix=1,dimx
+                do iy=1,dimy
+                    do iz=1,dimz
+                        avpol_tosend(ix,iy,iz,im)=avpol_tosend(ix, iy, iz,im) + &
+                            avpol_temp(ix,iy,iz,im)/q_tosend
+                    enddo
+                enddo
+            enddo
+        enddo
 
-   q_tosend=q_tosend+pro(i, jj)
+        q(ii) = q_tosend ! no la envia ahora
 
- enddo ! i
-! norma 
-do im = 1, N_monomer
- do ix=1,dimx
-  do iy=1,dimy
-   do iz=1,dimz
-    avpol_tosend(ix,iy,iz,im)=avpol_tosend(ix, iy, iz,im) + avpol_temp(ix,iy,iz,im)/q_tosend
-    enddo
-   enddo
- enddo
-enddo
-q(ii) = q_tosend ! no la envia ahora
-
-enddo ! jj
-!------------------ MPI ----------------------------------------------
-!1. Todos al jefe
-
-
-call MPI_Barrier(MPI_COMM_WORLD, err)
-
-! Junta avpol       
-  call MPI_REDUCE(avpol_tosend, avpol, dimx*dimy*dimz*N_monomer, MPI_DOUBLE_PRECISION, MPI_SUM,0, MPI_COMM_WORLD, err)
-
-end subroutine 
+    enddo ! jj
+    !------------------ MPI ----------------------------------------------
+    !1. Todos al jefe
 
 
+    call MPI_Barrier(MPI_COMM_WORLD, err)
+
+    ! Junta avpol       
+    call MPI_REDUCE(avpol_tosend, avpol, dimx*dimy*dimz*N_monomer, MPI_DOUBLE_PRECISION, &
+        MPI_SUM,0, MPI_COMM_WORLD, err)
+
+end subroutine calc_std
 
 subroutine calcavpol(xpot)
-use mparameters_monomer
-use mkl
-use system
-implicit none
-real*8 xpot(dimx, dimy, dimz, N_monomer)
+    use mparameters_monomer
+    use mkl
+    use system
+    implicit none
 
-if(flagmkl.eq.0)call calc_std(xpot)
+    real*8 xpot(dimx, dimy, dimz, N_monomer)
+
+    if(flagmkl.eq.0)call calc_std(xpot)
 #ifdef _MKL
-if(flagmkl.eq.1)call calc_mkl(xpot)
-if(flagmkl.eq.2)call calc_mkl_map(xpot)
+    if(flagmkl.eq.1)call calc_mkl(xpot)
+    if(flagmkl.eq.2)call calc_mkl_map(xpot)
 #endif
+
 end subroutine calcavpol
 
 

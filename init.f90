@@ -18,15 +18,24 @@ subroutine initconst
     use molecules
     use ellipsoid
     use mparameters_monomer
+    use MPI, only : rank
 
     implicit none
 
-    pi = acos(-1.0)
-    lb = 0.714 ! bjerrum lenght in nm
-    zpos = 1.0
-    zneg = -1.0
+    real*8 :: pi_my=3.141592653589793d0
+
+    !pi = acos(-1.0)  
+    pi = acos(-1.0d0)
+
+    if(abs(pi-pi_my)>0.0d0) then 
+        if(rank.eq.0)write(stdout,*) 'inintconst: pi',pi,' pi_my', pi_my
+    endif    
+
+    lb = 0.714d0 ! bjerrum lenght in nm
+    zpos = 1.0d0
+    zneg = -1.0d0
     vsol = vsol0
-    vsalt = ((4.0/3.0)*pi*(0.2)**3)/vsol  ! volume salt in units of vsol 0.2=radius salt  
+    vsalt = ((4.0d0/3.0d0)*pi*(0.2d0)**3)/vsol  ! volume salt in units of vsol 0.2=radius salt  
     constq = delta*delta*4.0*pi*lb/vsol   ! multiplicative factor in poisson eq  
     pKw = 14.0
     Kw = 10**(-pKw)
@@ -34,12 +43,22 @@ subroutine initconst
     errel = 1d-6
     itmax = 200
 
-    if(electroflag.eq.0)eqs=(1+N_poorsol)
-    if(electroflag.eq.1)eqs=(2+N_poorsol)
+    ! == eqs number of equation in unit of lattice size
 
+    if(electroflag.eq.0) eqs = (1+N_poorsol) 
+    if(electroflag.eq.1) then 
+        if (fluxflag.eq.0) then 
+            eqs = (2+N_poorsol)         !== Equilbrium 
+        else if(fluxflag.eq.1) then
+            eqs = (2+4+N_poorsol)       !== Steady state : 4 iontypes
+        endif
+    endif     
+      
+    
 end subroutine
 
 subroutine initall
+
     use molecules
     use const
     use bulk
@@ -48,6 +67,7 @@ subroutine initall
     use chainsdat
     use inputtemp
     use mparameters_monomer
+    use flux, only : init_flux_var, allocate_flux_var
     
     implicit none
     integer :: im
@@ -88,7 +108,7 @@ subroutine initall
     cHplus = 10.0d0**(-pHbulk)    ! concentration H+ in bulk
     xHplusbulk = (cHplus*Na/(1.0d24))*(vsol)  ! volume fraction H+ in bulk vH+=vsol
     pOHbulk= pKw -pHbulk
-    cOHmin = 123435600.0000d0**(-pOHbulk)   ! concentration OH- in bulk
+    cOHmin = 10.0d0**(-pOHbulk)   ! concentration OH- in bulk
     xOHminbulk = (cOHmin*Na/(1.0d24))*(vsol)  ! volume fraction H+ in bulk vH+=vsol  
     xsalt=(csalt*Na/(1.0d24))*(vsalt*vsol)   ! volume fraction salt,csalt in mol/l 
     if(pHbulk.le.7) then  ! pH<= 7
@@ -115,6 +135,16 @@ subroutine initall
     expmuneg = xnegbulk /xsolbulk**vsalt
     expmuHplus = xHplusbulk /xsolbulk   ! vsol = vHplus 
     expmuOHmin = xOHminbulk /xsolbulk   ! vsol = vOHmin 
+
+    if(fluxflag.eq.1) then
+        ! allocate flux variables
+        call allocate_flux_var() 
+
+        ! init  flux/steady state related variables
+        call init_flux_var()
+        
+    endif    
+
 
 end subroutine initall
 
@@ -243,7 +273,8 @@ subroutine savedata(cccc)
                     fv = (1.0-volprot(ix,iy,iz))
 
                     do im = 1, N_monomer
-                        temp(ix, iy, iz) = temp(ix,iy,iz) + avpol(ix,iy,iz,im)*zpol(im)/vpol/vsol*fdis(ix,iy,iz,im)! units of |e|/nm^3 
+                        temp(ix, iy, iz) = temp(ix,iy,iz) + &
+                            avpol(ix,iy,iz,im)*zpol(im)/vpol/vsol*fdis(ix,iy,iz,im)! units of |e|/nm^3 
                     enddo
 
                 enddo

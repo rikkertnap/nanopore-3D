@@ -15,6 +15,7 @@ program main
     use ematrix
     use kaist
     use mkl
+    use flux
 
     implicit none
 
@@ -34,6 +35,7 @@ program main
     integer :: flagcrash
     real*8  ::  stOK,kpOK
     real*8  :: time0, timeF
+    integer :: info
 
     stdout = 6                           ! == unit number defined modules          
 
@@ -61,8 +63,8 @@ program main
     call makemaps
 
     call initconst
-    call inittransf ! Create transformation matrixes
-    call initellpos ! calculate real positions for ellipsoid centers
+    call inittransf    ! create transformation matrixes
+    call initellpos    ! calculate real positions for ellipsoid centers
     call initall
     call allocation
 
@@ -83,7 +85,7 @@ program main
 
     call kais                               ! == Van der Waals chi=kai 
     
-    if(rank.eq.0)write(stdout,*) 'Kai OK'
+    if(rank.eq.0) write(stdout,*) 'Kai OK'
 
     ! == select system 
 
@@ -98,7 +100,7 @@ program main
     elseif (systemtype.eq.41) then
         call update_matrix_channel_4(flag)  ! == channel with one ring 
     elseif (systemtype.eq.42) then
-        call update_matrix_channel_4(flag)  ! == channel with two row ??
+        call update_matrix_channel_4(flag)  ! == channel with mutiple rings 
     elseif (systemtype.eq.52) then
         call update_matrix_channel_4(flag)  ! == rod
     elseif (systemtype.eq.6) then
@@ -123,6 +125,14 @@ program main
     call creador ! Genera cadenas
     if(rank.eq.0) write(stdout,*) 'Creador OK'
 
+    if(fluxflag.eq.1) then 
+        call unit_test_divJ(info)
+        if(info.eq.0) then 
+            if(rank.eq.0) write(stdout,*) 'Flux test OK'
+        else
+            if(rank.eq.0) write(stdout,*) 'Flux test Failed'
+        endif    
+    endif
 
 #ifdef _MKL
     if (flagmkl.eq.1) then ! use compressed MKL CSR format to store chains

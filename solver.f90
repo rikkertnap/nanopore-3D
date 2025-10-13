@@ -1,6 +1,7 @@
 subroutine solver(xvec, xvecguess, ier)
 
-    use system, only : eqs, dimx, dimy, dimz, method 
+    use system, only : eqs, dimx, dimy, dimz, methodflag 
+    use anderson
 
     implicit none
 
@@ -18,15 +19,15 @@ subroutine solver(xvec, xvecguess, ier)
     maxfkfunevals = 1000 ! == defined in kinsol.f90 need to connected 
     accuracy = 1.0d-6    ! == defined fnormtol defined in kinsol.f90
    
-    if(method==1) then
+    if(methodflag==1) then
 
         call call_kinsol(xvec, xvecguess, ier)
 
-    else if(method==2) then
+    else if(methodflag==2) then
 
         call anderson_min_loop(xvecguess, xvec, accuracy, residual, isSolution, maxfkfunevals, neq)
 
-    else if(method==3) then
+    else if(methodflag==3) then
     
         call simple_min_loop(xvecguess, xvec, accuracy, residual, isSolution, maxfkfunevals, neq)
 

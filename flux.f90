@@ -16,10 +16,20 @@ module flux
     character(len=5), parameter :: iontype(4)=(/"pos  ","neg  ","Hplus","OHmin"/) 
     integer, parameter :: niontypes=4 
 
-    public :: divJ, mu, Jvec, mu_ion
-    public :: div_flux, allocate_divJ, allocate_mu
+    private 
+    public :: divJ, mu, Jvec, mu_ion, iontype, niontypes
+    public :: div_flux, allocate_flux_var, init_flux_var ,unit_test_divJ
 
 contains
+
+    subroutine allocate_flux_var()
+
+       call allocate_divJ()
+       call allocate_mu()
+       call allocate_Jvec()
+       call allocate_mu_ion()
+
+    end subroutine allocate_flux_var
 
     subroutine allocate_divJ()
 
@@ -53,6 +63,35 @@ contains
 
     end subroutine allocate_mu_ion
 
+    subroutine init_flux_var
+
+        use moleculeslist, only : vol, zval, mumin, mumax, xvolmin, xvolmax, Diffcoeff
+        use moleculeslist, only : init_diffusion_coeff, init_vol, init_zval, init_xvolmin
+        use inputtemp, only : psizmin, psizmax 
+        use molecules, only : vsol
+
+        real*8 :: pibulk 
+
+        call init_diffusion_coeff()
+        call init_vol()
+        call init_zval()
+        call init_xvolmin()
+
+        xvolmax = xvolmin
+
+        pibulk = -log(xvolmin%sol) 
+
+        mumin%pos = log(xvolmin%pos / vol%pos) +pibulk*vol%pos + psizmin*zval%pos
+        mumin%neg = log(xvolmin%neg / vol%neg) +pibulk*vol%neg + psizmin*zval%neg
+        mumin%Hplus = log(xvolmin%Hplus / vol%Hplus) +pibulk*vol%Hplus + psizmin*zval%Hplus
+        mumin%OHmin = log(xvolmin%OHmin / vol%OHmin) +pibulk*vol%OHmin + psizmin*zval%OHmin
+
+        mumax%pos = log(xvolmax%pos / vol%pos) +pibulk*vol%pos + psizmax*zval%pos
+        mumax%neg = log(xvolmax%neg / vol%neg) +pibulk*vol%neg + psizmax*zval%neg
+        mumax%Hplus = log(xvolmax%Hplus / vol%Hplus) +pibulk*vol%Hplus + psizmax*zval%Hplus
+        mumax%OHmin = log(xvolmax%OHmin / vol%OHmin) +pibulk*vol%OHmin + psizmin*zval%OHmin
+
+    end subroutine init_flux_var
 
    ! position dependent chem pot  
    ! \beta \mu_i(r) = \ln(\rho_i(r) v_w) + \beta \pi(r) * v_i + \beta * q_i \psi(r)
@@ -63,10 +102,11 @@ contains
 
         use system, only : dimx, dimy, dimz
         use moleculeslist, only :  vol, zval, get_value_moleclist
+        use const,only : stdout 
 
         ! input arguments 
-        real*8, intent(inout) :: mu(:,:,:)
-        real*8, intent(in) :: xvol(:,:,:), xsol(:,:,:)
+        real*8, intent(inout) :: mu(0:dimx+1,0:dimy+1,0:dimz+1)
+        real*8, intent(in) :: xvol(0:dimx+1,0:dimy+1,0:dimz+1), xsol(:,:,:)
         real*8, intent(in) :: psi(:,:,:)
         character(len=*), intent(in)  :: iontype
 
@@ -81,10 +121,10 @@ contains
         volum   = get_value_moleclist(vol,key)
         valence = get_value_moleclist(zval,key)
         
-        if(.true.) then
-           print*,"key=",key  
-           print*,"volum=",volum
-           print*,"valence=",valence
+        if(DEBUG_ST) then 
+            write(stdout,*)"chem_potential: key=",key  
+            write(stdout,*)"chem_potentialvolum=",volum
+            write(stdout,*)"chem_potentialvalence=",valence
         endif
         
         do iz=1,dimz
@@ -104,8 +144,8 @@ contains
         use system, only : dimx, dimy, dimz
 
         ! input arguments 
-        real*8, intent(inout) :: xvol(:,:,:)
-        real*8, intent(in) :: mu(:,:,:),xsol(:,:,:)
+        real*8, intent(inout) :: xvol(0:dimx+1,0:dimy+1,0:dimz+1)
+        real*8, intent(in) :: mu(0:dimx+1,0:dimy+1,0:dimz+1),xsol(:,:,:)
         real*8, intent(in) :: psi(:,:,:)
         real*8, intent(in) :: volum
         integer, intent(in) :: valence
@@ -135,7 +175,7 @@ contains
 
         ! input arguments 
         real*8, intent(inout) :: xvol(0:dimx+1,0:dimy+1,0:dimz+1)
-        real*8, intent(inout) ::   mu(0:dimx+1,0:dimy+1,0:dimz+1)
+        real*8, intent(inout) :: mu(0:dimx+1,0:dimy+1,0:dimz+1)
         character(len=*), intent(in) :: iontype
           
         ! local variables
@@ -176,37 +216,74 @@ contains
         xvol(:,:,dimz+1) = xvol_zmax
 
         ! internal membrane still to do ...
-        print*,"Warning bc_flux subroutine : internal membrane symmetries not applied yet"
+        print*,"bcflux:  Warning: internal membrane symmetries not applied yet"
 
     end subroutine bc_flux
 
+      ! boundary conditions for potential  
 
+    subroutine bc_psi(psi)
+        
+        use system, only : dimx, dimy, dimz  
+        use inputtemp, only : psizmax, psizmin 
+    
+
+        ! input arguments 
+        real*8, intent(inout) :: psi(0:dimx+1,0:dimy+1,0:dimz+1)
+        
+        ! local variables
+
+        ! boundary conditions 
+
+        ! x = 0
+        psi(0,:,:) = psi(1,:,:) 
+        
+        ! x = dimx
+        psi(dimx+1,:,:) = psi(dimx,:,:)  
+
+        ! y = 0
+        psi(:,0,:) = psi(:,1,:) 
+
+        ! y = dimy
+        psi(:,dimy+1,:) = psi(:,dimy,:) 
+        
+        ! z = 0
+        psi(:,:,0) = psizmin
+        
+        ! z = dimz
+        psi(:,:,dimz+1) = psizmax
+
+    end subroutine bc_psi
 
     subroutine div_flux(divJ,xsol,xion,psi,iontype)
 
+        use system, only : dimx, dimy, dimz
         ! input arguments 
         real*8, intent(inout) :: divJ(:,:,:)
         real*8, intent(in) :: xion(:,:,:), xsol(:,:,:)
-        real*8, intent(in) :: psi(:,:,:)
+        real*8, intent(in) :: psi(0:dimx+1,0:dimy+1,0:dimz+1)
         character(len=*), intent(in)  :: iontype
 
-        call div_flux_cubic(divJ,xsol,xion,psi,iontype)
+        call div_flux_channel(divJ,xsol,xion,psi,iontype)
                 
     end subroutine div_flux
         
-    ! Computes div.J with numerical scheme using Gauss's theorem 
+     ! Computes div.J with numerical scheme using Gauss's theorem 
 
-    subroutine div_flux_cubic(divJ,xsol,xion,psi,iontype)
+    subroutine div_flux_channel(divJ,xsol,xion,psi,iontype)
 
         use system, only : dimx, dimy, dimz
         use moleculeslist, only : vol, zval, mumin, mumax, xvolmin, xvolmax
         use moleculeslist, only : get_value_moleclist
+        use const, only : stdout
+        use MPI, only : rank
+        use ematrix, only : fvstdint
 
         ! input arguments 
 
         real*8, intent(inout) :: divJ(:,:,:)
         real*8, intent(in) :: xion(:,:,:), xsol(:,:,:)
-        real*8, intent(in) :: psi(:,:,:)
+        real*8, intent(in) ::  psi(0:dimx+1,0:dimy+1,0:dimz+1)
         character(len=*), intent(in) :: iontype
         
         ! local variables
@@ -237,15 +314,18 @@ contains
         !  in cubic coordiantes :  2 delta  :  from interpolation of density
 
         if(DEBUG_ST) then
-           print*,"key=",key  
-           print*,"volum=",volum
-           print*,"valence=",valence
-           print*,"mu_zmin=",mu_zmin
-           print*,"mu_zpls=",mu_zpls
-           print*,"xvol_zpls=",xvol_zpls
-           print*,"xvol_zmin=",xvol_zmin
-           print*,"size(xvol)=",size(xvol)
-        endif
+            if(rank.eq.0) then 
+                write(stdout,*)"div_flux_cubic: key= ",key  
+                write(stdout,*)"div_flux_cubic: volum= ",volum
+                write(stdout,*)"div_flux_cubic: valence= ",valence
+                write(stdout,*)"div_flux_cubic: mu_zmin= ",mu_zmin
+                write(stdout,*)"div_flux_cubic: mu_zpls= ",mu_zpls
+                write(stdout,*)"div_flux_cubic: xvol_zpls= ",xvol_zpls
+                write(stdout,*)"div_flux_cubic: xvol_zmin= ",xvol_zmin
+                write(stdout,*)"div_flux_cubic: size(xvol)= ",size(xvol),&
+                    "expected size= ",(dimx+2)*(dimy+2)*(dimz+2)
+            endif
+        endif    
 
         
         do iz=1,dimz
@@ -263,9 +343,153 @@ contains
         
     
         divJ=0.0d0
-        if(DEBUG_ST) divJ= 123435600.0000d0 ! used to detect unassinged values of divJ 
+        if(DEBUG_ST) divJ= 123435600.0000d0 ! == used to detect unassinged values of divJ 
         
-        ! inside 
+    
+        do iz=1,dimz
+            do iy=1,dimy
+                do ix=1,dimx
+
+                    if(fvstdint(ix,iy,iz).eq.0) then
+
+                        divJ(ix,iy,iz) =  xvol(ix,iy,iz) - 0.0d0 ! == inside channel divJ and xvol zero !!
+                    
+                    else 
+                        
+                        if(fvstdint(ix+1,iy,iz).eq.0) then 
+                            Jdotxpls = 0.0d0
+                        else     
+                            Jdotxpls = (xvol(ix+1,iy,iz) + xvol(ix  ,iy,iz))*(mu(ix+1,iy,iz) - mu(ix,iy,iz)  ) 
+                        endif
+
+                        if(fvstdint(ix-1,iy,iz).eq.0) then 
+                            Jdotxmin = 0.0d0
+                        else
+                            Jdotxmin = (xvol(ix  ,iy,iz) + xvol(ix-1,iy,iz))*(mu(ix ,iy,iz)  - mu(ix-1,iy,iz))
+                        endif
+                         
+                        if(fvstdint(ix,iy+1,iz).eq.0) then 
+                            Jdotypls = 0.0d0
+                        else
+                            Jdotypls = (xvol(ix,iy+1,iz) + xvol(ix,iy  ,iz))*(mu(ix,iy+1,iz) - mu(ix,iy,iz)  ) 
+                        endif
+                        
+                        if(fvstdint(ix,iy-1,iz).eq.0) then
+                            Jdotymin = 0.0d0
+                        else        
+                            Jdotymin = (xvol(ix,iy  ,iz) + xvol(ix,iy-1,iz))*(mu(ix,iy  ,iz) - mu(ix,iy-1,iz))
+                        endif
+
+                        if(fvstdint(ix,iy,iz+1).eq.0) then 
+                            Jdotzpls = 0.0d0
+                        else
+                            Jdotzpls = (xvol(ix,iy,iz+1) + xvol(ix,iy,iz  ))*(mu(ix,iy,iz+1) - mu(ix,iy,iz)  )
+                        endif
+                        if(fvstdint(ix,iy,iz-1).eq.0) then
+                            Jdotzmin = 0.0d0
+                        else      
+                            Jdotzmin = (xvol(ix,iy,iz  ) + xvol(ix,iy,iz-1))*(mu(ix,iy,iz  ) - mu(ix,iy,iz-1))
+                        endif    
+                
+                        divJtmp  =  Jdotxpls - Jdotxmin + Jdotypls - Jdotymin + Jdotzpls - Jdotzmin
+                        divJ(ix,iy,iz) = - coeff_scaled * divJtmp
+                    
+                    endif 
+
+                enddo
+            enddo
+        enddo    
+
+    
+        if(DEBUG_ST) then
+            do iz=1,dimz
+                do iy=1,dimy 
+                    do ix=1,dimx    
+                        if(divJ(ix,iy,iz)== 123435600.0000d0) print*,"divJ unassiged in ix=",ix,"iy=",iy,'iy=',iy
+                    enddo
+                enddo
+            enddo             
+        endif    
+
+    end subroutine div_flux_channel
+
+    ! Computes div.J with numerical scheme using Gauss's theorem 
+
+    subroutine div_flux_cubic(divJ,xsol,xion,psi,iontype)
+
+        use system, only : dimx, dimy, dimz
+        use moleculeslist, only : vol, zval, mumin, mumax, xvolmin, xvolmax
+        use moleculeslist, only : get_value_moleclist
+        use const, only : stdout
+        use MPI, only : rank
+
+        ! input arguments 
+
+        real*8, intent(inout) :: divJ(:,:,:)
+        real*8, intent(in) :: xion(:,:,:), xsol(:,:,:)
+        real*8, intent(inout) ::  psi(0:dimx+1,0:dimy+1,0:dimz+1)
+        character(len=*), intent(in) :: iontype
+        
+        ! local variables
+
+        integer :: ix, iy, iz
+        integer ::  id, idxpls, idxmin, idypls, idymin, idzpls, idzmin
+        character(len=5):: key
+        real*8 :: volum, valence, coeff_scaled
+        real*8 :: mu_zmin, mu_zpls, xvol_zmin, xvol_zpls
+        real*8 :: mu(0:dimx+1, 0:dimy+1, 0:dimz+1)
+        real*8 :: xvol(0:dimx+1, 0:dimy+1, 0:dimz+1)
+        real*8 :: Jdotxpls, Jdotxmin, Jdotypls, Jdotymin, Jdotzpls, Jdotzmin, divJtmp 
+
+        key = trim(iontype)
+
+        volum   = get_value_moleclist(vol,key)
+        valence = get_value_moleclist(zval,key)
+        mu_zmin = get_value_moleclist(mumin,key)
+        mu_zpls = get_value_moleclist(mumax,key)
+        xvol_zmin = get_value_moleclist(xvolmin,key)
+        xvol_zpls = get_value_moleclist(xvolmax,key)
+        
+        !coeff_scaled = 1.0_dp/(volum*delta*2.0_dp)
+        coeff_scaled =  1.0d0
+
+        !  volum from conversion of volumefraction to density  
+        !  in cylinder coordinates : 2 delta^2 from division by 2 \pi delta^2 {\bar r}_i 
+        !  in cubic coordiantes :  2 delta  :  from interpolation of density
+
+        if(DEBUG_ST) then
+            if(rank.eq.0) then 
+                write(stdout,*)"div_flux_cubic: key= ",key  
+                write(stdout,*)"div_flux_cubic: volum= ",volum
+                write(stdout,*)"div_flux_cubic: valence= ",valence
+                write(stdout,*)"div_flux_cubic: mu_zmin= ",mu_zmin
+                write(stdout,*)"div_flux_cubic: mu_zpls= ",mu_zpls
+                write(stdout,*)"div_flux_cubic: xvol_zpls= ",xvol_zpls
+                write(stdout,*)"div_flux_cubic: xvol_zmin= ",xvol_zmin
+                write(stdout,*)"div_flux_cubic: size(xvol)= ",size(xvol),&
+                    "expected size= ",(dimx+2)*(dimy+2)*(dimz+2)
+            endif
+        endif    
+
+        
+        do iz=1,dimz
+            do iy=1,dimy
+                do ix=1,dimx
+                    xvol(ix,iy,iz) = xion(ix,iy,iz) ! xvol and xion not same range !!!
+                    mu(ix,iy,iz) = log(xvol(ix,iy,iz)/volum) -log(xsol(ix,iy,iz))*volum + valence * psi(ix,iy,iz)
+                enddo
+            enddo
+        enddo    
+      
+        ! == apply boundary conditions to mu and xvol 
+
+        call bc_flux(mu,xvol,iontype)
+        ! call bc_psi(psi)  ! need to be applied outside check with bc in fkfun !!!
+        
+    
+        divJ=0.0d0
+        if(DEBUG_ST) divJ= 123435600.0000d0 ! == used to detect unassinged values of divJ 
+        
         
         do iz=1,dimz
             do iy=1,dimy
@@ -292,7 +516,9 @@ contains
             do iz=1,dimz
                 do iy=1,dimy 
                     do ix=1,dimx    
-                        if(divJ(ix,iy,iz)== 123435600.0000d0) print*,"divJ unassiged in ix=",ix,"iy=",iy,'iy=',iy
+                        if(divJ(ix,iy,iz)== 123435600.0000d0) then 
+                            print*,"divJ unassiged in ix=",ix,"iy=",iy,'iy=',iy
+                        endif    
                     enddo
                 enddo
             enddo             
@@ -314,7 +540,7 @@ contains
 
         real*8, intent(inout) :: Jvec(:,:,:,:)
         real*8, intent(inout) :: xvol(:,:,:)
-        real*8, intent(in) :: psi(:,:,:), xsol(:,:,:)
+        real*8, intent(in) ::  psi(0:dimx+1,0:dimy+1,0:dimz+1), xsol(:,:,:)
         character(len=*), intent(in)  :: iontype
 
         ! local arguments
@@ -322,7 +548,7 @@ contains
         real*8 :: grad_mu(dimx,dimy,dimz,3)
         real*8 ::  volum, Diffconst, Jvec0
         integer :: i, ix, iy, iz, idx 
-        character(len=5):: key
+        character(len=5) :: key
  
         call grad_chem_pot(grad_mu,xsol,xvol,psi,iontype)
 
@@ -365,7 +591,7 @@ contains
     function current_I() result(currI)
 
         use system, only : dimx, dimy, dimz
-        use results, only : xpos, xneg, xHplus,xOHmin
+        use results, only : xpos, xneg, xHplus, xOHmin
         use fields_fkfun, only : xsol=>xh, psi
        
         ! return arguments 
@@ -381,25 +607,22 @@ contains
         current = 0.0d0
 
         do t=1,niontypes
-           ! if(isionselfconsistent(t)) then
-                if(iontype(t)=="pos") then 
-                    call fluxJ(J,xsol,xpos,psi,iontype(t))
-                    current(t) = current_I_ion(J,iontype(t))
-                endif    
-                if(iontype(t)=="neg") then 
-                    call fluxJ(J,xsol,xneg,psi,iontype(t))
-                    current(t) = current_I_ion(J,iontype(t))
-                endif 
-                if(iontype(t)=="Hplus") then
-                     call fluxJ(J,xsol,xHplus,psi,iontype(t))
-                    current(t) = current_I_ion(J,iontype(t))
-                endif    
-                if(iontype(t)=="OHmin") then 
-                    call fluxJ(J,xsol,xOHmin,psi,iontype(t))
-                    current(t) = current_I_ion(J,iontype(t))
-                endif
-                    
-            ! endif    
+            if(iontype(t)=="pos") then 
+                call fluxJ(J,xsol,xpos,psi,iontype(t))
+                current(t) = current_I_ion(J,iontype(t))
+            endif    
+            if(iontype(t)=="neg") then 
+                call fluxJ(J,xsol,xneg,psi,iontype(t))
+                current(t) = current_I_ion(J,iontype(t))
+            endif 
+            if(iontype(t)=="Hplus") then
+                    call fluxJ(J,xsol,xHplus,psi,iontype(t))
+                current(t) = current_I_ion(J,iontype(t))
+            endif    
+            if(iontype(t)=="OHmin") then 
+                call fluxJ(J,xsol,xOHmin,psi,iontype(t))
+                current(t) = current_I_ion(J,iontype(t))
+            endif
         enddo
 
         currI = sum(current)
@@ -413,14 +636,12 @@ contains
     function current_I_ion(J,iontype) result(current)
 
         use system, only : dimx, dimy, dimz, delta
-        ! use results, only : xpos,xneg, xHplus,xOHmin
-        ! use fields_fkfun, only : xh,psi
-        use moleculeslist, only :  zval, get_value_moleclist
+        use moleculeslist, only : zval, get_value_moleclist
         
 
         ! input arguments 
 
-        real*8, intent(inout) :: J(:,:,:,:)
+        real*8, intent(in) :: J(:,:,:,:)
         character(len=*), intent(in)  :: iontype
 
         ! return arguments
@@ -429,7 +650,7 @@ contains
 
         ! local variables
 
-        character(len=5):: key
+        character(len=5) :: key
         real*8 :: valence, sum_curJ
         integer ix, iy, izmidplane
 
@@ -460,7 +681,7 @@ contains
 
         real*8, intent(inout) :: grad_mu(:,:,:,:)
         real*8, intent(in) :: xion(:,:,:), xsol(:,:,:)
-        real*8, intent(in) :: psi(:,:,:)
+        real*8, intent(in) ::  psi(0:dimx+1,0:dimy+1,0:dimz+1)
         character(len=*), intent(in)  :: iontype
 
         ! local variables
@@ -484,7 +705,7 @@ contains
         
         if(DEBUG_ST) grad_mu = 1234567.89d0
 
-        !call chem_potential(mu,xsol,xvol,psi,iontype) 
+         !call chem_potential(mu,xsol,xvol,psi,iontype) 
 
         do iz=1,dimz
             do iy=1,dimy
@@ -497,7 +718,8 @@ contains
     
         ! apply boundary condtions 
 
-        call bc_flux(mu,xvol,iontype)
+        call bc_flux(mu,xvol,iontype)  
+        !call bc_psi(psi)  ! need to be done outside bc in fkfun !!!
 
         do iz=1,dimz
             do iy=1,dimy
@@ -565,15 +787,25 @@ contains
 
     end subroutine calculate_mu_ion
 
-    subroutine unit_test_diff
+    subroutine unit_test_divJ(info)
 
         use system, only : delta, dimx, dimy, dimz
         use moleculeslist, only : mumin, mumax, xvolmin, xvolmax
         use moleculeslist, only : get_value_moleclist
+        use bulk, only : xsolbulk
+        use const, only : stdout
+        use inputtemp, only : psizmax, psizmin 
+        use MPI, only : rank 
+
+        integer, intent(inout) :: info
+
+        ! local arguments
 
         integer :: ix,iy,iz
+        integer :: un_flux, ios
+        character(len=8) :: outfilename
 
-        ! local varailbe not in module just for test
+        ! local variable  not in module just for testing
         real*8 :: xion(dimx,dimy,dimz)
         real*8 :: xsol(dimx,dimy,dimz)
         real*8 :: psi(0:dimx+1,0:dimy+1,0:dimz+1)
@@ -581,12 +813,7 @@ contains
 
         real*8 ::  mu_zmin, mu_zpls, xvol_zmin, xvol_zpls
         character(len=5):: key
-        real*8 :: slope, intercept, psizmin, psizmax, sumdivJ
-
-        print*,"Warning need to get surface potential imported."
-        
-        psizmax=0.0d0 
-        psizmin=1.0d0
+        real*8 :: slope, intercept , sumdivJ        
 
         key = "pos"
 
@@ -595,21 +822,35 @@ contains
         xvol_zmin = get_value_moleclist(xvolmin,key)
         xvol_zpls = get_value_moleclist(xvolmax,key)
 
+        if(DEBUG_ST) then
+            if(rank.eq.0) then 
+                write(stdout,*)"unit_test_divJ : key = ",key  
+                write(stdout,*)"unit_test_divJ : mu_zmin = ",mu_zmin
+                write(stdout,*)"unit_test_divJ : mu_zpls = ",mu_zpls
+                write(stdout,*)"unit_test_divJ : xvol_zpls = ",xvol_zpls
+                write(stdout,*)"unit_test_divJ : xvol_zmin = ",xvol_zmin
+            endif
+        endif    
+
+
         slope = (psizmax-psizmin)/((dimz+1.0d0)*delta)
         intercept = psizmin + slope * delta/2.0d0
 
         do iz=1,dimz
             do iy=1,dimy
                 do ix=1,dimx
-                    xsol(ix,iy,iz) =1.0d0 - 2.0d0 * xvol_zmin 
+                    xsol(ix,iy,iz) = xsolbulk
                     xion(ix,iy,iz) = xvol_zmin
                     psi(ix,iy,iz) =  slope * (iz - 0.5d0) * delta  + intercept
                 enddo
             enddo
         enddo        
 
-        call div_flux(divJ,xsol,xion,psi,key)
+        ! need to apply boundary. conditions of psi
+        call bc_psi(psi) 
 
+        call div_flux_cubic(divJ,xsol,xion,psi,key)
+   
         sumdivJ = 0.0d0
 
         do iz=1,dimz
@@ -620,8 +861,39 @@ contains
             enddo
         enddo      
 
-        print*,"unit test: sumdivJ=",sumdivJ
+        if(DEBUG_ST) then 
+            if(rank.eq.0) then 
+                outfilename = "flux.out"
+                open(newunit=un_flux,file=outfilename, iostat=ios, action="write")
+                do iz=1,dimz
+                    do iy=1,dimy
+                        do ix=1,dimx
+                            write(un_flux,*)ix,iy,iz,divJ(ix,iy,iz)
+                        enddo
+                    enddo
+                enddo          
+                close(un_flux)
 
-    end subroutine unit_test_diff
+                outfilename = "psi.out"
+                open(newunit=un_flux,file=outfilename, iostat=ios, action="write")
+                do iz=0,dimz+1
+                    do iy=0,dimy+1
+                        do ix=0,dimx+1
+                            write(un_flux,*)ix,iy,iz,psi(ix,iy,iz)
+                        enddo
+                    enddo
+                enddo          
+                close(un_flux)
+
+
+            endif
+        endif        
+
+        info=0 ! ok 
+        if((sumdivJ/(xvol_zmin**2))>0.0001d0) info=1
+
+        write(stdout,*)"unit_test_divJ: unit test: sumdivJ=",sumdivJ
+
+    end subroutine unit_test_divJ
 
 end module flux

@@ -8,33 +8,33 @@ subroutine inittransf
     implicit none
     real*8 :: beta
     real*8 :: temp(3,3)
-    integer :: dimn, j
+    integer :: dimn, i, j
     real*8 :: x(3),xx(3), vect1(3),vect2(3),vect3(3), vol
     real*8 :: vectc(3)
     real*8 :: fix
     real*8 :: cdivl
     real*8, external :: NORMA
 
-    gama0 = gama0/180.0*pi              ! == angle basis  vector in radians
+    gama0 = gama0/180.0d0*pi              ! == angle basis  vector in radians
 
-    beta = (pi/2.0 - gama0)/2.0         ! == angele between  u and x axis
+    beta = (pi/2.0d0 - gama0)/2.0d0         ! == angel between  u and x axis
 
     cdivl = cdiva/(sqrt((cos(beta)**2) - (sin(beta)**2))) ! == what is cdiva ???
-    fix = 1.0/(cdivl**(1.0/3.0))
+    fix = 1.0d0/(cdivl**(1.0d0/3.0d0))
 
     ! == tranform matrix from (x,y,z)  to (u,v,z) 
 
     MAT(1,1) = cos(beta)/fix
     MAT(1,2) = -sin(beta)/fix
-    MAT(1,3) = 0.0
+    MAT(1,3) = 0.0d0
     MAT(2,1) = -sin(beta)/fix
     MAT(2,2) = cos(beta)/fix
-    MAT(2,3) = 0.0
+    MAT(2,3) = 0.0d0
 
     MAT = MAT/(sqrt((cos(beta)**2) - (sin(beta)**2)))
 
-    MAT(3,1) = 0.0
-    MAT(3,2) = 0.0
+    MAT(3,1) = 0.0d0
+    MAT(3,2) = 0.0d0
     MAT(3,3) = 1.0/cdivl/fix ! divide by cdivl to keep constant volume
  
     TMAT = TRANSPOSE(MAT)  
@@ -45,22 +45,22 @@ subroutine inittransf
     call inverse(temp,IMAT,dimn)   ! == IMAT is  inverse of MAT
 
     xx(1) = delta
-    xx(2) = 0.0
-    xx(3) = 0.0
+    xx(2) = 0.0d0
+    xx(3) = 0.0d0
 
     x = MATMUL(IMAT,xx) 
     vect1 = x
 
     xx(2) = delta
-    xx(1) = 0.0
-    xx(3) = 0.0
+    xx(1) = 0.0d0
+    xx(3) = 0.0d0
 
     x = MATMUL(IMAT,xx) !
     vect2 = x
 
     xx(3) = delta
-    xx(2) = 0.0
-    xx(1) = 0.0
+    xx(2) = 0.0d0
+    xx(1) = 0.0d0
 
     x = MATMUL(IMAT,xx) ! to real space 
     vect3 = x
@@ -73,22 +73,22 @@ subroutine inittransf
     if(rank.eq.0)write(stdout,*) 'transform:', 'Volume of a lattice cell in transformed space', delta**3, 'nm^3'
 
     xx(1) = delta*dfloat(dimx)
-    xx(2) = 0.0
-    xx(3) = 0.0
+    xx(2) = 0.0d0
+    xx(3) = 0.0d0
 
     x = MATMUL(IMAT,xx) 
     vect1 = x
 
-    xx(2) = delta*dfloat(dimy)
-    xx(1) = 0.0
-    xx(3) = 0.0
+    xx(2) = delta*dfloat(dimy) ! == delta*dbl(dimy) ??
+    xx(1) = 0.0d0
+    xx(3) = 0.0d0
 
     x = MATMUL(IMAT,xx) !
     vect2 = x
 
     xx(3) = delta*dfloat(dimz)
-    xx(2) = 0.0
-    xx(1) = 0.0
+    xx(2) = 0.0d0
+    xx(1) = 0.0d0
 
     x = MATMUL(IMAT,xx) ! 
     vect3 = x
@@ -97,13 +97,24 @@ subroutine inittransf
 
     vol = DOT_PRODUCT(vect1,vectc)
 
-    if(rank.eq.0)write(stdout,*) 'transform:', 'a / nm ', NORMA(vect1)
-    if(rank.eq.0)write(stdout,*) 'transform:', 'b / nm ', NORMA(vect2)
-    if(rank.eq.0)write(stdout,*) 'transform:', 'c / nm ', NORMA(vect3)
-    if(rank.eq.0)write(stdout,*) 'transform:', 'gama ', gama0*180/3.14159 
-    if(rank.eq.0)write(stdout,*) 'transform:', 'c/a', NORMA(vect3)/NORMA(vect1)
-    if(rank.eq.0)write(stdout,*) 'transform:', 'c/b', NORMA(vect3)/NORMA(vect2)
-    if(rank.eq.0)write(stdout,*) 'transform:', 'cell volume ', vol, 'nm^3'
+    if(rank.eq.0) then 
+        write(stdout,*) 'transform:', 'cdiva  ', cdiva
+        write(stdout,*) 'transform:', 'cdivl ,fix  ', cdivl,fix
+        write(stdout,*) 'transform:', 'a / nm ', NORMA(vect1)
+        write(stdout,*) 'transform:', 'b / nm ', NORMA(vect2)
+        write(stdout,*) 'transform:', 'c / nm ', NORMA(vect3)
+        write(stdout,*) 'transform:', 'gama ', gama0*180.0d0/pi 
+        write(stdout,*) 'transform:', 'beta ', beta*180.0d0/pi 
+        write(stdout,*) 'transform:', 'c/a', NORMA(vect3)/NORMA(vect1)
+        write(stdout,*) 'transform:', 'c/b', NORMA(vect3)/NORMA(vect2)
+        write(stdout,*) 'transform:', 'cell volume ', vol, 'nm^3'
+        do i=1,3
+            write(stdout,*) 'transform:', 'MAT  ',(MAT(i,j),j=1,3)
+        enddo
+        do i=1,3
+            write(stdout,*) 'transform:', 'IMAT ',(IMAT(i,j),j=1,3)
+        enddo
+    endif    
 
 end subroutine
 

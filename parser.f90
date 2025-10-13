@@ -83,9 +83,15 @@ subroutine readinput
     dz = ndr
     cdiva = ndr
     csalt = ndr
+    psizmin = ndr
+    psizmax = ndr
 
     vpol = ndr
-    fz=ndr !yamila
+    fz=ndr  !yamila
+    
+    methodflag = ndi    ! == RJN 
+    fluxflag = ndi
+    curvedflag = ndi 
 
     vsol0 = ndr
     gama0 = ndr
@@ -152,11 +158,12 @@ subroutine readinput
                 if(rank.eq.0)write(stdout,*) 'parser:','Set ',trim(label),' = ',trim(buffer)
 
             case ('seed')
+
                 read(buffer, *, iostat=ios) seed2
                 if(rank.eq.0)write(stdout,*) 'parser:','Set ',trim(label),' = ',trim(buffer)
 
-
             case ('stdout')
+                
                 read(buffer, *, iostat=ios) stdout
                 if(rank.eq.0)write(stdout,*) 'parser:','Set ',trim(label),' = ',trim(buffer)
 
@@ -169,16 +176,19 @@ subroutine readinput
                 if(rank.eq.0)write(stdout,*) 'parser:','Set ',trim(label),' = ',trim(buffer)
 
             case ('fluxflag') ! == new flag to be used in Steady State
+
                 read(buffer, *, iostat=ios) fluxflag
                 if(rank.eq.0)write(stdout,*) 'parser:','Set ',trim(label),' = ',trim(buffer)
 
             case ('curvedflag') ! == new flag for hourglass shaped  channel
-                read(buffer, *, iostat=ios) fluxflag
+                read(buffer, *, iostat=ios) curvedflag
                 if(rank.eq.0)write(stdout,*) 'parser:','Set ',trim(label),' = ',trim(buffer)
- 
-            case ('method') ! == new flag to select non-linear solver
-                read(buffer, *, iostat=ios) method
+  
+            case ('methodflag') ! == new solver method
+                
+                read(buffer, *, iostat=ios) methodflag
                 if(rank.eq.0)write(stdout,*) 'parser:','Set ',trim(label),' = ',trim(buffer)
+           
 
 
             case ('branched')
@@ -299,13 +309,20 @@ subroutine readinput
                 read(buffer, *, iostat=ios) sigmar
                 if(rank.eq.0)write(stdout,*) 'parser:','Set ',trim(label),' = ',trim(buffer)
 
-
             case ('gama')
                 read(buffer, *, iostat=ios) gama0
                 if(rank.eq.0)write(stdout,*) 'parser:','Set ',trim(label),' = ',trim(buffer)
 
             case ('pHbulk')
                 read(buffer, *, iostat=ios) pHbulk
+                if(rank.eq.0)write(stdout,*) 'parser:','Set ',trim(label),' = ',trim(buffer)
+
+            case ('psizmin')
+                read(buffer, *, iostat=ios) psizmin
+                if(rank.eq.0)write(stdout,*) 'parser:','Set ',trim(label),' = ',trim(buffer)
+
+            case ('psizmax')
+                read(buffer, *, iostat=ios) psizmax
                 if(rank.eq.0)write(stdout,*) 'parser:','Set ',trim(label),' = ',trim(buffer)
 
             case ('infile')
@@ -545,6 +562,8 @@ subroutine readinput
 
     enddo ! while 
 
+    close(fh) ! == closing input file 
+
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     !
     ! Check validity of input
@@ -569,49 +588,83 @@ subroutine readinput
     endif 
 
 
-    if(vtkflag.eq.ndi)call stopundef('vtkflag')
-    if(dimx.eq.ndi)call stopundef('dimx')
-    if(scx.eq.ndi)call stopundef('scx')
-    if(scy.eq.ndi)call stopundef('scy')
-    if(scz.eq.ndi)call stopundef('scz')
-    if(dimy.eq.ndi)call stopundef('dimy')
-    if(dimz.eq.ndi)call stopundef('dimz')
-    if(ncha.eq.ndi)call stopundef('ncha')
-    if(long.eq.ndi)call stopundef('long')
-    if(cuantas.eq.ndi)call stopundef('cuantas')
-    if(infile.eq.ndi)call stopundef('infile')
-    if(cutoff.eq.ndr)call stopundef('Xucutoff')
-    if(readchains.eq.ndi)call stopundef('readchains')
-    if(systemtype.eq.ndi)call stopundef('systemtype')
-    if(nst.eq.ndi)call stopundef('nst')
+    if(vtkflag.eq.ndi) call stopundef('vtkflag')
+    if(dimx.eq.ndi) call stopundef('dimx')
+    if(scx.eq.ndi) call stopundef('scx')
+    if(scy.eq.ndi) call stopundef('scy')
+    if(scz.eq.ndi) call stopundef('scz')
+    if(dimy.eq.ndi) call stopundef('dimy')
+    if(dimz.eq.ndi) call stopundef('dimz')
+    if(ncha.eq.ndi) call stopundef('ncha')
+    if(long.eq.ndi) call stopundef('long')
+    if(cuantas.eq.ndi) call stopundef('cuantas')
+    if(infile.eq.ndi) call stopundef('infile')
+    if(cutoff.eq.ndr) call stopundef('Xucutoff')
+    if(readchains.eq.ndi) call stopundef('readchains')
+    if(systemtype.eq.ndi) call stopundef('systemtype')
+    if(nst.eq.ndi) call stopundef('nst')
 
-    if(delta.eq.ndr)call stopundef('delta')
-    if(dx.eq.ndr)call stopundef('dx')
-    if(dy.eq.ndr)call stopundef('dy')
-    if(dz.eq.ndr)call stopundef('dz')
-    if(cdiva.eq.ndr)call stopundef('cdiva')
-    if(dielS.eq.ndr)call stopundef('dielS')
-    if(dielP.eq.ndr)call stopundef('dielP')
-    if(lseg.eq.ndr)call stopundef('lseg')
-    if(csalt.eq.ndr)call stopundef('csalt')
-    if(pHbulk.eq.ndr)call stopundef('pHbulk')
-    if(vpol0.eq.ndr)call stopundef('vpol')
-    if(vsol0.eq.ndr)call stopundef('vsol')
-    if(benergy.eq.ndr)call stopundef('benergy')
-    if(gama0.eq.ndr)call stopundef('gama')
-    if(fz.eq.ndr)call stopundef('fz') !yamila
+    if(delta.eq.ndr) call stopundef('delta')
+    if(dx.eq.ndr) call stopundef('dx')
+    if(dy.eq.ndr) call stopundef('dy')
+    if(dz.eq.ndr) call stopundef('dz')
+    if(cdiva.eq.ndr) call stopundef('cdiva')
+    if(dielS.eq.ndr) call stopundef('dielS')
+    if(dielP.eq.ndr) call stopundef('dielP')
+    if(lseg.eq.ndr) call stopundef('lseg')
+    if(csalt.eq.ndr) call stopundef('csalt')
+    if(pHbulk.eq.ndr) call stopundef('pHbulk')
+    if(psizmin.eq.ndr) call stopundef('psizmin')
+    if(psizmax.eq.ndr) call stopundef('psizmax')
+    if(vpol0.eq.ndr) call stopundef('vpol')
+    if(vsol0.eq.ndr) call stopundef('vsol')
+    if(benergy.eq.ndr) call stopundef('benergy')
+    if(gama0.eq.ndr) call stopundef('gama')
+    if(fz.eq.ndr) call stopundef('fz') !yamila
 
+    if(methodflag.eq.ndi) call stopundef('methodflag') ! == RJN
+    if(fluxflag.eq.ndi) call stopundef('fluxflag')
+    if(curvedflag.eq.ndi) call stopundef('curvedflag')
+
+    
+    
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-end subroutine
+end subroutine readinput
 
 subroutine stopundef(namevar)
-    use const ! , only : ierr
+    use const , only : stdout
+    use MPI, only : ierr
     
     character(len=*), intent(in) :: namevar
 
     write(stdout,*) 'parser:', 'Variable ', namevar, ' is undefined '
-    call MPI_FINALIZE(ierr) ! finaliza MPI
+    call MPI_FINALIZE(ierr) ! == end  MPI
     stop
-end
+
+end subroutine stopundef
+
+subroutine check_value_methodflag(methodflag)
+
+    use const, only : stdout
+    use MPI, only : ierr
+
+    integer, intent(in) :: methodflag
+
+    integer :: allowedvalue(3)=(/1,2,3/) 
+    logical :: flag
+
+    flag = .false.
+
+    do i=1,3
+        if(methodflag==allowedvalue(i)) flag=.true.
+    enddo    
+    
+    if(flag) then 
+        write(stdout,*) 'parser:', 'value methodflag not premmitted :', methodflag
+        call MPI_FINALIZE(ierr) ! ++end MPI
+        stop
+    endif
+
+end subroutine check_value_methodflag
 
