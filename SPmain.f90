@@ -16,6 +16,7 @@ program main
     use kaist
     use mkl
     use flux
+    use channelcurved
 
     implicit none
 
@@ -36,6 +37,7 @@ program main
     real*8  ::  stOK,kpOK
     real*8  :: time0, timeF
     integer :: info
+   
 
     stdout = 6                           ! == unit number defined modules          
 
@@ -131,7 +133,15 @@ program main
             if(rank.eq.0) write(stdout,*) 'Flux test OK'
         else
             if(rank.eq.0) write(stdout,*) 'Flux test Failed'
-        endif    
+        endif   
+    endif
+    if(curvedflag.eq.1) then 
+        call unit_test_area_channel(info) 
+        if(info.eq.0) then 
+            if(rank.eq.0) write(stdout,*) 'Area test OK'
+        else
+            if(rank.eq.0) write(stdout,*) 'Area test Failed'
+        endif   
     endif
 
 #ifdef _MKL

@@ -100,6 +100,9 @@ subroutine readinput
     nsc = 1
     scs(1) = 1.0
 
+    rchannelL = ndr
+    rchanneLS = ndr
+
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 
@@ -418,7 +421,14 @@ subroutine readinput
                 case(42, 52) ! 42: channel, 52: rod
         
                     read(fh, *) basura
-                    read(fh, *) rchannel
+                    if(curvedflag.eq.1) then 
+                        read(fh, *) rchannelL 
+                        read(fh, *) basura
+                        read(fh, *) rchannelS 
+                        rchannel = rchannelL
+                    else
+                       read(fh, *) rchannel 
+                    endif   
                     read(fh, *) basura
                     read(fh, *) RdimZ
                     read(fh, *) basura
@@ -625,6 +635,16 @@ subroutine readinput
     if(methodflag.eq.ndi) call stopundef('methodflag') ! == RJN
     if(fluxflag.eq.ndi) call stopundef('fluxflag')
     if(curvedflag.eq.ndi) call stopundef('curvedflag')
+
+    if(systemtype.eq.42) then 
+        if(curvedflag.eq.1) then 
+            if(rank.eq.0) then 
+                write(stdout,*) 'parser:Set rchannelL =', rchannelL
+                write(stdout,*) 'parser:Set rchannelS =', rchanneLS
+            endif
+        endif
+        write(stdout,*) 'parser: Set rchannel  =', rchanneL
+    endif
 
     
     

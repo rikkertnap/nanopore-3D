@@ -68,8 +68,8 @@ contains
         ! at T= 25 C
         ! all values are in 10-5 cm^2/sec 10-9 m^2/sec
 
-        Diffcoeff%pos    = 1.33d-9 ! Na
-        Diffcoeff%neg    = 2.03d-9 ! Cl 
+        Diffcoeff%pos   = 1.33d-9 ! Na
+        Diffcoeff%neg   = 2.03d-9 ! Cl 
         Diffcoeff%Hplus = 9.31d-9
         Diffcoeff%OHmin = 5.28d-9  
         

@@ -104,14 +104,16 @@ endmodule
 
 module channel
 
-    real*8 :: rchannel                   ! == radius nanochannel
-    real*8 :: originc(2)                 ! == location in x-y plane of long axis channel  
+    real*8 :: rchannel                  ! == radius nanochannel
+    real*8 :: originc(2)                ! == location in x-y plane of long axis channel  
     real*8 :: echargec, sigmac, eepsc, sigmar
     integer :: NBRUSH
-    integer :: RdimZ                     ! size of reservoirs in delta units
-    integer :: Nrings                    ! number of rings for systemtype = 42
-    real*8, allocatable :: ringpos(:)    ! position along the pore
-    integer :: Npolx, Npoly
+    integer :: RdimZ                    ! size of reservoirs in delta units
+    integer :: Nrings                   ! number of rings for systemtype = 42
+    real*8, allocatable :: ringpos(:)   ! position along the pore
+    integer :: Npolx, Npoly              
+    real*8  :: rchannelL, rchannelS     ! == largest and smalles radius of curved nanochannel 
+                                        ! == used only if curvedflag==1 and systype =42 
 
 endmodule
 

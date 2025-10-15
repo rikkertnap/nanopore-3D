@@ -28,7 +28,7 @@ subroutine initconst
     pi = acos(-1.0d0)
 
     if(abs(pi-pi_my)>0.0d0) then 
-        if(rank.eq.0)write(stdout,*) 'inintconst: pi',pi,' pi_my', pi_my
+        if(rank.eq.0)write(stdout,*) 'init const: pi',pi,' pi_my', pi_my
     endif    
 
     lb = 0.714d0 ! bjerrum lenght in nm
