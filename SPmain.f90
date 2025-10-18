@@ -58,17 +58,17 @@ program main
     if(rank.eq.0) write(10,*) 'GIT Version: ', _VERSION
     if(rank.eq.0) write(10,*) 'MPI OK'
     
-    call readinput        ! == DEFINITIONS.txt file 
+    call readinput        ! == read DEFINITIONS.txt file 
 
     call monomer_definitions
     call chains_definitions
     call makemaps
 
-    call initconst
-    call inittransf    ! create transformation matrixes
-    call initellpos    ! calculate real positions for ellipsoid centers
-    call initall
-    call allocation
+    call initconst      ! == init constants
+    call inittransf     ! == create transformation matrixes
+    call initellpos     ! == calculate real positions for ellipsoid centers
+    call initall        ! == init all variables
+    call allocation     ! == allocate all variables 
 
     !!! General files
 
@@ -89,6 +89,17 @@ program main
     
     if(rank.eq.0) write(stdout,*) 'Kai OK'
 
+    if(fluxflag.eq.1) then 
+        call unit_test_divJ(info)
+        if(rank.eq.0) write(stdout,*) 'Flux test OK'   
+    endif
+
+    if(curvedflag.eq.1) then 
+        call unit_test_area_channel(info) 
+        if(rank.eq.0) write(stdout,*) 'Area test OK'
+    endif
+
+
     ! == select system 
 
     if (systemtype.eq.1) then
@@ -102,7 +113,11 @@ program main
     elseif (systemtype.eq.41) then
         call update_matrix_channel_4(flag)  ! == channel with one ring 
     elseif (systemtype.eq.42) then
-        call update_matrix_channel_4(flag)  ! == channel with mutiple rings 
+        if(curvedflag.eq.1) then 
+            call update_matrix_channel_4_curved(flag)  ! == channel with mutiple rings 
+        else    
+            call update_matrix_channel_4(flag)  ! == channel with mutiple rings 
+        endif
     elseif (systemtype.eq.52) then
         call update_matrix_channel_4(flag)  ! == rod
     elseif (systemtype.eq.6) then
@@ -127,23 +142,7 @@ program main
     call creador ! Genera cadenas
     if(rank.eq.0) write(stdout,*) 'Creador OK'
 
-    if(fluxflag.eq.1) then 
-        call unit_test_divJ(info)
-        if(info.eq.0) then 
-            if(rank.eq.0) write(stdout,*) 'Flux test OK'
-        else
-            if(rank.eq.0) write(stdout,*) 'Flux test Failed'
-        endif   
-    endif
-    if(curvedflag.eq.1) then 
-        call unit_test_area_channel(info) 
-        if(info.eq.0) then 
-            if(rank.eq.0) write(stdout,*) 'Area test OK'
-        else
-            if(rank.eq.0) write(stdout,*) 'Area test Failed'
-        endif   
-    endif
-
+    
 #ifdef _MKL
     if (flagmkl.eq.1) then ! use compressed MKL CSR format to store chains
         call px2csr

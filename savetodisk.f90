@@ -11,13 +11,13 @@ subroutine savetodisk(array, title, counter)
 
     ! local variables
 
-    integer ix, iy, iz, jx, jy, jz
-    real*8 arraytemp(dimx, dimy, dimz)
-    real*8 arrayz(dimz)
-    character*6 titlez
-    character*21 filename, tempc
-    real*4 singlepres
-    real*8 x(3), v(3)
+    integer :: ix, iy, iz, jx, jy, jz
+    real*8 :: arraytemp(dimx, dimy, dimz)
+    real*8 :: arrayz(dimz)
+    character*6 :: titlez
+    character*21 :: filename, tempc
+    real*4 :: singlepres
+    real*8 :: x(3), v(3)
     integer, external :: PBCSYMI, PBCREFI
 
     !-----  coordenadas -------------------------
