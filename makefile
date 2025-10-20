@@ -1,6 +1,6 @@
 TARGET = 3D
 
-SRC = modules.f90 maps.f90 SPmain.f90 channel.f90 PBC.f90 parser.f90 init.f90 allocation.f90 allocatencha.f90 allocateell.f90 3D.f90  allocatecpp.f90  cadenas.f90 cadenas_b.f90 cadenas_b2.f90  fe.f90  fkfun.f90  kai.f90  kinsol.f90 anderson.f90 solver.f90 pxs.f90  savetodisk.f90 rands.f90 ellipsoid.f90 dielectric.f90 transform.f90 testsystem.f90 testsystemc.f90 testsystemr.f90 monomers.definitions.f90 chains.definitions.f90 channel-part.f90 
+SRC = modules.f90 maps.f90  moleculelist.f90 flux.f90 channel-curved.f90 SPmain.f90 channel.f90 PBC.f90 parser.f90 init.f90 allocation.f90 allocatencha.f90 allocateell.f90 3D.f90  allocatecpp.f90  cadenas.f90 cadenas_b.f90 cadenas_b2.f90  fe.f90  fkfun.f90  kai.f90 anderson.f90 kinsol.f90 solver.f90  pxs.f90  savetodisk.f90 rands.f90 ellipsoid.f90 dielectric.f90 transform.f90 testsystem.f90 testsystemc.f90 testsystemr.f90 monomers.definitions.f90 chains.definitions.f90 channel-part.f90 
 
 # STANDARD FLAGS
 LFLAGS = -lm /usr/lib/x86_64-linux-gnu/librt.so  -L/usr/local/lib  -lsundials_fkinsol -lsundials_kinsol -lsundials_fnvecserial -lsundials_nvecserial ${LIBS} -Wl,-rpath,/usr/local/lib
@@ -44,6 +44,11 @@ ifeq ($(HOST),ensalada)
 LDFLAGS=-lm /usr/lib/x86_64-linux-gnu/librt.so -L/opt/local/sundials-2.6.1-openmpi/lib -lsundials_fkinsol -lsundials_kinsol -lsundials_fnvecserial -lsundials_nvecserial     -Wl,-rpath,/opt/local/sundials-2.6.1-openmpi/lib
 
 LFLAGS=-lm /usr/lib/x86_64-linux-gnu/librt.so -L/opt/local/sundials-2.6.1-openmpi/lib -lsundials_fkinsol -lsundials_kinsol -lsundials_fnvecserial -lsundials_nvecserial     -Wl,-rpath,/opt/local/sundials-2.6.1-openmpi/lib
+endif
+
+ifeq ($(HOST),mccbmec02cc21mlvdm)
+LDFLAGS=
+LFLAGS= -lm  -framework Accelerate
 endif
 
 

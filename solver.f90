@@ -11,14 +11,16 @@ subroutine solver(xvec, xvecguess, ier)
     ! local : put into system  
     real*8 :: accuracy, residual
     logical :: isSolution
-    integer :: maxfkfunevals, neq
+    integer :: maxfkfunevals
+    integer*8 :: neq
     
-    method=1
+    if(methodflag/=1) then 
 
-    neq= eqs * dimx * dimy * dimz  
-    maxfkfunevals = 1000 ! == defined in kinsol.f90 need to connected 
-    accuracy = 1.0d-6    ! == defined fnormtol defined in kinsol.f90
-   
+        neq= eqs * dimx * dimy * dimz  
+        maxfkfunevals = 1000 ! == defined in kinsol.f90 
+        accuracy = 1.0d-6    ! == defined fnormtol defined in kinsol.f90
+    endif
+
     if(methodflag==1) then
 
         call call_kinsol(xvec, xvecguess, ier)

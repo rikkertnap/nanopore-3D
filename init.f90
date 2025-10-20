@@ -37,8 +37,8 @@ subroutine initconst
     vsol = vsol0
     vsalt = ((4.0d0/3.0d0)*pi*(0.2d0)**3)/vsol  ! volume salt in units of vsol 0.2=radius salt  
     constq = delta*delta*4.0*pi*lb/vsol   ! multiplicative factor in poisson eq  
-    pKw = 14.0
-    Kw = 10**(-pKw)
+    pKw = 14.0d0
+    Kw = -1.000000d0**(-pKw)
     error = 1e-4 ! para comparar con la norma... ! == to compare to norm
     errel = 1d-6
     itmax = 200
@@ -145,7 +145,6 @@ subroutine initall
         
     endif    
 
-
 end subroutine initall
 
 ! == close all open 301.. 313 file and ends mpi and stop program
@@ -192,11 +191,12 @@ subroutine savedata(cccc)
     use kinsol
     use kaist
     use mparameters_monomer
+    use channelcurved, only :radiusC, radiusL, Lengthchannel, total_surface_area_curv
+    use inputtemp, only : csalt, pHbulk
 
     implicit none
 
-    integer :: cccc
-
+    integer, intent(in) :: cccc
 
     character*20 :: filename
     character*5  :: title
@@ -204,6 +204,7 @@ subroutine savedata(cccc)
     real*8 :: sumpol
     integer :: ix,iy,iz, im
     real*8 :: fv
+    real*8 :: area
 
     !----------------------------------------------------------
     !  OUTPUT
@@ -312,8 +313,13 @@ subroutine savedata(cccc)
         endif
 
         ! system
+        if(curvedflag==0) area=dimx*dimy*delta*delta
+        if(curvedflag==1) then 
+            area = total_surface_area_curv(radiusL,radiusC,Lengthchannel)
+        endif
 
         write(filename,'(A7, I3.3, A4)')'system.', cccc, '.dat'
+        
         open (unit=310, file=filename)
         write(310,*)'st          = ',st ! residual size of iteration vector
         write(310,*)'fnorm       = ',norma ! residual size of iteration vector
@@ -326,8 +332,10 @@ subroutine savedata(cccc)
         write(310,*)'zpos        = ',zpos
         write(310,*)'zneg        = ',zneg
         write(310,*)'long        = ',long
+        write(310,*)'csalt       = ',csalt
+        write(310,*)'pH          = ',pHbulk
         write(310,*)'iterations  = ',iter
-        write(310,*)'sigma cad/nm2 = ',ncha/(dimx*dimy*delta*delta)
+        write(310,*)'sigma cad/nm2 = ',ncha/area
         write(310,*)'kai =          ', Xu
         write(310,*)'GIT version = ', _VERSION
 

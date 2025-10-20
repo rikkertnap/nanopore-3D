@@ -253,9 +253,9 @@ subroutine fkfun(x,f,ier2)
 
                     elseif(hguess .eq. 1) then
 
-                    hd = sqrt(float((2*ix-dimx)**2+(2*iy-dimy)**2))/2.0*delta-hring
-                    hd = hd**2+(oval*float(2*iz-dimz)/2.0*delta)**2
-                    hfactor = dexp(-(kp**2)*hd)
+                        hd = sqrt(float((2*ix-dimx)**2+(2*iy-dimy)**2))/2.0*delta-hring
+                        hd = hd**2+(oval*float(2*iz-dimz)/2.0*delta)**2
+                        hfactor = dexp(-(kp**2)*hd)
 
                     else
 
