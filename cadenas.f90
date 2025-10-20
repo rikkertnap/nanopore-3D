@@ -34,7 +34,7 @@ subroutine creador
                 read(3113,*)in1(j,1),in1(j,2),in1(j,3)
             enddo
             call pxs
-                ! write(stdout,*) 'creador:', i, newcuantas(1)
+            !write(stdout,*) 'creador:', i, newcuantas(1)
         enddo
 
         ! do il = 1, ncha
@@ -326,15 +326,15 @@ subroutine graftpoints
 
     call allocatencha
 
-    do i = 1, ncha                     ! ncha = number of graft point  
-        ngpol(i) = volx(i)             ! number of polyemr or number per unit areea 
-        posicion(i, :) = com(i,:)             ! position real in space    
-        cpp(mod(i,size)+1) = cpp(mod(i,size)+1) + 1. ! = distrubetion chain per processore 
+    do i = 1, ncha                                   ! ncha = number of graft point  
+        ngpol(i) = volx(i)                           ! number of polymer 
+        posicion(i, :) = com(i,:)                    ! position real in space    
+        cpp(mod(i,size)+1) = cpp(mod(i,size)+1) + 1  ! = distribution of graft point per processore 
     enddo
 
     maxcpp = maxval(cpp)
  
-    cppini(1) = 0                        ! book kkeping of where graft point 
+    cppini(1) = 0                        ! book keeping of where graft point 
     do j = 2,size                        ! cppini(2) first of the graft chain at second 
         cppini(j)=cppini(j-1)+cpp(j-1)
     enddo

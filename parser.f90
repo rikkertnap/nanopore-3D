@@ -443,7 +443,7 @@ subroutine readinput
                     do i = 1, Nrings
                         read(fh, *) ringpos(i)
                     enddo
-                    ringpos = ringpos - 0.5
+                    ringpos = ringpos - 0.5       ! == translated by 0.5 ringposistion input range [0:1] => [-0.5:0.5] 
                     
                     read(fh, *) basura
                     read(fh, *) echargec

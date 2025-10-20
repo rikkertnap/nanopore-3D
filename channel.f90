@@ -643,9 +643,15 @@ double precision function intcell_c(rchannel2,originc,ix,iy,iz,n)
         do ay = 1, n
             do az = 1, n
 
-                dr(1) = ix*delta-(ax)*delta/float(n) 
-                dr(2) = iy*delta-(ay)*delta/float(n) 
-                dr(3) = iz*delta-(az)*delta/float(n) 
+                !dr(1) = ix*delta-(ax)*delta/float(n) 
+                !dr(2) = iy*delta-(ay)*delta/float(n) 
+                !dr(3) = iz*delta-(az)*delta/float(n) 
+
+                ! = 0.5 to ensure points uniformly and symetrically distrubuted over cell volume 
+                
+                dr(1) = ix*delta-(ax-0.5)*delta/float(n) 
+                dr(2) = iy*delta-(ay-0.5)*delta/float(n) 
+                dr(3) = iz*delta-(az-0.5)*delta/float(n) 
 
                 ! dr in transformed space
                 dxr = MATMUL(IMAT, dr)
@@ -846,7 +852,11 @@ subroutine newintegrateg_c_4(rchannel2,RdimZ,originc, npoints,volx1,sumvolx1,com
             !x in  real space
             v = MATMUL(MAT,x)
             if((systemtype.eq.42).or.(systemtype.eq.52).or.(systemtype.eq.60)) then
-                v(3) = v(3) + float((dimz-RdimZ*2))/2.0*delta ! centers the first row of polymers at the middle of the layer, useful to avoid numerical rounding errors.
+                v(3) = v(3) + float((dimz-RdimZ*2))/2.0*delta 
+                ! centers the first row of polymers at the middle of the layer, useful to avoid numerical rounding errors.
+                ! == this translate v(3) by half height=(dimz-2Rdimz)delta of cylinder !!!!   
+ 
+            
             else
                 v(3) = v(3) + float((dimz-RdimZ*2)/npointz)/2.0*delta ! centers the first row of polymers at the middle of the layer, useful to avoid numerical rounding errors.
             endif
@@ -857,7 +867,7 @@ subroutine newintegrateg_c_4(rchannel2,RdimZ,originc, npoints,volx1,sumvolx1,com
                 js(j) = floor(v(j)/delta)+1
             enddo
 
-            js(3)=mod(js(3)+dimz-1,dimz)+1
+            js(3)=mod(js(3)+dimz-1,dimz)+1 ! == translate by (dimz-1) and then computes remainder of division by (dimz)
 
             jx = js(1)
             jy = js(2)

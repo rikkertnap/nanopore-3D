@@ -306,6 +306,8 @@ subroutine fkfun(x,f,ier2)
                     ! Poor solvent depende de la grilla donde esta y de sus vecinos
                     ! == Poor solvent depends on the grid where it is and its neighbors
 
+
+
                     if(hydroph(im).ne.0) then
 
                     protemp=0.0
@@ -372,11 +374,14 @@ subroutine fkfun(x,f,ier2)
 
                     endif ! hydrph
 
+                    write(567,*)xpot(ix,iy,iz,1)
+
                 enddo ! ix
             enddo ! iy
         enddo !iz
 
     enddo ! N_monomer
+
 
     !!!!!!!!!!!!!!!!!!!!!! Calculate pro from xpot !!!!!!!!!!!!!
     call calcavpol(xpot)
@@ -416,7 +421,6 @@ subroutine fkfun(x,f,ier2)
     enddo
 
     ! Volume fraction
-
     do ix=1,dimx
         do iy=1,dimy
             do iz=1,dimz
@@ -430,6 +434,7 @@ subroutine fkfun(x,f,ier2)
                          avpol(ix,iy,iz,im) !packing ...+polimero
                 enddo
 
+                ! write(123,*)ix,iy,iz,avpol(ix,iy,iz,1),xh(ix,iy,iz)
             enddo
         enddo
     enddo
@@ -587,16 +592,20 @@ subroutine calc_std(xpot)
     use results
 
     implicit none
-    real*8 avpol_tosend(dimx,dimy,dimz, N_monomer)
-    real*8 xpot(dimx, dimy, dimz, N_monomer)
-    real*8 fv
-    real*8 q_tosend
-    real*8 avpol_temp(dimx,dimy,dimz,N_monomer)
-    integer im,jj,i,j, ix, iy, iz, ii, ax, ay, az
+
+    real*8, intent(in) :: xpot(dimx, dimy, dimz, N_monomer)
+
+    ! local variables 
+
+    real*8 :: avpol_tosend(dimx,dimy,dimz, N_monomer)
+    real*8 :: fv
+    real*8 :: q_tosend
+    real*8 :: avpol_temp(dimx,dimy,dimz,N_monomer)
+    integer :: im,jj,i,j, ix, iy, iz, ii, ax, ay, az
     ! MPI
-    integer tag
+    integer :: tag
     parameter(tag = 0)
-    integer err
+    integer :: err
 
     shift = 1.0d0 ! == added  d0  ! uniform shift in P(alpha)
     avpol_tosend = 0.0d0

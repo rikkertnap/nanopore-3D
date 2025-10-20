@@ -13,20 +13,21 @@ subroutine pxs
     use const
     use transform
     use mparameters_monomer
+
     implicit none
         
-    integer j, ii, jj,i
-    real*8 pxtemp(3,long)
-    real*8 xx(3)
-    real*8 x(3)
-    real*8 v(3)
-    integer testsystem
-    integer testsystemr
-    integer testsystemc
-    real*8 maxx(3)
-    integer flag
-    integer aa
-    real*4 ztemp
+    integer :: j, ii, jj,i
+    real*8 :: pxtemp(3,long)
+    real*8 :: xx(3)
+    real*8 :: x(3)
+    real*8 :: v(3)
+    integer :: testsystem
+    integer :: testsystemr
+    integer :: testsystemc
+    real*8 :: maxx(3)
+    integer :: flag
+    integer :: aa
+    real*4 :: ztemp
 
     integer, external :: PBCREFI, PBCSYMI
 
@@ -34,8 +35,9 @@ subroutine pxs
     maxx(2) = float(dimy)*delta
     maxx(3) = float(dimz)*delta
 
-    do jj = 1, cpp(rank+1)            ! == cpp , jj ?? comes from cadenas and subroutine graftpoit
-        ii = cppini(rank+1)+jj        ! == cppini ii ??
+    do jj = 1, cpp(rank+1)            ! == cpp  distrubition of graft points over nodes/cpus graftpoit c
+                                      ! == cpp number of graft point on node  ,rank +1 because start number at o 
+        ii = cppini(rank+1)+jj        ! == cppini  = 'first' graft point on node
         flag = 0
 
         ztemp = 0.0
@@ -186,12 +188,13 @@ end subroutine pxs
 subroutine rot_chain_cyl(x,ii)
     use rotchain
     implicit none
+
     integer, intent(in) :: ii
     real*8 , intent(inout) :: x(3)
 
     ! local variable 
-    real*8 y(3)
-    real*8 t
+    real*8 :: y(3)
+    real*8 :: t
 
     t = rotangle(ii)
     y = x

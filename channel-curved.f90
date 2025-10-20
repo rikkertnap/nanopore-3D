@@ -341,18 +341,18 @@ contains
 
         ! call integrate_channel_curved(rchannelL2, RdimZ,originc ,npoints, voleps1 , sumvoleps1, flag)
         
-        !call integrate_channel_curved(radiusSeps,radiusLeps,RdimZ,originc_curv ,npoints, voleps1 , sumvoleps1, flag)
+        call integrate_channel_curved(radiusSeps,radiusLeps,RdimZ,originc_curv ,npoints, voleps1 , sumvoleps1, flag)
 
         flag = .false. ! not a problem if eps lays outside boundaries
 
         call integrate_channel_curved(radiusS,radiusL,RdimZ, originc_curv,npoints, volprot1, sumvolprot1, flag)
 
-        !call integrate_channel_curved(radiusSq,radiusLq,RdimZ,originc_curv ,npoints, voleps1 , sumvoleps1, flag)
+        call integrate_channel_curved(radiusSq,radiusLq,RdimZ,originc_curv ,npoints, voleps1 , sumvoleps1, flag)
         
 
         ! call newintegrateg_c_4(radiusS,radiusL,RdimZ,originc_curv,npoints,volx1,sumvolx1, com1, p1, ncha1, volxx1, NBRUSH)
-        !call newintegrate_channel_curved(radiusS,radiusL,RdimZ,originc_curv, npoints,volx1,sumvolx1,com1,p1,&
-        !    ncha1,volxx1, NBRUSH)
+        call newintegrate_channel_curved(radiusS,radiusL,RdimZ,originc_curv, npoints,volx1,sumvolx1,com1,p1,&
+            ncha1,volxx1, NBRUSH)
      
     
         !! eps
@@ -393,7 +393,7 @@ contains
         !area = 2.0*pi*rchannel*hcyl
 
         !! volume  
-        !volprot1 = volprot1 * 0.9999
+        volprot1 = volprot1 * 0.9999
         volprot = volprot+volprot1
 
         ! CHECK COLLISION HERE...
@@ -543,13 +543,13 @@ contains
                 sumvolprot = sumvolprot + voltemp
                 volprot(ix,iy,iz) = voltemp
 
-                write(567,*)ix,iy,iz,voltemp,flagin,flagout
+                !write(567,*)ix,iy,iz,voltemp,flagin,flagout
                 
 
             enddo ! iz
-            write(567,*)""
+         !   write(567,*)""
         enddo ! iy
-        write(567,*)""
+        !write(567,*)""
     enddo ! ix
 
 end subroutine  integrate_channel_curved
@@ -583,6 +583,8 @@ function integration_cell(origincurv,ix,iy,iz,n,RC,RL)result(intcell_c)
     do ax = 1, n
         do ay = 1, n
             do az = 1, n
+
+                ! = points uniform and symetrically distrubuted over cell volume 
 
                 dr(1) = ix*delta-(ax-0.5)*delta/float(n) 
                 dr(2) = iy*delta-(ay-0.5)*delta/float(n) 
@@ -722,7 +724,6 @@ subroutine newintegrate_channel_curved(radiusS,radiusL,RdimZ,origincurv, npoints
     LenC = LengthChannelCurvature()
     RC = radiusCurvature(RL,RS,LenC)
 
-
     do jjjz = 1, npointz      ! == loop over number of graft point in z and  the
         do jjjt = 1, npointt
 
@@ -742,46 +743,50 @@ subroutine newintegrate_channel_curved(radiusS,radiusL,RdimZ,origincurv, npoints
             
             ! == x and y coordiante for cylinder with no curvature update formula 
 
-            ! x(1) = cos(float(jjjt-1)/float(npointt)*2.0*pi+rtetha+tethaadd)*rchannel + origin(1)
+            ! x(1) = cos(float(jjjt-1)/float(npointt)*2.0*pi+rtetha+tethaadd)*rchannel + originc(1)
             ! x(2) = sin(float(jjjt-1)/float(npointt)*2.0*pi+rtetha+tethaadd)*rchannel + originc(2)
-            
-            zcoor =(ringpos(jjjz)*hcyl+hcyl0 -origincurv(3)) ! zcoor for radiusfz centered around orgincurv channel 
-                                                            ! ringpos relative location graft point 
+            ! x(3) = ringpos(jjjz)*hcyl+hcyl0 
+
+            !zcoor =(ringpos(jjjz)*hcyl+hcyl0 -origincurv(3)) 
+           
+            !== zcoor for radiusfz needs to be centered around orgincurv channel 
+            !== ringpos relative location graft point range [-0.5:0.5] 
+            !== ringpos=-0.5 == base zrel=-hcyl/2: ringbase=0.5 to zrel=+hcyl/2 
+           
+            zcoor =((ringpos(jjjz)+0.5d0)*hcyl+hcyl0-origincurv(3)) 
             Radiusz = radiusfz(zcoor,RL,RC)
 
             x(1) = cos(float(jjjt-1)/float(npointt)*2.0*pi+rtetha+tethaadd)*Radiusz + origincurv(1)
             x(2) = sin(float(jjjt-1)/float(npointt)*2.0*pi+rtetha+tethaadd)*Radiusz + origincurv(2)
 
-            x(3) = ringpos(jjjz)*hcyl+hcyl0 
+           ! x(3) = ringpos(jjjz)*hcyl+hcyl0  ! Coordinate system has unusally origin of middle of cylinder == hcyl0 == base cylinder
  
-           ! select case (systemtype)
-           ! case(4)
-           !     x(3) = float(jjjz-1)/float(npointz)*hcyl+rz+hcyl0
-           ! case(41)
-           !     x(3) = float(jjjz-1)/float(npointz)*hcyl+hcyl0 ! for systemtype = 41 shift only in tetha, no in z
-           ! case(42, 52, 60)
-           !     x(3) = ringpos(jjjz)*hcyl+hcyl0 
-            !end select
+            x(3) = (ringpos(jjjz)+0.5d0)*hcyl+hcyl0 !  Coordinate system has orgin of lattice 
 
-            !x in  real space
+
+            ! == x in  real space
 
             v = MATMUL(MAT,x)
 
-            v(3) = v(3) + float((dimz-RdimZ*2))/2.0*delta ! centers the first row of polymers at the middle of the layer, useful to avoid numerical rounding errors.
 
+            ! == v(3) = v(3) + float((dimz-RdimZ*2))/2.0*delta  ! == RJN different for curvature
+            ! == centers the first row of polymers at the middle of the layer, useful to avoid numerical rounding errors.
+            ! == this translate v(3) by half height=(dimz-2Rdimz)delta/2 of cylinder !!!! 
+            ! == if((systemtype.eq.42).or.(systemtype.eq.52).or.(systemtype.eq.60)) then
+            ! ==   v(3) = v(3) + float((dimz-RdimZ*2))/2.0*delta ! centers the first row of polymers at the middle of the layer, useful to avoid numerical rounding errors.
+            ! == else
+            ! ==    v(3) = v(3) + float((dimz-RdimZ*2)/npointz)/2.0*delta ! centers the first row of polymers at the middle of the layer, useful to avoid numerical rounding errors.
+            ! == endif
+            ! == x = MATMUL(IMAT,v) ! and recalculates x due to the change in v ! == unneccsary
 
-            !if((systemtype.eq.42).or.(systemtype.eq.52).or.(systemtype.eq.60)) then
-            !    v(3) = v(3) + float((dimz-RdimZ*2))/2.0*delta ! centers the first row of polymers at the middle of the layer, useful to avoid numerical rounding errors.
-            !else
-            !    v(3) = v(3) + float((dimz-RdimZ*2)/npointz)/2.0*delta ! centers the first row of polymers at the middle of the layer, useful to avoid numerical rounding errors.
-            !endif
-
-            x = MATMUL(IMAT,v) ! and recalculates x due to the change in v
             do j = 1,3
-                js(j) = floor(v(j)/delta)+1
+               ! js(j) = floor(v(j)/delta)+1
+                js(j) = int(v(j)/delta)+1
             enddo
 
-            js(3)=mod(js(3)+dimz-1,dimz)+1
+            ! js(3)=mod(js(3)+dimz-1,dimz)+1    
+            !== this is translate js integer (v)  by (dimz-1) and retrun remainder  of the division by dimz ??
+
 
             jx = js(1)
             jy = js(2)
@@ -789,12 +794,13 @@ subroutine newintegrate_channel_curved(radiusS,radiusL,RdimZ,origincurv, npoints
 
             do i = 1, 3
                 if((js(i).le.0).or.(js(i).gt.dims(i))) then
-                    write(stdout,*) 'newintegrate_channel_curved:error in channel', i, js(i), dims(i)
+                    write(stdout,*) 'neewintegrate_channel_curved: error in channel-curved', i, js(i), dims(i)
                     write(stdout,*) v(1), v(2), v(3)
                     stop
                 endif
             enddo
 
+             write(125,*) jjjz, jjjt,  jx,jy,jz, x
             ! increase counter
 
             if(ncha1.eq.maxvolx) then
@@ -811,7 +817,7 @@ subroutine newintegrate_channel_curved(radiusS,radiusL,RdimZ,origincurv, npoints
 
             volxx1(jx,jy,jz) =  1.0
             volx1(indexvolx(jx,jy,jz)) = 1.0
-            com1(indexvolx(jx,jy,jz),:) = x(:)
+            com1(indexvolx(jx,jy,jz),:) = x(:) ! == caredull use coordiante systmam assoicaite with vector x 
             sumvolx1 = sumvolx1 + 1.0
 
         enddo ! jjjt
@@ -819,9 +825,15 @@ subroutine newintegrate_channel_curved(radiusS,radiusL,RdimZ,origincurv, npoints
 
     do i = 1, ncha1
         ! Moves the position of the first segment lseg/2 away from the surface to prevent collision due to round errors.
-        rchannelz = dsqrt(com1(i,1)**2+com1(i,2)**2)
+        ! == lseg 
+        
+        rchannelz = dsqrt((com1(i,1)-origincurv(1))**2+(com1(i,2)-origincurv(2))**2)
+        
+       ! print*,"rchannelz=",rchannelz
+        
         com1(i,1) = com1(i,1) - lseg*((com1(i,1)-origincurv(1)))/rchannelz ! replace rchannel with rchannelz : radius of channel is z dependent 
         com1(i,2) = com1(i,2) - lseg*((com1(i,2)-origincurv(2)))/rchannelz 
+      
     enddo
 
 end subroutine 

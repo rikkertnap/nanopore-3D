@@ -169,7 +169,7 @@ program main
     endif
 
     ii = 1
-    sc = scs(ii)  ! == what is scs 
+    sc = scs(ii)  ! == what is scs  == 0 
 
     select case (vscan) ! == variable scan over variabel kp ??
     case (1)
