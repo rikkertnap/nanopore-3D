@@ -46,30 +46,30 @@ end subroutine solver
 ! Subrutina que llama a kinsol
      
 
-subroutine call_fkfun(x1_old)
-    use system
-    use MPI
+!subroutine call_fkfun(x1_old)
+!    use system
+!    use MPI
+!
+!    integer i
 
-    integer i
-
-    real*8 :: x1_old(eqs*dimx*dimy*dimz) 
+!    real*8 :: x1_old(eqs*dimx*dimy*dimz) 
 
     ! == local arguments 
-    real*8 :: x1(eqs*dimx*dimy*dimz)     ! == this make a local copy call x1 independetly of the one defien din solve in 3D.f90
-    real*8 :: f(eqs*dimx*dimy*dimz)
+!    real*8 :: x1(eqs*dimx*dimy*dimz)     ! == this make a local copy call x1 independetly of the one defien din solve in 3D.f90
+!    real*8 :: f(eqs*dimx*dimy*dimz)
 
     ! MPI
 
-    integer tag
-    parameter(tag = 0)
-    integer err
+!    integer tag
+!    parameter(tag = 0)
+!    integer err
 
-    x1 = 0.0
-    do i = 1,eqs*dimx*dimy*dimz
-        x1(i) = x1_old(i)
-    enddo
+!    x1 = 0.0
+!    do i = 1,eqs*dimx*dimy*dimz
+!        x1(i) = x1_old(i)
+!    enddo
 
-    CALL MPI_BCAST(x1, eqs*dimx*dimy*dimz , MPI_DOUBLE_PRECISION,0, MPI_COMM_WORLD,err)
+!    CALL MPI_BCAST(x1, eqs*dimx*dimy*dimz , MPI_DOUBLE_PRECISION,0, MPI_COMM_WORLD,err)
 
-    call fkfun(x1,f, ier) ! todavia no hay solucion => fkfun 
-end
+!    call fkfun(x1,f, ier) ! todavia no hay solucion => fkfun 
+!end
