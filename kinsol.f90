@@ -101,18 +101,18 @@ subroutine call_kinsol(x1_old, xg1_old, ier)
     use mparameters_monomer
     implicit none
     integer i
-    real*8 x1(eqs*dimx*dimy*dimz), xg1(eqs*dimx*dimy*dimz)
-    real*8 x1_old(eqs*dimx*dimy*dimz), xg1_old(eqs*dimx*dimy*dimz)
-    integer*8 iout(15) ! Kinsol additional output information
-    real*8 rout(2) ! Kinsol additional out information
-    integer*8 msbpre
-    real*8 fnormtol, scsteptol
-    real*8 scale(eqs*dimx*dimy*dimz)
-    real*8 constr(eqs*dimx*dimy*dimz)
-    integer*4  globalstrat, maxl, maxlrst
-    integer*4 ier ! Kinsol error flag
-    integer*8 neq ! Kinsol number of equations
-    integer*4 max_niter
+    real*8 :: x1(eqs*dimx*dimy*dimz), xg1(eqs*dimx*dimy*dimz)
+    real*8 :: x1_old(eqs*dimx*dimy*dimz), xg1_old(eqs*dimx*dimy*dimz)
+    integer*8 :: iout(15) ! Kinsol additional output information
+    real*8 :: rout(2) ! Kinsol additional out information
+    integer*8 :: msbpre
+    real*8 :: fnormtol, scsteptol
+    real*8 :: scale(eqs*dimx*dimy*dimz)
+    real*8 :: constr(eqs*dimx*dimy*dimz)
+    integer*4 :: globalstrat, maxl, maxlrst
+    integer*4 :: ier ! Kinsol error flag
+    integer*8 :: neq ! Kinsol number of equations
+    integer*4 :: max_niter
 
 
     common /psize/ neq ! Kinsol
@@ -150,9 +150,9 @@ subroutine call_kinsol(x1_old, xg1_old, ier)
     call fkinsetrin('FNORM_TOL', fnormtol, ier)
     call fkinsetrin('SSTEP_TOL', scsteptol, ier)
 
-    print*,"Warning cast maxniter to integer*8"
+    ! print*,"Warning cast maxniter to integer*8"
 
-    call fkinsetiin('MAX_NITER', int(max_niter,kind(neq)), ier)
+    call fkinsetiin('MAX_NITERS', int(max_niter,kind(neq)), ier)
 
     do i = 1, ncells  !constraint vector
         constr(i) = 2.0 ! xh > 0
@@ -163,10 +163,18 @@ subroutine call_kinsol(x1_old, xg1_old, ier)
     enddo
 
     if(electroflag.eq.1) then
-        do i = ncells*(N_poorsol+1), ncells*(N_poorsol+2)  !constraint vector
+       ! do i = ncells*(N_poorsol+1), ncells*(N_poorsol+2)  !constraint vector
+        do i = ncells*(N_poorsol+1)+1, ncells*(N_poorsol+2)
             constr(i) = 0.0 ! no contraint for psi
         enddo
     endif
+        
+    if(fluxflag.eq.1) then
+        do i = ncells*(N_poorsol+2)+1, ncells*(N_poorsol+6)  !constraint vector
+            constr(i) = 2.0 ! xpos > 0 etc
+        enddo
+    endif
+
 
     call fkinsetvin('CONSTR_VEC', constr, ier) ! constraint vector
     ! CALL FKINSPTFQMR (MAXL, IER)

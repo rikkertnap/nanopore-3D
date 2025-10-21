@@ -374,7 +374,7 @@ subroutine fkfun(x,f,ier2)
 
                     endif ! hydrph
 
-                    write(567,*)xpot(ix,iy,iz,1)
+!                    write(567,*)xpot(ix,iy,iz,1)
 
                 enddo ! ix
             enddo ! iy
