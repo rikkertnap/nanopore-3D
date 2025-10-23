@@ -30,20 +30,22 @@ subroutine Free_Energy_Calc(looped)
     ! == local variables
 
     real*8 :: q_tosend(ncha), sumgauche_tosend(ncha)
-    real*8 ::  q0(ncha), sumgauche0(ncha)
+    real*8 :: q0(ncha), sumgauche0(ncha)
     integer :: newcuantas0(ncha)
     real*8 :: F_Mix_s, F_Mix_pos
     real*8 :: F_Mix_neg, F_Mix_Hplus
     real*8 :: Free_energy2, sumpi, sumrho, sumel, sumdiel, suma, mupol
     real*8 :: temp
     real*8 :: F_Mix_OHmin, F_gauche, F_Conf, F_Eq, F_vdW, F_eps, F_electro
-    real*8 :: pro0(cuantas, maxcpp)
+    real*8 :: pro0(cuantas, maxcpp)         ! pro(cuantas, maxcpp))
     real*8 :: entropy(dimx,dimy,dimz)
     character*5 :: title
     real*8 :: xtotalsum(dimx,dimy,dimz)
     
     ! MPI
-    integer :: stat(MPI_STATUS_SIZE) 
+    !integer :: stat(MPI_STATUS_SIZE) 
+    type(MPI_Status) :: stat
+
     integer :: source
     integer :: dest
     integer :: tag
@@ -101,9 +103,9 @@ subroutine Free_Energy_Calc(looped)
 
         ! Envia pro
 
-        print*,"warning mpi_send disable !!"  
-        ! CALL MPI_SEND(pro, cuantas*cpp(rank+1) , MPI_DOUBLE_PRECISION, dest, tag, MPI_COMM_WORLD,err)
-
+        ! pro(cuantas, maxcpp)) 
+        CALL MPI_SEND(pro, cuantas*cpp(rank+1) , MPI_DOUBLE_PRECISION, dest, tag, MPI_COMM_WORLD,err)
+        
         ! sum gauche
 
         do jj = 1, cpp(rank+1)
@@ -259,9 +261,8 @@ subroutine Free_Energy_Calc(looped)
                         ! == loop over the remaining processors
 
             source = ii-1
-            print*,"warning mpi_recv  disabled !!"  
-            ! call MPI_RECV(pro0, cuantas*cpp(ii), MPI_DOUBLE_PRECISION, source, tag, MPI_COMM_WORLD,stat, err)
-
+           ! pro(cuantas, maxcpp))
+            call MPI_RECV(pro0, cuantas*cpp(ii), MPI_DOUBLE_PRECISION, source, tag, MPI_COMM_WORLD, stat, err)
 
             do jj = 1, cpp(ii)
                 !       write(stdout,*) ii, jj, pro0(10,jj)
@@ -431,7 +432,7 @@ subroutine Free_Energy_Calc(looped)
                                 do ipp = 1, N_poorsol
                     
                                     F_vdW = F_vdW - 0.5000*delta**3*xtotal(ix,iy,iz,ip) &
-                            *xtotal(jx,jy,jz,ipp)*Xu(ax, ay, az)*st*st_matrix(ip,ipp)*fv*fv2/(vpol*vpol*vsol*vsol)
+                        *xtotal(jx,jy,jz,ipp)*Xu(ax, ay, az)*st*st_matrix(ip,ipp)*fv*fv2/(vpol*vpol*vsol*vsol)
                     
                                 enddo ! ip
                                 enddo ! ipp

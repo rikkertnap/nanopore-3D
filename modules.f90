@@ -2,6 +2,8 @@
 
 module mkl
 
+    implicit none
+
     type compressed_matrix
 
         real*8, allocatable :: inc_values(:)
@@ -31,13 +33,18 @@ module mkl
 
 end module
 
-module maps                                
+module maps  
+    
+    implicit none
+    
     integer, allocatable :: imap(:,:,:)               ! == hash table form 3D to 1D 
     integer, allocatable :: mapx(:), mapy(:), mapz(:) ! == inverse 1D to 3D
 endmodule
  
 
 module mparameters_monomer
+
+    implicit none
 
     integer :: N_poorsol                    ! number of different kais ==chis
     integer :: N_monomer                    ! number of different monomer types
@@ -50,12 +57,17 @@ endmodule mparameters_monomer
 
 
 module branches            ! == variable for branched polymer
+    
+    implicit none
+
     integer longb(3), longbb
     integer branched
     integer indexncha
 endmodule
 
 module system 
+    
+    implicit none
 
     integer :: systemtype   ! == descriptor of system, see parser.f90 
     integer :: vscan        ! == select type of loop of VdW variable 
@@ -72,13 +84,15 @@ module system
     integer :: curvedflag   ! == if flag ==1 use to control shape of nanochannel 0 : straight cylindrical shape 1: hourglass shaped nanopore 
     integer :: fluxflag     ! == if flag ==1 add flux equation : steady system instead of equilibrium
     integer :: methodflag   ! == select solver method :  1= kinsol 2=anderson 3= simple mixing
-
-endmodule
+    integer :: graftflag     ! == if flag ==1 read in graft point from file only fro systemtyep =42
+    
+end module
 
 
 
 module ematrix
     use system
+    implicit none
 
     real*8, allocatable :: volprot(:,:,:)       ! == volume not accesible by polymer, solvent, ions: volume of membrane and proteins
     real*8, allocatable :: volprot1(:,:,:)
@@ -99,10 +113,13 @@ end module
 
 module rotchain
     use ematrix, only : maxvolx
+    implicit none
     real*8 :: rotangle(maxvolx)
 endmodule
 
 module channel
+
+     implicit none
 
     real*8 :: rchannel                  ! == radius nanochannel
     real*8 :: originc(2)                ! == location in x-y plane of long axis channel  
@@ -117,19 +134,23 @@ module channel
 
 endmodule
 
-module s2d        
+module s2d  
+     implicit none      
     integer :: scx,scy,scz                 ! == dimensional ranges in vtk file 
 endmodule
 
 module mkinsol
+    implicit none
     double precision, allocatable :: pp(:)    ! == pre-condition variable in kinsol
 endmodule
 
 module montecarlo
+    implicit none
     real*8 :: free_energy
 endmodule
 
 module chainsdat
+    implicit none  
     integer :: cuantas                    ! == number of conformations
     integer, allocatable :: newcuantas(:) ! == number of conformations per graft point accepted ???
     integer :: long                       ! == length of polymer chain /number of segments
@@ -148,6 +169,7 @@ endmodule
 
 module molecules
     use system
+    implicit none
     real*8 :: vsol                        ! == volume solvent 
     real*8 :: vpol                        ! == volume polymer segment 
     real*8 :: vpol0
@@ -159,6 +181,7 @@ module molecules
 endmodule
 
 module kaist                              ! == variables related to hamilton inception method: for solving poor solvent condition
+    implicit none
     integer :: hguess
     real*8 :: hring
     real*8 :: oval
@@ -174,11 +197,15 @@ module kaist                              ! == variables related to hamilton inc
     real*8 :: sc
     real*8 :: scs(100)
 
+    integer :: npH                             ! = placed here 
+    real*8 :: pHs(100) 
+
 endmodule
 
 module fields_fkfun                             ! == density fields 
     use system
     use chainsdat
+    implicit none
     real*8, allocatable :: xtotal(:, :, :, :)   ! xtotal para poor solvent  == xtotal used for poor solvent interaction
     real*8, allocatable :: psi(:, :, :)         ! == electrostatic potential
     real*8, allocatable :: q(:)                 ! == part function 
@@ -189,6 +216,7 @@ module fields_fkfun                             ! == density fields
 endmodule
 
 module conformations
+    implicit none
     integer*1, allocatable :: px(:,:,:)         ! == x-position of conformatio
     integer*1, allocatable :: py(:,:,:)
     integer*1, allocatable :: pz(:,:,:)
@@ -199,14 +227,17 @@ endmodule
 module MPI
     !include 'mpif.h' ! librerias MPI
     use mpi_f08
+    implicit none
     integer :: rank                         ! local rank node
     integer :: size                         ! number of nodes, size of mpi size override intrinic function size 
     integer :: ierr                         ! output flag  
     integer :: flagsolver                   ! continuation stop flag of  
-endmodule
+
+end module
 
 module kinsol
     use system
+    implicit none
     integer :: iter                         ! == number fkfun evals /iterations           
     integer*4 :: ier                        ! == Kinsol error flag
     integer*8 :: neq                        ! == Kinsol number of equations
@@ -216,6 +247,7 @@ module kinsol
 endmodule
 
 module const
+    implicit none
     real*8 :: dielW, dielP, dielS           ! == dielectric contant of water, polymer and surfce    
     real*8 :: constqE                       ! == pre factor in Poisson Equation 
     real*8 :: dielPr, dielSr                ! == relative dielectric constant ?? 
@@ -239,6 +271,7 @@ module const
 endmodule
 
 module kai                                  ! == poor solvent/ Van der Waals interaction variables 
+    implicit none
     integer :: Xulimit                      ! == maximum cutoff in unit of delta ??
     real*8 :: cutoff                        ! == cutoff VdW interaction 
     real*8, allocatable :: Xu(:,:,:)        ! == VdW interaction matrix 
@@ -247,6 +280,7 @@ endmodule
 
 module results
     use system
+    implicit none
     real*8, allocatable :: avpol(:,:,:,:)   ! == volume fraction polymer : indices ix iy iz im : im type monomer
     real*8, allocatable :: epsfcn(:,:,:)    ! == dielectric constant at ix iy iz   
     real*8, allocatable :: Depsfcn(:,:,:)   ! == derivative of dielectric constant ?? 
@@ -259,12 +293,14 @@ module results
 endmodule
 
 module bulk                                 ! = bulk chemical potentails and volume fractions
+    implicit none
     real*8 :: expmupos, expmuneg, expmuHplus, expmuOHmin
     real*8 :: xsolbulk, xposbulk, xnegbulk, xHplusbulk, xOHminbulk
 endmodule
 
 
 module ellipsoid                            ! == particle placement varialbes
+    implicit none
     integer NNN                             ! == number of particles  
     real*8, allocatable :: rotmatrix(:,:,:)
     real*8, allocatable :: Aell(:,:)
@@ -283,7 +319,8 @@ module ellipsoid                            ! == particle placement varialbes
     real*8, allocatable :: eeps(:)
 end module
 
-module inputtemp     
+module inputtemp 
+    implicit none    
     real*8 :: xsalt            ! == volume fraction salt in reservoir
     real*8 :: pHbulk           ! == pH  reservoir 
     real*8 :: pOHbulk          ! == pOH reservoir 
@@ -294,6 +331,7 @@ module inputtemp
 end module
 
 module transform               ! == coordinate transformation 
+    implicit none
     real*8 :: gama0            ! == angle between basis vectors in oblique/prism/tetragonal lattice coordinates 
     real*8 :: MAT(3,3)         ! == transformation matrix from (x,y,z) coordinated to ( u,v,w)  
     real*8 :: TMAT(3,3)        ! == transpose of transformation matrix     

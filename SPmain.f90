@@ -17,6 +17,7 @@ program main
     use mkl
     use flux
     use channelcurved
+    use inputtemp
 
     implicit none
 
@@ -34,11 +35,11 @@ program main
     character*10 :: filename
     integer :: j, i, ii, iii
     integer :: flagcrash
-    real*8  ::  stOK,kpOK
+    real*8  :: stOK,kpOK
+    real*8  :: pHbulkok
     real*8  :: time0, timeF
     integer :: info
    
-
     stdout = 6                           ! == unit number defined modules          
 
     !!!!!!!!!!!! global parameters ...  !!!!!!
@@ -58,7 +59,7 @@ program main
     if(rank.eq.0) write(10,*) 'GIT Version: ', _VERSION
     if(rank.eq.0) write(10,*) 'MPI OK'
     
-    call readinput        ! == read DEFINITIONS.txt file 
+    call readinput       ! == read DEFINITIONS.txt file 
 
     call monomer_definitions
     call chains_definitions
@@ -98,7 +99,6 @@ program main
         call unit_test_area_channel(info) 
         if(rank.eq.0) write(stdout,*) 'Area test OK'
     endif
-
 
     ! == select system 
 
@@ -171,8 +171,8 @@ program main
     ii = 1
     sc = scs(ii)  ! == what is scs  == 0 
 
-    select case (vscan) ! == variable scan over variabel kp ??
-    case (1)
+    select case (vscan)  ! == variable scan over variabel kp, st , or pHbulk
+    case (1)             ! == loop over VdW kp values give in array sts
         st = sts(1)
         kp = 1.0d10+kps(1)
         do i = 1, nkp
@@ -182,11 +182,9 @@ program main
                 flagcrash = 1
                 do while(flagcrash.eq.1)
                     flagcrash = 0
-                    call CPU_TIME(time0)
-
+                    call cpu_time(time0)
                     call solve(flagcrash)       ! == call to solver system
-                    
-                    call CPU_TIME(timeF)
+                    call cpu_time(timeF)
                     if(rank.eq.0) print*,'Timer:',timeF-time0
                     if(flagcrash.eq.1) then
                         if(i.eq.1) stop
@@ -195,7 +193,7 @@ program main
                     endif
                 enddo
 
-                kpOK = kp ! last st solved OK
+                kpOK = kp ! last kp solved OK
                 if(rank.eq.0) write(stdout,*) 'Solved OK, kp: ', kpOK
     
             enddo
@@ -210,7 +208,7 @@ program main
 
         enddo
 
-    case (2)
+    case (2) ! == loop over VdW st values give in array sts
 
         kp = 0
         st = 1.0d10+sts(1)
@@ -221,9 +219,10 @@ program main
                 flagcrash = 1
                 do while(flagcrash.eq.1)
                     flagcrash = 0
-
+                    call cpu_time(time0)
                     call solve(flagcrash) ! == call to solver system
-                    
+                    call cpu_time(timeF)
+                    if(rank.eq.0) print*,'Timer:',timeF-time0
                     if(flagcrash.eq.1) then
                         if(i.eq.1) stop
                         st = (st + stOK)/2.0
@@ -246,6 +245,43 @@ program main
             
             call store2disk(counterr)
 
+        enddo
+
+    case (3) ! == loop over pH values specied in array pHs
+
+        kp = 0.0
+        st= sts(1)
+        pHbulk = 1.0d10+pHs(1)
+        do i = 1, npH
+            do while (pHbulk.ne.pHs(i))
+                pHbulk = pHs(i)
+                if(rank.eq.0) write(stdout,*)'switch to pH = ', pHbulk
+                flagcrash = 1
+                do while(flagcrash.eq.1)
+                    flagcrash = 0
+                    call cpu_time(time0)
+                    call initbulk
+                    call solve(flagcrash)
+                    call cpu_time(timef)
+                    if(rank.eq.0) print*,'timer:',timef-time0
+                    if(flagcrash.eq.1) then
+                        if(i.eq.1) stop
+                        pHbulk = (pHbulk + pHbulkok)/2.0
+                        if(rank.eq.0) write(stdout,*)'error, switch to pH = ', pHbulk
+                    endif
+                enddo
+
+                pHbulkok = pHbulk ! last pH solved ok
+                if(rank.eq.0) write(stdout,*) 'solved ok, pH: ', pHbulkok
+
+                counterr = counter + i + ii  - 1
+                call free_energy_calc(counterr)
+                if(rank.eq.0) write(stdout,*) 'free energy after solving', free_energy
+                call savedata(counterr)
+                if(rank.eq.0) write(stdout,*) 'save ok'
+                call store2disk(counterr)
+
+            enddo
         enddo
 
     end select

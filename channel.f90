@@ -672,6 +672,8 @@ double precision function intcell_c(rchannel2,originc,ix,iy,iz,n)
 end function intcell_c
 
 
+! == This routine determines the surface coverage and grafting positions only for cylinder
+
 subroutine newintegrateg_c_4(rchannel2,RdimZ,originc, npoints,volx1,sumvolx1,com1,p1,ncha1,volxx1, NBRUSH)
     use system
     use transform
@@ -682,38 +684,42 @@ subroutine newintegrateg_c_4(rchannel2,RdimZ,originc, npoints,volx1,sumvolx1,com
 
     implicit none
 
-    real*8 rtetha, rz
-    integer NBRUSH
-    real*8 sumvolx1
-    integer npoints
-    integer indexvolx(dimx,dimy,dimz)
-    integer listvolx(ncha,3)
-    real*8 radio
-    real*8 rchannel, rchannel2, originc(2)
-    real*8 phi, dphi, tetha,dtetha, as, ds
-    integer mphi, mtetha
-    integer ix,iy,iz,jx,jy,jz
-    real*8 x(3), v(3)
-    integer i,j
-    integer ncount
-    real*8 comshift ! how far from the surface of the sphere the grafting point is
-    integer ncha1 ! count for current sphere
-    real*8 volx1(maxvolx)
-    real*8 com1(maxvolx,3)
-    integer p1(maxvolx,3)
-    real*8 volxx1(dimx,dimy,dimz)
-    integer flagin
-    integer dims(3), is(3), js(3)
-    integer jjjz, jjjt, npointz, npointt
-    real*8 hcyl
-    real*8 hcyl0
+    real*8, intent(in)  :: rchannel2
+    integer, intent(in) :: RdimZ
+    real*8, intent(in)  :: originc(2)
+    integer, intent(in) :: npoints
+    real*8, intent(inout)  :: volx1(maxvolx)
+    real*8, intent(inout) :: sumvolx1
+    real*8, intent(inout) :: com1(maxvolx,3)
+    integer, intent(inout) :: p1(maxvolx,3)
+    integer, intent(inout) :: ncha1 ! count for current sphere
+    real*8, intent(inout) :: volxx1(dimx,dimy,dimz)
+    integer, intent(in) :: NBRUSH
+    
+    ! local variables 
+
+    real*8 :: rtetha, rz
+    integer :: indexvolx(dimx,dimy,dimz)
+    integer :: listvolx(ncha,3)
+    real*8 :: rchannel
+    real*8 :: phi, tetha ! dphi , dtetha, as, ds
+    ! integer :: mphi, mtetha
+    integer ::  ix,iy,iz,jx,jy,jz
+    real*8 :: x(3), v(3)
+    integer :: i,j
+    integer :: ncount
+    real*8 :: comshift ! how far from the surface of the sphere the grafting point is
+   ! integer flagin
+    integer :: dims(3), is(3), js(3)
+    integer :: jjjz, jjjt, npointz, npointt
+    real*8 :: hcyl
+    real*8 :: hcyl0
     real*8, external :: rands
-    real*8 tethaadd, disp
-    integer RdimZ
+    real*8 :: tethaadd, disp
 
     disp = delta
 
-    pi=acos(-1.0)
+    pi=acos(-1.0d0)
 
     dims(1) = dimx
     dims(2) = dimy
@@ -953,7 +959,7 @@ real*8 hcyl, hcyl0
 real*8, external :: rands
 integer RdimZ
 
-pi=acos(-1.0)
+pi=acos(-1.0d0)
 
 dims(1) = dimx
 dims(2) = dimy
@@ -1104,7 +1110,7 @@ integer dims(3), is(3), js(3)
 integer jjjz, jjjt, npointz, npointt
 integer RdimZ
 
-pi=acos(-1.0)
+pi=acos(-1.0d0)
 
 dims(1) = dimx
 dims(2) = dimy

@@ -360,6 +360,16 @@ subroutine readinput
                     read(fh,*)sts(i)
                 enddo 
 
+            case ('npH')
+                read(buffer, *, iostat=ios) npH
+                if(rank.eq.0)write(stdout,*) 'parser:','Set ',trim(label),' = ',trim(buffer)
+  
+                do i = 1, npH
+                    read(fh,*)pHs(i)
+                enddo 
+
+                pHbulk = pHs(1)
+
             case ('nsc')
                 read(buffer, *, iostat=ios) nsc
                 if(rank.eq.0)write(stdout,*) 'parser:','Set ',trim(label),' = ',trim(buffer)
@@ -613,6 +623,7 @@ subroutine readinput
     if(readchains.eq.ndi) call stopundef('readchains')
     if(systemtype.eq.ndi) call stopundef('systemtype')
     if(nst.eq.ndi) call stopundef('nst')
+    if(npH.eq.ndi) call stopundef('npH') ! == RJN 
 
     if(delta.eq.ndr) call stopundef('delta')
     if(dx.eq.ndr) call stopundef('dx')

@@ -2,7 +2,7 @@
 subroutine initmpi
 
     use MPI
-    use chainsdat
+!    use chainsdat
 
     implicit none
 
@@ -36,9 +36,9 @@ subroutine initconst
     zneg = -1.0d0
     vsol = vsol0
     vsalt = ((4.0d0/3.0d0)*pi*(0.2d0)**3)/vsol  ! volume salt in units of vsol 0.2=radius salt  
-    constq = delta*delta*4.0*pi*lb/vsol   ! multiplicative factor in poisson eq  
+    constq = delta*delta*4.0d0*pi*lb/vsol   ! multiplicative factor in poisson eq  
     pKw = 14.0d0
-    Kw = -1.000000d0**(-pKw)
+    Kw = 10.0d0**(-pKw)
     error = 1e-4 ! para comparar con la norma... ! == to compare to norm
     errel = 1d-6
     itmax = 200
@@ -53,10 +53,11 @@ subroutine initconst
             eqs = (2+4+N_poorsol)       !== Steady state : 4 iontypes
         endif
     endif     
-      
-    
+         
 end subroutine
 
+! == init Input-dependent variables
+ 
 subroutine initall
 
     use molecules
@@ -97,29 +98,13 @@ subroutine initall
     ! Input-dependent variables
     !!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-
     vpol = vpol/vsol ! vpol in units of vsol
     constqE = vpol/(2.0d0*constq)
     dielW = 78.54d0
     dielPr = dielP/dielW
     dielSr = dielS/dielW
 
-
-    cHplus = 10.0d0**(-pHbulk)    ! concentration H+ in bulk
-    xHplusbulk = (cHplus*Na/(1.0d24))*(vsol)  ! volume fraction H+ in bulk vH+=vsol
-    pOHbulk= pKw -pHbulk
-    cOHmin = 10.0d0**(-pOHbulk)   ! concentration OH- in bulk
-    xOHminbulk = (cOHmin*Na/(1.0d24))*(vsol)  ! volume fraction H+ in bulk vH+=vsol  
-    xsalt=(csalt*Na/(1.0d24))*(vsalt*vsol)   ! volume fraction salt,csalt in mol/l 
-    if(pHbulk.le.7) then  ! pH<= 7
-        xposbulk=xsalt/zpos
-        xnegbulk=-xsalt/zneg+(xHplusbulk -xOHminbulk) *vsalt ! NaCl+ HCl  
-    else                  ! pH >7 
-        xposbulk=xsalt/zpos +(xOHminbulk -xHplusbulk) *vsalt ! NaCl+ NaOH   
-        xnegbulk= -xsalt/zneg 
-    endif
-
-    xsolbulk=1.0d0 -xHplusbulk -xOHminbulk -xnegbulk -xposbulk 
+    call initbulk
 
     do im = 1, N_monomer
         Ka(im)=10.0d0**(-pKa(im))
@@ -131,21 +116,48 @@ subroutine initall
         end select
     enddo
 
+    if(fluxflag.eq.1) then
+        ! allocate flux variables
+        call allocate_flux_var() 
+        ! init  flux/steady state related variables
+        call init_flux_var()
+    endif    
+
+end subroutine initall
+
+
+subroutine initbulk 
+
+    use molecules, only : vsol, vsalt, zpos,zneg  
+    use inputtemp, only : xsalt, pHbulk, csalt    
+    use const, only : pi, Na, pKw
+    use bulk, only : expmupos, expmuneg, expmuHplus, expmuOHmin
+    use bulk, only : xsolbulk, xposbulk, xnegbulk, xHplusbulk, xOHminbulk
+
+    cHplus = 10.0d0**(-pHbulk)                ! concentration H+ in bulk
+    xHplusbulk = (cHplus*Na/(1.0d24))*(vsol)  ! volume fraction H+ in bulk vH+=vsol
+    pOHbulk = pKw -pHbulk
+    cOHmin = 10.0d0**(-pOHbulk)               ! concentration OH- in bulk
+    xOHminbulk = (cOHmin*Na/(1.0d24))*(vsol)  ! volume fraction H+ in bulk vH+=vsol  
+    xsalt =(csalt*Na/(1.0d24))*(vsalt*vsol)    ! volume fraction salt,csalt in mol/l 
+
+    if(pHbulk.le.7) then  ! pH<= 7
+        xposbulk = xsalt/zpos
+        xnegbulk = -xsalt/zneg+(xHplusbulk -xOHminbulk) *vsalt ! NaCl+ HCl  
+    else                  ! pH >7 
+        xposbulk = xsalt/zpos +(xOHminbulk -xHplusbulk) *vsalt ! NaCl+ NaOH   
+        xnegbulk = -xsalt/zneg 
+    endif
+
+    xsolbulk = 1.0d0 -xHplusbulk -xOHminbulk -xnegbulk -xposbulk 
+
     expmupos = xposbulk /xsolbulk**vsalt
     expmuneg = xnegbulk /xsolbulk**vsalt
     expmuHplus = xHplusbulk /xsolbulk   ! vsol = vHplus 
     expmuOHmin = xOHminbulk /xsolbulk   ! vsol = vOHmin 
 
-    if(fluxflag.eq.1) then
-        ! allocate flux variables
-        call allocate_flux_var() 
 
-        ! init  flux/steady state related variables
-        call init_flux_var()
-        
-    endif    
-
-end subroutine initall
+end subroutine initbulk
 
 ! == close all open 301.. 313 file and ends mpi and stop program
 subroutine endall
