@@ -393,7 +393,7 @@ contains
         !area = 2.0*pi*rchannel*hcyl
 
         !! volume  
-        volprot1 = volprot1 * 0.9999
+        volprot1 = volprot1 * 0.9999d0
         volprot = volprot+volprot1
 
         ! CHECK COLLISION HERE...
@@ -615,6 +615,7 @@ end function integration_cell
 ! == In channel.f90 subroutine called newintegrateg_c_4(
 ! == calculates volprot for systemtype =4 and curvedflag==1
 ! == This routine determines the surface coverage and grafting positions only for cylinder
+! == grafting position returned by variable p1 and com1 
 
 subroutine newintegrate_channel_curved(radiusS,radiusL,RdimZ,origincurv, npoints,volx1,sumvolx1,com1,p1,&
     ncha1,volxx1, NBRUSH)
@@ -623,22 +624,24 @@ subroutine newintegrate_channel_curved(radiusS,radiusL,RdimZ,origincurv, npoints
     use transform
     use chainsdat
     use ematrix
-    use const
+    !use const
+    use const, only : pi, randominput, stdout
     use channel, only : sigmar, Nrings, ringpos
+    use graftpoint, only : read_graftpoint, write_graftpoint
 
     implicit none
 
     real*8, intent(inout) :: radiusS        ! == smallest radius channel  
     real*8, intent(inout) :: radiusL        ! == largest  radius channel   
     integer, intent(in) :: RdimZ            ! == size reservoir in delta  
-    real*8, intent(in) :: origincurv(3)      ! == orgincurv center channel  
-    integer, intent(in) :: npoints          ! == number of points
+    real*8, intent(in) :: origincurv(3)     ! == orgincurv center channel  
+    integer, intent(in) :: npoints          ! == number of points used for integration
     real*8, intent(inout) :: volx1(maxvolx) 
     real*8, intent(inout) :: sumvolx1
-    real*8, intent(inout) :: com1(maxvolx,3)
-    integer, intent(inout)::  p1(maxvolx,3)
+    real*8, intent(inout) :: com1(maxvolx,3) ! =  
+    integer, intent(inout)::  p1(maxvolx,3) ! == location  on lattice 
     real*8, intent(inout) :: volxx1(dimx,dimy,dimz)
-    integer, intent(inout) :: ncha1            ! count for current sphere ?? == number of grafts ??
+    integer, intent(inout) :: ncha1         ! == number of grafts points maxvolx >= ncha1
     integer, intent(in) :: NBRUSH           ! == number of graft in theta direction
 
 
@@ -665,8 +668,12 @@ subroutine newintegrate_channel_curved(radiusS,radiusL,RdimZ,origincurv, npoints
 
     real*8 :: zcoor       !== z coordinate relative to z origin
     real*8 :: Radiusz     !== z dependent radius of channel  
-    real*8 :: RC,RL,RS,LenC,rchannelz
+    real*8 :: RC,RL,RS,LenC,rchannelz ! == local shape varialbes
 
+    real*8, allocatable :: positiongraftpoint(:,:)
+    integer :: ngrafts, info, pts
+    logical :: isWrite
+    
 !    disp = delta
 
     dims(1) = dimx
@@ -714,90 +721,164 @@ subroutine newintegrate_channel_curved(radiusS,radiusL,RdimZ,origincurv, npoints
     RL = radiusL
     LenC = LengthChannelCurvature()
     RC = radiusCurvature(RL,RS,LenC)
-
-    do jjjz = 1, npointz      ! == loop over number of graft point in z and  the
-        do jjjt = 1, npointt
-
-            select case (randominput) ! == random displacement of rz and rtheta see channel.f90 for complete list here no discplacement!!!
-            case(0)
-                rtetha = 0.0 
-                rz = 0.0
-            case default
-                write(stdout,*)" newintegrate_channel_curved: wrong randominput value"
-                stop
-            end select
-
-
-            !if ((systemtype.eq.42).or.(systemtype.eq.52).or.(systemtype.eq.60)) then
-            
-            tethaadd = 0.0
-            
-            ! == x and y coordiante for cylinder with no curvature update formula 
-
-            ! x(1) = cos(float(jjjt-1)/float(npointt)*2.0*pi+rtetha+tethaadd)*rchannel + originc(1)
-            ! x(2) = sin(float(jjjt-1)/float(npointt)*2.0*pi+rtetha+tethaadd)*rchannel + originc(2)
-            ! x(3) = ringpos(jjjz)*hcyl+hcyl0 
-
-            !zcoor =(ringpos(jjjz)*hcyl+hcyl0 -origincurv(3)) 
-           
-            !== zcoor for radiusfz needs to be centered around orgincurv channel 
-            !== ringpos relative location graft point range [-0.5:0.5] 
-            !== ringpos=-0.5 == base zrel=-hcyl/2: ringbase=0.5 to zrel=+hcyl/2 
-           
-            zcoor =((ringpos(jjjz)+0.5d0)*hcyl+hcyl0-origincurv(3)) 
-            Radiusz = radiusfz(zcoor,RL,RC)
-
-            x(1) = cos(float(jjjt-1)/float(npointt)*2.0*pi+rtetha+tethaadd)*Radiusz + origincurv(1)
-            x(2) = sin(float(jjjt-1)/float(npointt)*2.0*pi+rtetha+tethaadd)*Radiusz + origincurv(2)
-
-           ! x(3) = ringpos(jjjz)*hcyl+hcyl0  ! Coordinate system has unusally origin of middle of cylinder == hcyl0 == base cylinder
  
-            x(3) = (ringpos(jjjz)+0.5d0)*hcyl+hcyl0 !  Coordinate system has orgin of lattice 
+
+    if(graftflag.ne.1) then                 ! == place graftpoint on a regular grid 
+
+        do jjjz = 1, npointz                ! == loop over number of graft point in z and  the
+            do jjjt = 1, npointt
+
+                select case (randominput)   ! == random displacement of rz and rtheta see channel.f90 for complete list here no discplacement!!!
+                case(0)
+                    rtetha = 0.0d0 
+                    rz = 0.0d0
+                case default
+                    write(stdout,*)" newintegrate_channel_curved: wrong randominput value"
+                    stop
+                end select
 
 
-            ! == x in  real space
+                !if ((systemtype.eq.42).or.(systemtype.eq.52).or.(systemtype.eq.60)) then
+                
+                tethaadd = 0.0d0
+                
+                ! == x and y coordiante for cylinder with no curvature update formula 
 
+                ! x(1) = cos(float(jjjt-1)/float(npointt)*2.0*pi+rtetha+tethaadd)*rchannel + originc(1)
+                ! x(2) = sin(float(jjjt-1)/float(npointt)*2.0*pi+rtetha+tethaadd)*rchannel + originc(2)
+                ! x(3) = ringpos(jjjz)*hcyl+hcyl0 
+
+                !zcoor =(ringpos(jjjz)*hcyl+hcyl0 -origincurv(3)) 
+            
+                !== zcoor for radiusfz needs to be centered around orgincurv channel 
+                !== ringpos relative location graft point range [-0.5:0.5] 
+                !== ringpos=-0.5 == base zrel=-hcyl/2: ringbase=0.5 to zrel=+hcyl/2 
+            
+                zcoor =((ringpos(jjjz)+0.5d0)*hcyl+hcyl0-origincurv(3)) 
+                Radiusz = radiusfz(zcoor,RL,RC)
+
+                x(1) = cos(float(jjjt-1)/float(npointt)*2.0d0*pi+rtetha+tethaadd)*Radiusz + origincurv(1)
+                x(2) = sin(float(jjjt-1)/float(npointt)*2.0d0*pi+rtetha+tethaadd)*Radiusz + origincurv(2)
+
+                ! x(3) = ringpos(jjjz)*hcyl+hcyl0  ! Coordinate system has unusally origin of middle of cylinder == hcyl0 == base cylinder
+    
+                x(3) = (ringpos(jjjz)+0.5d0)*hcyl+hcyl0 !  Coordinate system has orgin of lattice 
+
+
+                ! == x in  real space
+
+                v = MATMUL(MAT,x)
+
+
+                ! == v(3) = v(3) + float((dimz-RdimZ*2))/2.0*delta  ! == RJN different for curvature
+                ! == centers the first row of polymers at the middle of the layer, useful to avoid numerical rounding errors.
+                ! == this translate v(3) by half height=(dimz-2Rdimz)delta/2 of cylinder !!!! 
+                ! == if((systemtype.eq.42).or.(systemtype.eq.52).or.(systemtype.eq.60)) then
+                ! ==   v(3) = v(3) + float((dimz-RdimZ*2))/2.0*delta ! centers the first row of polymers at the middle of the layer, useful to avoid numerical rounding errors.
+                ! == else
+                ! ==    v(3) = v(3) + float((dimz-RdimZ*2)/npointz)/2.0*delta ! centers the first row of polymers at the middle of the layer, useful to avoid numerical rounding errors.
+                ! == endif
+                ! == x = MATMUL(IMAT,v) ! and recalculates x due to the change in v ! == unneccsary
+
+                do j = 1,3
+                ! js(j) = floor(v(j)/delta)+1
+                    js(j) = int(v(j)/delta)+1
+                enddo
+
+                ! js(3)=mod(js(3)+dimz-1,dimz)+1    
+                !== this is translate js integer (v)  by (dimz-1) and retrun remainder  of the division by dimz ??
+
+
+                jx = js(1)
+                jy = js(2)
+                jz = js(3)
+
+                do i = 1, 3
+                    if((js(i).le.0).or.(js(i).gt.dims(i))) then
+                        write(stdout,*) 'neewintegrate_channel_curved: error in channel-curved', i, js(i), dims(i)
+                        write(stdout,*) v(1), v(2), v(3)
+                        stop
+                    endif
+                enddo
+
+                write(125,*) jjjz, jjjt,  jx,jy,jz, x
+                ! increase counter
+
+                if(ncha1.eq.maxvolx) then
+                    write(stdout,*) 'newintegrate_channel_curved:: increase maxvolx'
+                    stop
+                endif
+
+                ncha1 = ncha1 + 1
+
+                indexvolx(jx,jy,jz) = ncha1
+                p1(ncha1,1)=jx
+                p1(ncha1,2)=jy
+                p1(ncha1,3)=jz
+
+                volxx1(jx,jy,jz) =  1.0
+                volx1(indexvolx(jx,jy,jz)) = 1.0
+                com1(indexvolx(jx,jy,jz),:) = x(:) ! == carefull use coordiante systmam associated with vector x 
+                sumvolx1 = sumvolx1 + 1.0
+
+            enddo ! jjjt
+        enddo ! jjjz
+
+
+
+        do i = 1, ncha1
+            ! == positiongraftpoint(i,:) = com1(i,:) - origincurv(:)
+            ! == Moves the position of the first segment lseg away from the surface to prevent collision due to round errors. 
+            
+            rchannelz = dsqrt((com1(i,1)-origincurv(1))**2+(com1(i,2)-origincurv(2))**2)
+            com1(i,1) = com1(i,1) - lseg*((com1(i,1)-origincurv(1)))/rchannelz ! replace rchannel with rchannelz : radius of channel is z dependent 
+            com1(i,2) = com1(i,2) - lseg*((com1(i,2)-origincurv(2)))/rchannelz 
+        enddo
+  
+    
+    else  
+    
+        ! == read graft point from file
+         
+        ngrafts = npointz * npointt
+
+        allocate(positiongraftpoint(ngrafts,3))
+    
+        isWrite=.false.
+    
+        call read_graftpoint(RS,RL,lenC,ngrafts,positiongraftpoint,info)
+        if(info.ne.0) then
+            write(stdout,*) 'failure to read graftpoint info:',info
+            stop
+        endif
+        
+        if(isWrite) call write_graftpoint(RS,RL,lenC,ngrafts,positiongraftpoint,info,isWrite)
+
+        do pts=1,ngrafts 
+           
+            x(:) = positiongraftpoint(pts,:) + origincurv(:)   ! == position real space
             v = MATMUL(MAT,x)
-
-
-            ! == v(3) = v(3) + float((dimz-RdimZ*2))/2.0*delta  ! == RJN different for curvature
-            ! == centers the first row of polymers at the middle of the layer, useful to avoid numerical rounding errors.
-            ! == this translate v(3) by half height=(dimz-2Rdimz)delta/2 of cylinder !!!! 
-            ! == if((systemtype.eq.42).or.(systemtype.eq.52).or.(systemtype.eq.60)) then
-            ! ==   v(3) = v(3) + float((dimz-RdimZ*2))/2.0*delta ! centers the first row of polymers at the middle of the layer, useful to avoid numerical rounding errors.
-            ! == else
-            ! ==    v(3) = v(3) + float((dimz-RdimZ*2)/npointz)/2.0*delta ! centers the first row of polymers at the middle of the layer, useful to avoid numerical rounding errors.
-            ! == endif
-            ! == x = MATMUL(IMAT,v) ! and recalculates x due to the change in v ! == unneccsary
-
-            do j = 1,3
-               ! js(j) = floor(v(j)/delta)+1
-                js(j) = int(v(j)/delta)+1
-            enddo
-
-            ! js(3)=mod(js(3)+dimz-1,dimz)+1    
-            !== this is translate js integer (v)  by (dimz-1) and retrun remainder  of the division by dimz ??
-
-
-            jx = js(1)
-            jy = js(2)
-            jz = js(3)
-
-            do i = 1, 3
+            
+            do i = 1,3   
+                js(i) = int(v(i)/delta)+1                     ! == position on lattice 
+            
                 if((js(i).le.0).or.(js(i).gt.dims(i))) then
-                    write(stdout,*) 'neewintegrate_channel_curved: error in channel-curved', i, js(i), dims(i)
-                    write(stdout,*) v(1), v(2), v(3)
+                    write(stdout,*)'newintegrate_channel_curved: error in channel-curved', i, js(i), dims(i)
+                    write(stdout,*) x(1), x(2), x(3)
                     stop
                 endif
             enddo
-
-             write(125,*) jjjz, jjjt,  jx,jy,jz, x
-            ! increase counter
 
             if(ncha1.eq.maxvolx) then
                 write(stdout,*) 'newintegrate_channel_curved:: increase maxvolx'
                 stop
             endif
+
+            jx = js(1)
+            jy = js(2)
+            jz = js(3)
+
+            ! ==  increase counter
 
             ncha1 = ncha1 + 1
 
@@ -808,24 +889,21 @@ subroutine newintegrate_channel_curved(radiusS,radiusL,RdimZ,origincurv, npoints
 
             volxx1(jx,jy,jz) =  1.0
             volx1(indexvolx(jx,jy,jz)) = 1.0
-            com1(indexvolx(jx,jy,jz),:) = x(:) ! == caredull use coordiante systmam assoicaite with vector x 
+            com1(indexvolx(jx,jy,jz),:) = x(:) ! == carefull use coordinate systmam asociated with vector x 
             sumvolx1 = sumvolx1 + 1.0
 
-        enddo ! jjjt
-    enddo ! jjjz
+        enddo 
+    
+        do i = 1, ncha1
+            ! == Moves the position of the first segment lseg away from the surface to prevent collision due to round errors.
+            rchannelz = dsqrt((com1(i,1)-origincurv(1))**2+(com1(i,2)-origincurv(2))**2)
+            com1(i,1) = com1(i,1) - lseg*((com1(i,1)-origincurv(1)))/rchannelz 
+            com1(i,2) = com1(i,2) - lseg*((com1(i,2)-origincurv(2)))/rchannelz 
+        enddo
 
-    do i = 1, ncha1
-        ! Moves the position of the first segment lseg/2 away from the surface to prevent collision due to round errors.
-        ! == lseg 
-        
-        rchannelz = dsqrt((com1(i,1)-origincurv(1))**2+(com1(i,2)-origincurv(2))**2)
-        
-       ! print*,"rchannelz=",rchannelz
-        
-        com1(i,1) = com1(i,1) - lseg*((com1(i,1)-origincurv(1)))/rchannelz ! replace rchannel with rchannelz : radius of channel is z dependent 
-        com1(i,2) = com1(i,2) - lseg*((com1(i,2)-origincurv(2)))/rchannelz 
-      
-    enddo
+        deallocate(positiongraftpoint)
+
+    endif 
 
 end subroutine 
 
