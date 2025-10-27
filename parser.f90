@@ -451,13 +451,20 @@ subroutine readinput
                     read(fh, *) Nrings
 
                     allocate (ringpos(Nrings))
+                    print*,"graftflag=",graftflag
+                    if(graftflag.eq.0) then 
 
-                    read(fh, *) basura
-        
-                    do i = 1, Nrings
-                        read(fh, *) ringpos(i)
-                    enddo
-                    ringpos = ringpos - 0.5       ! == translated by 0.5 ringposistion input range [0:1] => [-0.5:0.5] 
+                        read(fh, *) basura
+                        do i = 1, Nrings
+                            read(fh, *) ringpos(i)
+                        enddo
+                    else
+                        do i = 1, Nrings
+                            ringpos(i)=(i-0.d0)/(Nrings+1.0d0) != init value on regular spaceing will be override by input file 
+                        enddo 
+                    endif
+
+                    ringpos = ringpos - 0.5d0       ! == translated by 0.5 ringposistion input range [0:1] => [-0.5:0.5] 
                     
                     read(fh, *) basura
                     read(fh, *) echargec
