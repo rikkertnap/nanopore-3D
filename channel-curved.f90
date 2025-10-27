@@ -615,7 +615,6 @@ end function integration_cell
 ! == In channel.f90 subroutine called newintegrateg_c_4(
 ! == calculates volprot for systemtype =4 and curvedflag==1
 ! == This routine determines the surface coverage and grafting positions only for cylinder
-    !
 
 subroutine newintegrate_channel_curved(radiusS,radiusL,RdimZ,origincurv, npoints,volx1,sumvolx1,com1,p1,&
     ncha1,volxx1, NBRUSH)
@@ -662,16 +661,13 @@ subroutine newintegrate_channel_curved(radiusS,radiusL,RdimZ,origincurv, npoints
     real*8 :: hcyl         ! == height cylinder/channel 
     real*8 :: hcyl0        ! == location base of cylinder/channel 
     real*8, external :: rands
-    real*8 :: tethaadd, disp
+    real*8 :: tethaadd     !  , disp
 
     real*8 :: zcoor       !== z coordinate relative to z origin
     real*8 :: Radiusz     !== z dependent radius of channel  
     real*8 :: RC,RL,RS,LenC,rchannelz
 
-    disp = delta
-
-   ! pi=acos(-1.0d0) ! == ?? reinit pi
-    print*,"pi=",pi
+!    disp = delta
 
     dims(1) = dimx
     dims(2) = dimy
@@ -686,11 +682,6 @@ subroutine newintegrate_channel_curved(radiusS,radiusL,RdimZ,origincurv, npoints
     com1 = 0.0
     p1 = 0
     volxx1 = 0.0
-
-    !
-    ! This routine determines the surface coverage and grafting positions only for cylinder
-    !
-    !
 
     v(1) = 0.0
     v(2) = 0.0

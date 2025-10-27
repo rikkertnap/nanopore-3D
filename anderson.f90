@@ -259,7 +259,7 @@ subroutine anderson_min_loop(xguess, x, TOL, fnorm, isSolution, MAX_INT, N)
         delta = fnorm/L2norm(xoutM,NN)
         conv = (fnorm <= TOL)       ! 1=true if found solution
         
-        print*,"step = ",step,"norm = ",fnorm,"delta = ",delta
+        !gprint*,"step = ",step,"norm = ",fnorm,"delta = ",delta
         
         if( delta < TOL)  then ! Anderson mixing
         

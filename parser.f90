@@ -92,6 +92,7 @@ subroutine readinput
     methodflag = ndi    ! == RJN 
     fluxflag = ndi
     curvedflag = ndi 
+    graftflag = ndi  
 
     vsol0 = ndr
     gama0 = ndr
@@ -178,21 +179,24 @@ subroutine readinput
                 read(buffer, *, iostat=ios) electroflag
                 if(rank.eq.0)write(stdout,*) 'parser:','Set ',trim(label),' = ',trim(buffer)
 
-            case ('fluxflag') ! == new flag to be used in Steady State
+            case ('fluxflag') ! == flag selects Equilibrium or Steady State
 
                 read(buffer, *, iostat=ios) fluxflag
                 if(rank.eq.0)write(stdout,*) 'parser:','Set ',trim(label),' = ',trim(buffer)
 
-            case ('curvedflag') ! == new flag for hourglass shaped  channel
+            case ('curvedflag') ! == new flag for curved shaped  channel
                 read(buffer, *, iostat=ios) curvedflag
                 if(rank.eq.0)write(stdout,*) 'parser:','Set ',trim(label),' = ',trim(buffer)
   
-            case ('methodflag') ! == new solver method
+            case ('methodflag') ! == selects solver method
                 
                 read(buffer, *, iostat=ios) methodflag
                 if(rank.eq.0)write(stdout,*) 'parser:','Set ',trim(label),' = ',trim(buffer)
-           
-
+            
+            case ('graftflag') ! ==  read grafto point from
+                
+                read(buffer, *, iostat=ios) graftflag
+                if(rank.eq.0)write(stdout,*) 'parser:','Set ',trim(label),' = ',trim(buffer)
 
             case ('branched')
                 read(buffer, *, iostat=ios) branched
@@ -646,6 +650,7 @@ subroutine readinput
     if(methodflag.eq.ndi) call stopundef('methodflag') ! == RJN
     if(fluxflag.eq.ndi) call stopundef('fluxflag')
     if(curvedflag.eq.ndi) call stopundef('curvedflag')
+    if(graftflag.eq.ndi) call stopundef('graftflag')
 
     if(systemtype.eq.42) then 
         if(curvedflag.eq.1) then 

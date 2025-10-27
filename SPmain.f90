@@ -248,7 +248,7 @@ program main
         enddo
 
     case (3) ! == loop over pH values specied in array pHs
-
+        
         kp = 0.0
         st= sts(1)
         pHbulk = 1.0d10+pHs(1)

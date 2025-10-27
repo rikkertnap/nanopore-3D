@@ -237,9 +237,9 @@ subroutine savedata(cccc)
         !!!!!!!!!!!!!!!!!!! Guarda archivos !!!!!!!!!!!!!!!!!!!!!!!!!!!!
         ! Polimero, todo
 
-        temp = 0.0
+        temp = 0.0d0
         do im = 1, N_monomer
-            temp(:,:,:) =  temp(:,:,:) + avpol(:,:,:, im)*(1.0 - volprot(:,:,:))
+            temp(:,:,:) =  temp(:,:,:) + avpol(:,:,:, im)*(1.0d0 - volprot(:,:,:))
         enddo
 
         title = 'avpol'
@@ -249,7 +249,7 @@ subroutine savedata(cccc)
         ! polymer , by type 
         
         do im = 1, N_monomer
-            temp(:,:,:) = avpol(:,:,:,im)*(1.0 - volprot(:,:,:))
+            temp(:,:,:) = avpol(:,:,:,im)*(1.0d0 - volprot(:,:,:))
             write(title,'(A3, I2.2)')'avp',im
             call savetodisk(temp, title, cccc)
         enddo
@@ -278,12 +278,12 @@ subroutine savedata(cccc)
 
         ! polymer charge
 
-        temp = 0.0
+        temp = 0.0d0
 
         do ix=1,dimx
             do iy=1,dimy
                 do iz=1,dimz
-                    fv = (1.0-volprot(ix,iy,iz))
+                    fv = (1.0d0-volprot(ix,iy,iz))
 
                     do im = 1, N_monomer
                         temp(ix, iy, iz) = temp(ix,iy,iz) + &
@@ -351,12 +351,12 @@ subroutine savedata(cccc)
         write(310,*)'kai =          ', Xu
         write(310,*)'GIT version = ', _VERSION
 
-        sumpol = 0.0
+        sumpol = 0.0d0
         do ix = 1, dimx
             do iy = 1, dimy
                 do iz = 1, dimz
                     do im = 1, N_monomer
-                        sumpol = sumpol + avpol(ix,iy,iz,im)*(delta**3)*(1.0-volprot(ix,iy,iz))/vpol/vsol
+                        sumpol = sumpol + avpol(ix,iy,iz,im)*(delta**3)*(1.0d0-volprot(ix,iy,iz))/vpol/vsol
                     enddo
                 enddo
             enddo

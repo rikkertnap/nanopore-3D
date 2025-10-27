@@ -113,7 +113,7 @@ contains
 
         ! == local argument 
 
-        character(len=19) :: fname
+        character(len=15) :: fname
         integer :: un, ios, i, unnew
         character(len=80) :: text
         character(len=100) :: io_msg  
@@ -126,7 +126,7 @@ contains
         if(rank==0) then 
 
             ! == writing in of graft point from file
-            write(fname,'(A19)')'graftpoints-run.out'
+            write(fname,'(A15)')'graftpoints.out'
             open(newunit=un,file=fname,iostat=ios,status='replace',iomsg=io_msg)
             if(ios >0 ) then
                 write(stdout,*)'Error opening graftpoint-run.out file : iostat =', ios
@@ -142,7 +142,7 @@ contains
             if(ios/=0) isWriteGood=.false. 
             write(un,*,iostat=ios)ngraft
             if(ios/=0) isWriteGood=.false. 
-            write(un,*,iostat=ios)" "
+            write(un,*,iostat=ios)"#"
 
             do i=1,ngraft
                 write(un,*,iostat=ios)positiongraft(i,1),positiongraft(i,2),positiongraft(i,3)

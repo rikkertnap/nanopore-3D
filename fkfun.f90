@@ -33,7 +33,9 @@ subroutine fkfun(x,f,ier2)
     integer :: im, ip
     integer :: jx, jy, jz, jj
     real*8 :: xpot(dimx, dimy, dimz, N_monomer)
-    integer id, noffset ! == indices used for flux contrubution to f
+    integer :: id, noffset ! == indices used for flux contrubution to f
+    real*8 :: normvol, normel 
+
     ! Charge
     real*8 :: psitemp
     real*8 :: MV(3),MU(3),MW(3)
@@ -45,19 +47,19 @@ subroutine fkfun(x,f,ier2)
     integer, external :: PBCSYMI, PBCREFI
 
     ! poor solvent 
-    real*8 sttemp
+    real*8 :: sttemp
     ! MPI
-    integer tag
+    integer :: tag
     parameter(tag = 0)
-    integer err
-    real*8 avpol_temp(dimx,dimy,dimz,N_monomer)
-    real*8 q_tosend
-    real*8 gradpsi2
-    real*8 fv
+    integer :: err
+    real*8 :: avpol_temp(dimx,dimy,dimz,N_monomer)
+    real*8 :: q_tosend
+    real*8 :: gradpsi2
+    real*8 :: fv
 
     ! hamiltonian inception
-    real*8 hfactor, hd
-    real*8 hds(100)
+    real*8 :: hfactor, hd
+    real*8 :: hds(100)
 
 
     hds = -1
@@ -512,7 +514,7 @@ subroutine fkfun(x,f,ier2)
                     epsv(3) = (epsfcn(ix,iy,iz+1)-epsfcn(ix,iy,iz-1))/2.0d0
 
                     psitemp = epsfcn(ix,iy,iz)*&
-                        (MVV*psivv+MUU*psiuu+MWW*psiww+2.0*MVU*psivu+2.0*MVW*psivw+2.0*MUW*psiuw)
+                        (MVV*psivv+MUU*psiuu+MWW*psiww+2.0d0*MVU*psivu+2.0d0*MVW*psivw+2.0d0*MUW*psiuw)
                     psitemp = psitemp + DOT_PRODUCT(MATMUL(TMAT,epsv),MATMUL(TMAT,psiv))
 
                     ! OJO CHECK!!!!
@@ -561,14 +563,26 @@ subroutine fkfun(x,f,ier2)
  
     ! == norma = 0.0 
     norma = 0.0d0      ! == added  d0  without d0 significant number loss can occur
+    normvol = 0.0d0
+    normel = 0.0d0
 
     do i = 1, eqs*ncells
         norma = norma + (f(i))**2
     enddo
 
+    do i = 1,ncells
+        normvol= normvol +f(i)**2
+    enddo
+    if(electroflag.eq.1) then 
+        noffset=(N_poorsol+1)*ncells 
+        do i= 1, ncells    
+            normel = normel +f(i+noffset)**2
+        enddo       
+    endif
+    
     iter = iter + 1
     if(verbose.ge.3) then
-        if(rank.eq.0) write(stdout,*)'fkfun:', iter, norma, q(1)
+        if(rank.eq.0) write(stdout,*)'fkfun:', iter, sqrt(norma), sqrt(normvol), sqrt(normel), q(1)
     endif
 
     3333 continue
@@ -635,8 +649,8 @@ subroutine calc_std(xpot)
                 fv = fvstd(px(i,j, jj),py(i,j, jj),pz(i,j, jj))
                 im = segtype(j)
                 avpol_temp(px(i,j, jj),py(i,j, jj),pz(i,j, jj),im)= &
-                avpol_temp(px(i,j, jj),py(i,j, jj),pz(i,j, jj),im)+pro(i, jj)*vpol*vsol/(delta**3)/fv* &
-                    ngpol(ii)*sc ! ngpol(ii) has the number of chains grafted to the point ii
+                avpol_temp(px(i,j, jj),py(i,j, jj),pz(i,j, jj),im)+&
+                pro(i, jj)*vpol*vsol/(delta**3)/fv*ngpol(ii)*sc ! ngpol(ii) has the number of chains grafted to the point ii
             enddo
 
             q_tosend=q_tosend+pro(i, jj)
