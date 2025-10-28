@@ -451,7 +451,7 @@ subroutine readinput
                     read(fh, *) Nrings
 
                     allocate (ringpos(Nrings))
-                    print*,"graftflag=",graftflag
+        
                     if(graftflag.eq.0) then 
 
                         read(fh, *) basura
@@ -600,7 +600,7 @@ subroutine readinput
     ! Check validity of input
     ! 
 
-    if(systemtype.eq.2) then
+    if(systemtype.eq.2.or.systemtype.eq.42) then
         if((cdiva.ne.1.0).or.(gama0.ne.90.0)) then
             write(stdout,*) 'Channel works only for cdiva = 1 and gama0 = 90.0... ending'
             call MPI_FINALIZE(ierr) ! finaliza MPI
@@ -666,7 +666,7 @@ subroutine readinput
                 write(stdout,*) 'parser:Set rchannelS =', rchanneLS
             endif
         endif
-        write(stdout,*) 'parser: Set rchannel  =', rchanneL
+         if(rank.eq.0)write(stdout,*) 'parser:Set rchannel  =', rchanneL
     endif
 
     

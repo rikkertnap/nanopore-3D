@@ -27,7 +27,7 @@ subroutine initconst
     !pi = acos(-1.0)  
     pi = acos(-1.0d0)
 
-    if(abs(pi-pi_my)>0.0d0) then 
+    if(abs(pi-pi_my)>0.0d0) then ! check accuracy 
         if(rank.eq.0)write(stdout,*) 'init const: pi',pi,' pi_my', pi_my
     endif    
 
@@ -325,21 +325,21 @@ subroutine savedata(cccc)
         endif
 
         ! system
-        if(curvedflag==0) area=dimx*dimy*delta*delta
+        if(curvedflag==0) area=dimx*dimy*delta*delta      ! == straight nanopore 
         if(curvedflag==1) then 
-            area = total_surface_area_curv(radiusL,radiusC,Lengthchannel)
+            area = total_surface_area_curv(radiusL,radiusC,Lengthchannel) !== curved nanopore
         endif
 
         write(filename,'(A7, I3.3, A4)')'system.', cccc, '.dat'
         
         open (unit=310, file=filename)
-        write(310,*)'st          = ',st ! residual size of iteration vector
-        write(310,*)'fnorm       = ',norma ! residual size of iteration vector
-        write(310,*)'length seg  = ',0.35 ! value see subroutine cadenas
+        write(310,*)'st          = ',st    ! residual size of iteration vector
+        write(310,*)'fnorm       = ',norma  ! residual size of iteration vector
+        write(310,*)'length seg  = ',lseg   ! value see subroutine cadenas
         write(310,*)'delta       = ',delta
         write(310,*)'vsol        = ',vsol
         write(310,*)'vsalt       = ',vsalt*vsol
-        write(310,*)'vpol       = ',vpol*vsol
+        write(310,*)'vpol        = ',vpol*vsol
         write(310,*)'pKw         = ',pKw
         write(310,*)'zpos        = ',zpos
         write(310,*)'zneg        = ',zneg
