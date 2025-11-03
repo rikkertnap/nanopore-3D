@@ -1,4 +1,4 @@
-TARGET = nanopore
+TARGET = nanopore-multi
 
 SRC = modules.f90 maps.f90  moleculelist.f90 flux.f90  read-graftpts.f90 channel-curved.f90 SPmain.f90 channel.f90 PBC.f90 parser.f90 init.f90 allocation.f90 allocatencha.f90 allocateell.f90 3D.f90  allocatecpp.f90  cadenas.f90 cadenas_b.f90 cadenas_b2.f90  fe.f90  fkfun.f90  kai.f90 anderson.f90 kinsol.f90 solver.f90  pxs.f90  savetodisk.f90 rands.f90 ellipsoid.f90 dielectric.f90 transform.f90 testsystem.f90 testsystemc.f90 testsystemr.f90 monomers.definitions.f90 chains.definitions.f90 channel-part.f90 
 
