@@ -434,38 +434,49 @@ subroutine readinput
     
                 case(42, 52) ! 42: channel, 52: rod
         
-                    read(fh, *) basura
                     if(curvedflag.eq.1) then 
+
+                        read(fh, *) basura
                         read(fh, *) rchannelL 
                         read(fh, *) basura
                         read(fh, *) rchannelS 
+                        read(fh, *) basura
+                        read(fh, *) nchannelsections
                         rchannel = rchannelL
+                    
                     else
-                       read(fh, *) rchannel 
-                    endif   
-                    read(fh, *) basura
-                    read(fh, *) RdimZ
-                    read(fh, *) basura
-                    read(fh, *) NBRUSH ! number of brushes in the tetha direction
-                    read(fh, *) basura
-                    read(fh, *) Nrings
 
-                    allocate (ringpos(Nrings))
-        
-                    if(graftflag.eq.0) then 
+                        read(fh, *) basura
+                        read(fh, *) rchannel 
+                        rchannelL = rchannelL  
+                        rchannelS = rchannelL 
+                    
+                    endif 
 
+                    if(graftflag.eq.1) then  
+
+                        read(fh, *) basura
+                        read(fh, *) RdimZ
+                        read(fh, *) basura             
+                        read(fh, *) ngrafts
+
+                    else
+
+                        read(fh, *) basura
+                        read(fh, *) RdimZ
+                        read(fh, *) basura
+                        read(fh, *) NBRUSH              ! == number of grafts in the tetha direction
+                        read(fh, *) basura
+                        read(fh, *) Nrings              ! == number of grafts in the z-direction
+                        allocate (ringpos(Nrings))      ! == relative postion of rings 
                         read(fh, *) basura
                         do i = 1, Nrings
                             read(fh, *) ringpos(i)
                         enddo
-                    else
-                        do i = 1, Nrings
-                            ringpos(i)=(i-0.d0)/(Nrings+1.0d0) != init value on regular spaceing will be override by input file 
-                        enddo 
+                        ringpos = ringpos - 0.5d0       ! == translated by 0.5 ringposistion input range [0:1] => [-0.5:0.5] 
+                  
                     endif
 
-                    ringpos = ringpos - 0.5d0       ! == translated by 0.5 ringposistion input range [0:1] => [-0.5:0.5] 
-                    
                     read(fh, *) basura
                     read(fh, *) echargec
                     read(fh, *) basura
@@ -608,6 +619,17 @@ subroutine readinput
         endif
     endif
 
+     if(systemtype.eq.42) then
+        if(graftflag.eq.1) then
+            if(curvedflag.eq.0) then 
+                write(stdout,*) 'Channel works only with graftflag = 1 in combinatin with curvedflag = 1 ending'
+                call MPI_FINALIZE(ierr) ! finaliza MPI
+                stop
+            endif
+        endif    
+    endif
+
+
     if (branched.eq.1) then
         longbb = long
         long = longbb + longb(1) + longb(2) + longb(3)
@@ -659,15 +681,28 @@ subroutine readinput
     if(curvedflag.eq.ndi) call stopundef('curvedflag')
     if(graftflag.eq.ndi) call stopundef('graftflag')
 
-    if(systemtype.eq.42) then 
-        if(curvedflag.eq.1) then 
-            if(rank.eq.0) then 
+    if(systemtype.eq.42) then  
+        if(rank.eq.0) then 
+            if(curvedflag.eq.1) then 
                 write(stdout,*) 'parser:Set rchannelL =', rchannelL
                 write(stdout,*) 'parser:Set rchannelS =', rchanneLS
-            endif
+                write(stdout,*) 'parser:Set Rdimz     =', RdimZ
+                write(stdout,*) 'parser:Set nsections =', nchannelsections
+            else
+                write(stdout,*) 'parser:Set rchannel  =', rchanneL 
+                write(stdout,*) 'parser:Set Rdimz     =', RdimZ
+            endif 
+            if(graftflag.eq.1) then 
+                write(stdout,*) 'parser:Set ngrafts   =', ngrafts
+            else 
+                write(stdout,*) 'parser:Set Nbrush    =', nbrush 
+                write(stdout,*) 'parser:Set Nrings    =', Nrings
+            endif    
+            write(stdout,*) 'parser:Set echargec  =', echargec
+            write(stdout,*) 'parser:Set eepsc     =', eepsc
+
         endif
-         if(rank.eq.0)write(stdout,*) 'parser:Set rchannel  =', rchanneL
-    endif
+    endif    
 
     
     

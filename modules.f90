@@ -119,7 +119,7 @@ endmodule
 
 module channel
 
-     implicit none
+    implicit none
 
     real*8 :: rchannel                  ! == radius nanochannel
     real*8 :: originc(2)                ! == location in x-y plane of long axis channel  
@@ -131,7 +131,9 @@ module channel
     integer :: Npolx, Npoly              
     real*8  :: rchannelL, rchannelS     ! == largest and smalles radius of curved nanochannel 
                                         ! == used only if curvedflag==1 and systype =42 
-
+    integer :: nchannelsections   
+    integer :: ngrafts                  ! number of graft points used if graftflag =1 : reading if graftpoint postions
+                                 
 endmodule
 
 module s2d  
@@ -301,7 +303,7 @@ endmodule
 
 module ellipsoid                            ! == particle placement varialbes
     implicit none
-    integer NNN                             ! == number of particles  
+    integer :: NNN                          ! == number of particles  
     real*8, allocatable :: rotmatrix(:,:,:)
     real*8, allocatable :: Aell(:,:)
     real*8, allocatable :: AellS(:,:)
@@ -326,8 +328,8 @@ module inputtemp
     real*8 :: pOHbulk          ! == pOH reservoir 
     real*8 :: csalt            ! == concentration of salt in Mol/L 
     real*8 :: cHplus, cOHmin   ! == concentration of H+ and OH- 
-    real*8 :: psizmin          ! == electrostatic pot of lower reservoier used for Steady State
-    real*8 :: psizmax          ! == electrostatic pol of upper reservoier used for Steady State
+    real*8 :: psizmin          ! == electrostatic pot of lower reservoir used for Steady State
+    real*8 :: psizmax          ! == electrostatic pol of upper reservoir used for Steady State
 end module
 
 module transform               ! == coordinate transformation 

@@ -6,16 +6,18 @@ subroutine creador
     use chainsdat
     use MPI
     use branches
+
     implicit none
-    integer i,il,ll
-    integer j
-    real*8 indax, inday, indaz
-    real*8 chains(3,200,100), gauches(100)
-    real*8 altx,alty,altz,x(200),y(200),xp(200),yp(200)
-    real*8 theta,theta1
-    integer iglobal
-    integer nchas
-    integer ii, jj
+    
+    integer :: i,il,ll
+    integer :: j
+    real*8 :: indax, inday, indaz
+    real*8 :: chains(3,200,100), gauches(100)
+    real*8 :: altx,alty,altz,x(200),y(200),xp(200),yp(200)
+    real*8 :: theta,theta1
+    integer :: iglobal
+    integer :: nchas
+    integer :: ii, jj
 
     indexncha = 1
 
@@ -44,7 +46,7 @@ subroutine creador
 
         close(3113)
         
-        return ! alernate return : chain generation by reading 
+        return ! == alternate return : chain generation by reading 
     
     endif
 
@@ -72,7 +74,7 @@ subroutine creador
                 in1(j,1)=chains(1,j,i)
                 if((readchains.eq.-1).and.(rank.eq.0))write(3113,*)in1(j,1),in1(j,2),in1(j,3)
             enddo
-            call pxs
+            call pxs 
         enddo
     enddo
 

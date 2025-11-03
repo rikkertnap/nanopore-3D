@@ -203,7 +203,7 @@ subroutine savedata(cccc)
     use kinsol
     use kaist
     use mparameters_monomer
-    use channelcurved, only :radiusC, radiusL, Lengthchannel, total_surface_area_curv
+    use channelcurved, only :radiusC, radiusL, Lengthchannel, total_surface_area_curv, lengthsection, nsections
     use inputtemp, only : csalt, pHbulk
 
     implicit none
@@ -327,15 +327,15 @@ subroutine savedata(cccc)
         ! system
         if(curvedflag==0) area=dimx*dimy*delta*delta      ! == straight nanopore 
         if(curvedflag==1) then 
-            area = total_surface_area_curv(radiusL,radiusC,Lengthchannel) !== curved nanopore
+            area = total_surface_area_curv(radiusL,radiusC,lengthsection,nsections) !== curved nanopore
         endif
 
         write(filename,'(A7, I3.3, A4)')'system.', cccc, '.dat'
         
         open (unit=310, file=filename)
-        write(310,*)'st          = ',st    ! residual size of iteration vector
-        write(310,*)'fnorm       = ',norma  ! residual size of iteration vector
-        write(310,*)'length seg  = ',lseg   ! value see subroutine cadenas
+        write(310,*)'st          = ',st    
+        write(310,*)'fnorm       = ',norma      ! residual size of iteration vector
+        write(310,*)'length seg  = ',lseg       
         write(310,*)'delta       = ',delta
         write(310,*)'vsol        = ',vsol
         write(310,*)'vsalt       = ',vsalt*vsol

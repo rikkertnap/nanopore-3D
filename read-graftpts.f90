@@ -7,7 +7,8 @@ contains
     subroutine read_graftpoint(rS,rL,lenChannel,ngraft,positiongraft,info)
         
         use const, only : stdout
-        use MPI, only : rank
+        use MPI, only : rank, ierr
+
         implicit none
 
         ! ==input arguments
@@ -31,6 +32,7 @@ contains
 
         info=0
         infotmp=0
+        isWrite=.false.
 
         ! == reading in of graft point from file
         write(fname,'(A14)')'graftpoints.in'
@@ -51,25 +53,19 @@ contains
         read(un,*,iostat=ios)ngraftin
             
         if(abs(rSin-rS)>0.0000001) then 
-            text="RadiusS graft file not equal inputted internal Rs"
-            write(stdout,*)text
-            write(stdout,*)rSin,rS
+            write(stdout,*)"RadiusS graft file: ",Rsin," not equal inputted internal Rs: ",rS
             infotmp=2
         endif
         if(abs(rLin-rL)>0.0000001) then 
-            text="RadiusL graft file not equal inputted internal RL"
-            write(stdout,*)text
-            write(stdout,*)rLin,rL
+            write(stdout,*)"RadiusL graft file: ",RLin," not equal inputted internal RL: ",rL
             infotmp=3
         endif
         if(abs(lenChannel-lenChannelin)>0.0000001) then 
-            text=" Lenchannel graft file not equal inputted internal value"
-            write(stdout,*)text
+            write(stdout,*)" Lenchannel graft file not equal inputted internal value"
             infotmp=4
         endif
         if(abs(ngraft-ngraftin)>0.0000001) then 
-            text="ngraft graft file not equal inputted internal ngraft"
-            write(stdout,*)text,ngraft,ngraftin
+            write(stdout,*)"ngraft graft file: ",ngraftin," not equal inputted internal ngraft: ",ngraft
             infotmp=5
         endif
 
@@ -87,15 +83,20 @@ contains
         
         close(un)
 
-        isWrite=.false.
-        call write_graftpoint(rS,rL,lenChannel,ngraft,positiongraft,info,isWrite)
+        if(info.ne.0) then
+            write(stdout,*) 'failure to read graftpoint info:',info
+            call MPI_FINALIZE(ierr) ! finaliza MPI
+            stop
+        endif    
+
+        if(isWrite) call write_graftpoint(rS,rL,lenChannel,ngraft,positiongraft,info)
 
     end subroutine read_graftpoint
 
-    ! write grafing points to a file only is isWrite ==.true.
+    ! write grafing points 
  
 
-    subroutine write_graftpoint(rS,rL,lenChannel,ngraft,positiongraft,info,isWrite)
+    subroutine write_graftpoint(rS,rL,lenChannel,ngraft,positiongraft,info)
 
         use const, only : stdout
         use MPI, only : rank
@@ -109,8 +110,7 @@ contains
         integer, intent(in) :: ngraft           ! == number of graft points
         real*8, intent(in) :: positiongraft(:,:)    ! == locatation graft point  => integer goes to p1
         integer, intent(inout) :: info          !== output information 
-        logical, intent(in) :: isWrite          ! == isWrite controls writing of grafs points  
-
+       
         ! == local argument 
 
         character(len=15) :: fname
@@ -120,8 +120,6 @@ contains
         logical :: isWriteGood
       
         info=0
-
-        if(.not.isWrite) return
 
         if(rank==0) then 
 
@@ -150,11 +148,9 @@ contains
             enddo 
 
             if(isWriteGood.eqv..false.) info=1
-
-               
+          
             close(un)
      
-
         endif    
     
     end subroutine write_graftpoint

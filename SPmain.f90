@@ -123,7 +123,7 @@ program main
     elseif (systemtype.eq.6) then
         call update_matrix_planar(flag)     ! == planar surface
     elseif (systemtype.eq.60) then
-        call update_matrix_60(flag)         ! channel + particles
+        call update_matrix_60(flag)         ! == channel + particles
     endif
     
     call calcfv                             ! == calulate variable fv matrix ! IMPORTANT
@@ -139,7 +139,7 @@ program main
     call graftpoints
     if(rank.eq.0) write(stdout,*) 'Graftpoints OK'
 
-    call creador ! Genera cadenas
+    call creador                                ! ==  make chains 
     if(rank.eq.0) write(stdout,*) 'Creador OK'
 
     
