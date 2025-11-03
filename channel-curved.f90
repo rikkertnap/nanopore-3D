@@ -225,12 +225,17 @@ contains
         areatotalL = 2.0d0*pi*RL*L 
         areatotalS = 2.0d0*pi*RS*L 
 
-        if(.not.((areatotalL>areachannel).and.(areachannel>areatotalS))) info = 4
+        if(areachannel<areatotalS) info = 4
+        if((RC<Rl).and.(areachannel<areatotalL)) info = 5
+        if((RC>Rl).and.(areachannel>areatotalL)) info = 6  
 
 
-        ! area channel should be between area cylinder with radiusS and radiusL 
+        ! area channel is larger then area cylinder with radiusS 
+        ! area channel is smaller or larger then area cylinder with radiusL 
+        ! depending on if curvature Rc is less or larger radiusL  
         
-        if(info==4)  then 
+        
+        if( info==4.or.info==5.or.info==6)  then 
             if(rank==0) write(stdout,*)"unit_test_area_channel: area=",areachannel,&
                 " areaL =",areatotalL," areaS =",areatotalS
         endif
@@ -264,7 +269,7 @@ contains
         logical, intent(inout) :: flag
 
         ! == local variables
-        ! real*8 :: rchannel2, rchannelL2, rchannelS2
+    
         real*8 :: radiusSeps, radiusLeps
         real*8 :: radiusSq, radiusLq
         real*8 :: lenC
@@ -279,7 +284,6 @@ contains
         real*8 :: sstemp,vvtemp, maxss
         real*8 :: cutarea
         real*8 :: temp
-       ! real*8 :: temp2
         real*8 :: sumvoleps1, sumvolprot1, sumvolq1, sumvolx1
         integer :: ncha1
         real*8 :: volx1(maxvolx)
@@ -296,10 +300,6 @@ contains
 
         cutarea = 0.0 ! throw away cells that have less area than cutarea x area of the cell with largest area  
         sumpolseg = 0.0
-
-        !rchannel2 = rchannel**2
-        !rchannelL2 = (rchannel - 3*delta)**2
-        !rchannelS2 = (rchannel + delta)**2
 
         lenC = LengthChannelCurvature()
 
@@ -338,19 +338,13 @@ contains
         npoints = 50
 
         flag = .false.
-
-        ! call integrate_channel_curved(rchannelL2, RdimZ,originc ,npoints, voleps1 , sumvoleps1, flag)
-        
+ 
         call integrate_channel_curved(radiusSeps,radiusLeps,RdimZ,originc_curv ,npoints, voleps1 , sumvoleps1, flag)
-
-        flag = .false. ! not a problem if eps lays outside boundaries
 
         call integrate_channel_curved(radiusS,radiusL,RdimZ, originc_curv,npoints, volprot1, sumvolprot1, flag)
 
         call integrate_channel_curved(radiusSq,radiusLq,RdimZ,originc_curv ,npoints, voleps1 , sumvoleps1, flag)
         
-
-        ! call newintegrateg_c_4(radiusS,radiusL,RdimZ,originc_curv,npoints,volx1,sumvolx1, com1, p1, ncha1, volxx1, NBRUSH)
         call newintegrate_channel_curved(radiusS,radiusL,RdimZ,originc_curv, npoints,volx1,sumvolx1,com1,p1,&
             ncha1,volxx1, NBRUSH)
      
@@ -626,7 +620,7 @@ subroutine newintegrate_channel_curved(radiusS,radiusL,RdimZ,origincurv, npoints
     use ematrix
     !use const
     use const, only : pi, randominput, stdout
-    use channel, only : sigmar, Nrings, ringpos
+    use channel, only : sigmar, Nrings, ringpos , ngrafts
     use graftpoint, only : read_graftpoint, write_graftpoint
 
     implicit none
@@ -671,7 +665,7 @@ subroutine newintegrate_channel_curved(radiusS,radiusL,RdimZ,origincurv, npoints
     real*8 :: RC,RL,RS,LenC,rchannelz ! == local shape varialbes
 
     real*8, allocatable :: positiongraftpoint(:,:)
-    integer :: ngrafts, info, pts
+    integer :: info, pts
     logical :: isWrite
     
 !    disp = delta
@@ -839,20 +833,15 @@ subroutine newintegrate_channel_curved(radiusS,radiusL,RdimZ,origincurv, npoints
     else  
     
         ! == read graft point from file
-         
-        ngrafts = npointz * npointt
+        print*,"ngrafts=",ngrafts
 
         allocate(positiongraftpoint(ngrafts,3))
     
         isWrite=.false.
     
         call read_graftpoint(RS,RL,lenC,ngrafts,positiongraftpoint,info)
-        if(info.ne.0) then
-            write(stdout,*) 'failure to read graftpoint info:',info
-            stop
-        endif
-        
-        if(isWrite) call write_graftpoint(RS,RL,lenC,ngrafts,positiongraftpoint,info,isWrite)
+       
+        if(isWrite) call write_graftpoint(RS,RL,lenC,ngrafts,positiongraftpoint,info)
 
         do pts=1,ngrafts 
            
