@@ -218,10 +218,10 @@ endmodule
 
 module conformations
     implicit none
-    integer*1, allocatable :: px(:,:,:)         ! == x-position of conformatio
-    integer*1, allocatable :: py(:,:,:)
-    integer*1, allocatable :: pz(:,:,:)
-    integer*1, allocatable :: ngauche(:,:)
+    integer*2, allocatable :: px(:,:,:)         ! == latice x-position of conformation range : px(cuantas, long, maxcpp)
+    integer*2, allocatable :: py(:,:,:)         ! == latice y-position of conformation 
+    integer*2, allocatable :: pz(:,:,:)         ! == latice z-position of conformation 
+    integer*1, allocatable :: ngauche(:,:)      ! == number of gauche bond in conf range : ngauche(cuantas,ncha)
     real*4 , allocatable :: zfinal(:,:)         ! == location charged end group real*4 !!
 endmodule
 
