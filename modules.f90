@@ -219,11 +219,11 @@ endmodule
 
 module conformations
     implicit none
-    integer*1, allocatable :: px(:,:,:)         ! == x-position of conformatio
-    integer*1, allocatable :: py(:,:,:)
-    integer*1, allocatable :: pz(:,:,:)
-    integer*1, allocatable :: ngauche(:,:)
-    real*4 , allocatable :: zfinal(:,:)         ! == location charged end group real*4 !!
+    integer*2, allocatable :: px(:,:,:)         ! == x-position of conformation  range : px(cuantas, long, maxcpp)
+    integer*2, allocatable :: py(:,:,:)         ! == y-position of conformation
+    integer*2, allocatable :: pz(:,:,:)         ! == z-position of conformation
+    integer*1, allocatable :: ngauche(:,:)      ! == number of gauche bond in conf range : ngauche(cuantas,ncha))
+    real*4, allocatable :: zfinal(:,:)          ! == location charged end group real*4 !!
 endmodule
 
 module MPI
@@ -254,8 +254,7 @@ module const
     real*8 :: constqE                       ! == pre factor in Poisson Equation 
     real*8 :: dielPr, dielSr                ! == relative dielectric constant ?? 
     real*8 :: pKw, Kw                       ! == water equilibrium
-    real*8 :: pi 
-   ! real*8, parameter :: Na = 6.02d23          ! == Avogadro's number  
+    real*8 :: pi  
     real*8, parameter :: Na = 6.022140857e23    ! == Avogadro's number 
     real*8 :: constq                        ! == pre factor in Poisson Eq 
     real*8 :: lb                            ! == Bjerrum length 

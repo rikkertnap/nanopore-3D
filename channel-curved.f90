@@ -80,7 +80,7 @@ contains
         ! return argument 
         real*8 :: Rz
         
-        if(RC**2>z**2) then 
+        if(RC**2>=z**2) then 
             Rz = sqrt(RC**2-z**2) -(RC-RL)    
         else 
             Rz = Rzmax 
@@ -109,7 +109,7 @@ contains
         integer, intent(in) :: nsect
         real*8 :: areatotal
        
-        if(Lsect<2.0d0*Rc) then 
+        if(Lsect<=2.0d0*Rc) then 
         
             areatotal = 2.0d0*pi*RC*Lsect-4.0d0*pi*(RC-RL)*RC*asin(Lsect/(2.0d0*RC))
             areatotal = areatotal * nsect

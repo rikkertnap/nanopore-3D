@@ -35,7 +35,7 @@ subroutine pxs
     maxx(2) = float(dimy)*delta
     maxx(3) = float(dimz)*delta
 
-    do jj = 1, cpp(rank+1)            ! == cpp  distrubition of graft points over nodes/cpus graftpoit c
+    do jj = 1, cpp(rank+1)            ! == cpp  distribution of graft points over nodes/cpus graftpoit c
                                       ! == cpp number of graft point on node  ,rank +1 because start number at o 
         ii = cppini(rank+1)+jj        ! == cppini  = 'first' graft point on node
         flag = 0
