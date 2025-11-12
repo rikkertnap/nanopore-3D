@@ -18,7 +18,8 @@ subroutine solver(xvec, xvecguess, ier)
     neq= eqs * dimx * dimy * dimz  
     maxfkfunevals = 1000 ! == defined in kinsol.f90 need to connected 
     accuracy = 1.0d-6    ! == defined fnormtol defined in kinsol.f90
-   
+    ier = 0              ! == retrun value solver  
+
     if(methodflag==1) then
 
         ! call call_kinsol(xvec, xvecguess, ier)
@@ -26,7 +27,8 @@ subroutine solver(xvec, xvecguess, ier)
     else if(methodflag==2) then
 
         call anderson_min_loop(xvecguess, xvec, accuracy, residual, isSolution, maxfkfunevals, neq)
-
+        
+    
     else if(methodflag==3) then
     
         call simple_min_loop(xvecguess, xvec, accuracy, residual, isSolution, maxfkfunevals, neq)
@@ -35,6 +37,10 @@ subroutine solver(xvec, xvecguess, ier)
         print*,"Solver method incorrect"
         stop
     endif
+
+    if(isSolution) ier=1 
+      
+
 
 end subroutine solver
 

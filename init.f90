@@ -203,12 +203,15 @@ subroutine savedata(cccc)
     use kinsol
     use kaist
     use mparameters_monomer
-    use channelcurved, only :radiusC, radiusL, Lengthchannel, total_surface_area_curv, lengthsection, nsections
+    use channelcurved, only : radiusC, radiusL, Lengthchannel, total_surface_area_curv, lengthsection, nsections
+    use channelcurved, only : total_surface_area
     use inputtemp, only : csalt, pHbulk
 
     implicit none
 
     integer, intent(in) :: cccc
+
+    ! local variables
 
     character*20 :: filename
     character*5  :: title
@@ -217,25 +220,13 @@ subroutine savedata(cccc)
     integer :: ix,iy,iz, im
     real*8 :: fv
     real*8 :: area
-
-    !----------------------------------------------------------
-    !  OUTPUT
-    !----------------------------------------------------------
+    real*8 :: avfdis(N_monomer)
+    real*8 :: sumavpol
 
     if(rank.eq.0) then 
 
-        ! solo el jefe escribe a disco....
-        ! onlly rank ( boss) write to disk 
-        ! Guarda infile
-        !  write(filename,'(A4, I3.3, A4)')'out.', cccc, '.dat'
-        !  open(unit=45, file=filename)
-        !   do i = 1, 2*n
-        !    write(45, *)x1(i)
-        !   enddo
-        !  close(45)
-
-        !!!!!!!!!!!!!!!!!!! Guarda archivos !!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        ! Polimero, todo
+        ! == save files 
+        ! == polymer 
 
         temp = 0.0d0
         do im = 1, N_monomer
@@ -245,8 +236,7 @@ subroutine savedata(cccc)
         title = 'avpol'
         call savetodisk(temp, title, cccc)
 
-        ! Polimero, por tipo
-        ! polymer , by type 
+        ! == polymer, by type 
         
         do im = 1, N_monomer
             temp(:,:,:) = avpol(:,:,:,im)*(1.0d0 - volprot(:,:,:))
@@ -254,17 +244,19 @@ subroutine savedata(cccc)
             call savetodisk(temp, title, cccc)
         enddo
 
-        ! Solvente
-        !  temp(:,:,:) = xh(:,:,:)*(1.0 - volprot(:,:,:))
+        ! == solvent
+        temp(:,:,:) = xh(:,:,:)*(1.0 - volprot(:,:,:))
 
-        !  title = 'avsol'
-        !  call savetodisk(temp, title, cccc)
+        title = 'avsol'
+        call savetodisk(temp, title, cccc)
+        
+        
         ! Cationes
-        title = 'avpos'
-        call savetodisk(xpos, title, cccc)
+        ! title = 'avpos'
+        ! call savetodisk(xpos, title, cccc)
         ! Aniones
-        title = 'avneg'
-        call savetodisk(xneg, title, cccc)
+        ! title = 'avneg'
+        ! call savetodisk(xneg, title, cccc)
         ! H+
         !  title = 'avHpl'
         !  call savetodisk(xHplus, title, cccc)
@@ -272,32 +264,31 @@ subroutine savedata(cccc)
         !  title = 'avOHm'
         !  call savetodisk(xOHmin, title, cccc)
         ! fdis
+        
         title = 'frdis'
         temp(1:dimx,1:dimy, 1:dimz) = fdis(1:dimx,1:dimy, 1:dimz,1)
         call savetodisk(temp, title, cccc)
 
         ! polymer charge
 
-        temp = 0.0d0
+        !temp = 0.0d0
 
-        do ix=1,dimx
-            do iy=1,dimy
-                do iz=1,dimz
-                    fv = (1.0d0-volprot(ix,iy,iz))
-
-                    do im = 1, N_monomer
-                        temp(ix, iy, iz) = temp(ix,iy,iz) + &
-                            avpol(ix,iy,iz,im)*zpol(im)/vpol/vsol*fdis(ix,iy,iz,im)! units of |e|/nm^3 
-                    enddo
-
-                enddo
-            enddo
-        enddo
+        !do ix=1,dimx
+        !    do iy=1,dimy
+        !        do iz=1,dimz
+        !           fv = (1.0d0-volprot(ix,iy,iz))
+        !            do im = 1, N_monomer
+        !                temp(ix, iy, iz) = temp(ix,iy,iz) + &
+        !                    avpol(ix,iy,iz,im)*zpol(im)/vpol/vsol*fdis(ix,iy,iz,im)! units of |e|/nm^3 
+        !            enddo
+        !        enddo
+        !    enddo
+        ! enddo
 
         !  title = 'qpol_'
         !  call savetodisk(temp, title, cccc)
 
-        ! Potencial electrostatico
+        ! electostatic potential 
 
         temp(1:dimx,1:dimy, 1:dimz) = psi(1:dimx,1:dimy, 1:dimz)
 
@@ -305,7 +296,7 @@ subroutine savedata(cccc)
         call savetodisk(temp, title, cccc)
 
 
-        ! Particle
+        !  Particle
         !  title = 'avpar'
         !  call savetodisk(volprot, title, cccc)
 
@@ -324,19 +315,58 @@ subroutine savedata(cccc)
             close(8)
         endif
 
-        ! system
-        if(curvedflag==0) area=dimx*dimy*delta*delta      ! == straight nanopore 
+        ! == system
+        ! == total number of segments
+        sumpol = 0.0d0  
+        do im = 1, N_monomer
+            do iz = 1, dimz
+                do iy = 1, dimy
+                    do ix= 1, dimx
+                        sumpol = sumpol + avpol(ix,iy,iz,im)*(delta**3)*(1.0d0-volprot(ix,iy,iz))/vpol/vsol
+                    enddo
+                enddo
+            enddo
+        enddo
+
+        ! == average fraction of charged monomers of type im 
+      
+        do im = 1, N_monomer
+            if (zpol(im).ne.0) then 
+                avfdis(im) = 0.0d0
+                sumavpol = 0.0d0
+                do iz=1,dimz
+                    do iy=1,dimy
+                        do ix=1,dimz
+                            fv = (1.0d0-volprot(ix,iy,iz))
+                            avfdis(im)= avfdis(im)+ avpol(ix,iy,iz,im)*fv*zpol(im)/vpol/vsol*fdis(ix,iy,iz,im) ! units of |e|/nm^3 
+                            sumavpol= sumavpol+avpol(ix,iy,iz,im)*fv/vpol/vsol      
+                        enddo
+                    enddo
+                enddo
+                avfdis(im)= avfdis(im)/sumavpol
+            else 
+                avfdis(im) = 0.0d0 
+            endif     
+         enddo
+
+
+        if(curvedflag==0) then
+            area =  total_surface_area(curvedflag,systemtype)
+        endif  
         if(curvedflag==1) then 
             area = total_surface_area_curv(radiusL,radiusC,lengthsection,nsections) !== curved nanopore
         endif
 
         write(filename,'(A7, I3.3, A4)')'system.', cccc, '.dat'
         
-        open (unit=310, file=filename)
-        write(310,*)'st          = ',st    
+        open (unit=310, file=filename) 
+        write(310,*)'GIT version = ', _VERSION   
         write(310,*)'fnorm       = ',norma      ! residual size of iteration vector
-        write(310,*)'length seg  = ',lseg       
+        write(310,*)'lseg        = ',lseg       
         write(310,*)'delta       = ',delta
+        write(310,*)'dimx        = ',dimx
+        write(310,*)'dimy        = ',dimy
+        write(310,*)'dimz        = ',dimz
         write(310,*)'vsol        = ',vsol
         write(310,*)'vsalt       = ',vsalt*vsol
         write(310,*)'vpol        = ',vpol*vsol
@@ -348,24 +378,16 @@ subroutine savedata(cccc)
         write(310,*)'pH          = ',pHbulk
         write(310,*)'iterations  = ',iter
         write(310,*)'sigma cad/nm2 = ',ncha/area
-        write(310,*)'kai =          ', Xu
-        write(310,*)'GIT version = ', _VERSION
-
-        sumpol = 0.0d0
-        do ix = 1, dimx
-            do iy = 1, dimy
-                do iz = 1, dimz
-                    do im = 1, N_monomer
-                        sumpol = sumpol + avpol(ix,iy,iz,im)*(delta**3)*(1.0d0-volprot(ix,iy,iz))/vpol/vsol
-                    enddo
-                enddo
-            enddo
+        write(310,*)'kai         = ',Xu
+        write(310,*)'st          = ',st 
+        write(310,*)'Number of segments = ',sumpol
+        do im = 1, N_monomer
+            write(310,*)'avfdis(',im,') = ',avfdis(im) 
         enddo
-
-        write(310,*)'Number of segments =          ', sumpol
+        
         close(310)
 
-    endif ! == if(rank==)  
+    endif ! == if(rank==0)  
 
 end subroutine
 

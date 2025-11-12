@@ -15,7 +15,6 @@ subroutine solver(xvec, xvecguess, ier)
     integer*8 :: neq
     
     if(methodflag/=1) then 
-
         neq= eqs * dimx * dimy * dimz  
         maxfkfunevals = 1000 ! == defined in kinsol.f90 
         accuracy = 1.0d-6    ! == defined fnormtol defined in kinsol.f90
@@ -37,6 +36,15 @@ subroutine solver(xvec, xvecguess, ier)
         print*,"Solver method incorrect"
         stop
     endif
+
+    if(methodflag/=1) then 
+        if(iSsolution) then 
+            ier = 1
+        else
+            ier = 0
+        endif    
+    endif
+
 
 end subroutine solver
 

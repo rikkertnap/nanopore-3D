@@ -127,7 +127,50 @@ contains
         endif              
 
     end function total_surface_area_curv
-    
+
+    ! == function used in init.f90 savedate subroutine 
+    ! == compute surface area for given systemtype=42 amd curveflag =1 
+    ! == that case require a different function !!
+
+    function total_surface_area(curvedflag,systemtype)result(area)  
+       
+        use const, only : pi, stdout 
+        use system, only : dimx,dimy, dimz, delta 
+        use channel, only  : RdimZ, rchannel 
+        use MPI, only : rank
+        
+        integer, intent(in) :: curvedflag, systemtype
+        real*8 :: area
+
+        real*8 :: hcyl
+       
+        select case (systemtype)
+        case(2)
+        
+            hcyl = dimz*delta
+            area = 2.0d0 * pi * rchannel * hcyl         
+        
+        case(3, 4, 41, 42, 52, 60)
+
+            hcyl = ( dimz-2.0d0* Rdimz)*delta    
+            area = 2.0d0 * pi * rchannel * hcyl    
+        
+        case(6)  ! planar surface
+        
+            area = dimx*dimy*delta*delta 
+        
+        case default
+            area = -1.0d0 
+            if(rank==0) write(stdout,*)"total_surface_area failure: wrong systemtype"
+        end select 
+       
+        if (curvedflag==1.and.systemtype==42) then
+            area= -1.0d0
+            if(rank==0) write(stdout,*)"total_surface_area failure: wrong curvedflag for systemtype 42"
+        endif                     
+
+    end function total_surface_area
+
     function total_volume_curv(RL,RC,Lsect,nsect) result(voltotal)
         use const, only : pi
         

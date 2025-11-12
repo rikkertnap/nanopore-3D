@@ -168,6 +168,7 @@ end subroutine
 ! using  Anderson method 
 subroutine anderson_min_loop(xguess, x, TOL, fnorm, isSolution, MAX_INT, N)
 
+    use const, only : stdout
    ! use vectornorm
    ! use fcnpointer
     
@@ -239,7 +240,7 @@ subroutine anderson_min_loop(xguess, x, TOL, fnorm, isSolution, MAX_INT, N)
 
     enddo
     
-    do while( (.not.(conv) .and. (step < MAX_INT) ))
+    do while( (.not.(conv) .and. (step <= MAX_INT) ))
     
         !call fcnptr(x,fvec,N)
         call fkfun(x,fvec,ier)
@@ -296,15 +297,18 @@ subroutine anderson_min_loop(xguess, x, TOL, fnorm, isSolution, MAX_INT, N)
         write(rstr,'(E25.16)')fnorm
         text="final L2 norm of the residuals = = "//trim(adjustl(rstr))
         !call print_to_log(LogUnit,text)
+        write(stdout,*)text
         write(istr,'(I8)')step
         text="number of iterations  = "//trim(adjustl(istr))
         !call print_to_log(LogUnit,text)
+        write(stdout,*)text
     endif    
 
     if (step>=MAX_INT) then
-        text="program exceeded maximuum number of interations, iteration aborted"
+        text="program exceeded maximuum number of interations, iteration aborted" 
+        write(stdout,*)text
         !call print_to_log(LogUnit,text)
-        !call write_last_fcn_eval(x)
+        call write_last_fcn_eval(x)
     endif     
     
     ! free memory 
@@ -324,6 +328,7 @@ end subroutine
 ! simple mixing method 
 subroutine  simple_min_loop(xguess, x, TOL, fnorm, isSolution, MAX_INT, N)
 
+    use const, only : stdout
     !use vectornorm
     !use fcnpointer
     
@@ -359,7 +364,7 @@ subroutine  simple_min_loop(xguess, x, TOL, fnorm, isSolution, MAX_INT, N)
     
     !    simple mixing   
 
-    do while( (.not.(conv) .and. (step < MAX_INT)))
+    do while( (.not.(conv) .and. (step <= MAX_INT)))
         ! call fcnptr(x,fvec,N) 
         call fkfun(x,fvec,ier)
         do i = 1, NN
@@ -380,13 +385,16 @@ subroutine  simple_min_loop(xguess, x, TOL, fnorm, isSolution, MAX_INT, N)
         write(rstr,'(E25.16)')fnorm
         text="final L2 norm of the residuals = = "//trim(adjustl(rstr))
         !call print_to_log(LogUnit,text)
+        write(stdout,*)text
         write(istr,'(I8)')step
         text="number of iterations  = "//trim(adjustl(istr))
-        !call print_to_log(LogUnit,text)
+        !call print_to_log(LogUnit,text) 
+        write(stdout,*)text
     endif    
     
     if (step>=MAX_INT) then
-        text="program exceeded maximuum number of interations, iteration aborted"
+        text="program exceeded maximuum number of interations, iteration aborted" 
+        write(stdout,*)text
        ! call print_to_log(LogUnit,text)
         call write_last_fcn_eval(x)
     endif    
@@ -394,29 +402,22 @@ subroutine  simple_min_loop(xguess, x, TOL, fnorm, isSolution, MAX_INT, N)
     ! free memory 
     deallocate(fvec)
   
-
-
-
-
-  
 end subroutine  simple_min_loop
 
 
 subroutine  write_last_fcn_eval(x)
 
+    use const, only : stdout
     real*8, intent(in), dimension(:) :: x
 
     integer :: un_out 
     character(len=5) :: outfilename
     integer :: ios, i
 
-
     outfilename = "x.out"
     open(newunit=un_out,file=outfilename, iostat=ios, action="write")
     
-    if(ios > 0 ) then
-        print*, 'Error opening file : iostat =', ios
-    endif
+    if(ios > 0 ) write(stdout,*)'Error opening file : iostat =', ios
 
     do i=1,size(x)
         write(un_out,*)x(i)
