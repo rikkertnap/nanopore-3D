@@ -1,5 +1,3 @@
-
-
 module mkl
 
     implicit none
@@ -46,12 +44,19 @@ module mparameters_monomer
 
     implicit none
 
-    integer :: N_poorsol                    ! number of different kais ==chis
-    integer :: N_monomer                    ! number of different monomer types
-    real*8, allocatable  :: st_matrix(:,:)  ! interaction between monomer types in fraction of st, scaled by st-scale during running....
-    integer, allocatable :: zpol(:)         ! charge of monomer segment: 1: base, -1: acid, 0:neutral
-    integer, allocatable :: hydroph(:)      ! 0: hydrophilic, 1 < x < N_poorsol, type of poor solvent
-    real*8, allocatable  ::  pKa(:), Ka(:), K0(:) 
+    integer :: N_poorsolA                    ! number of different kais ==chis
+    integer :: N_monomerA                    ! number of different monomer types
+    real*8, allocatable  :: st_matrixA(:,:)  ! interaction between monomer types in fraction of st, scaled by st-scale during running....
+    integer, allocatable :: zpolA(:)         ! charge of monomer segment: 1: base, -1: acid, 0:neutral
+    integer, allocatable :: hydrophA(:)      ! 0: hydrophilic, 1 < x < N_poorsol, type of poor solvent
+    real*8, allocatable  :: pKaA(:), KaA(:), K0A(:) 
+
+    integer :: N_poorsolB                    ! number of different kais ==chis
+    integer :: N_monomerB                    ! number of different monomer types
+    real*8, allocatable  :: st_matrixB(:,:)  ! interaction between monomer types in fraction of st, scaled by st-scale during running....
+    integer, allocatable :: zpolB(:)         ! charge of monomer segment: 1: base, -1: acid, 0:neutral
+    integer, allocatable :: hydrophB(:)      ! 0: hydrophilic, 1 < x < N_poorsol, type of poor solvent
+    real*8, allocatable  :: pKaB(:), KaB(:), K0B(:) 
 
 endmodule mparameters_monomer
 
@@ -94,15 +99,27 @@ module ematrix
     use system
     implicit none
 
-    real*8, allocatable :: volprot(:,:,:)       ! == volume not accesible by polymer, solvent, ions: volume of membrane and proteins
+    real*8, allocatable :: volprot(:,:,:)      ! == volume not accesible by polymer, solvent, ions: volume of membrane and proteins
     real*8, allocatable :: volprot1(:,:,:)
+    
     real*8, allocatable :: voleps(:,:,:)
     real*8, allocatable :: voleps1(:,:,:)
+
+    real*8, allocatable :: volepsA(:,:,:)      ! == mixtures
+    real*8, allocatable :: volepsA1(:,:,:)
+    real*8, allocatable :: volepsB(:,:,:)
+    real*8, allocatable :: volepsB1(:,:,:)
+    
     real*8, allocatable :: volq(:,:,:)
     real*8, allocatable :: volq1(:,:,:)
-    integer, parameter :: maxvolx = 50000
+    
+    integer, parameter :: maxvolx = 500 ! 00
     real*8 :: volx(maxvolx)
-    real*8 :: com(maxvolx,3)
+    
+    real*8 :: com(maxvolx,3)          
+    real*8 :: comA(maxvolx,3)                   ! == mixtures
+    real*8 :: comB(maxvolx,3)
+
     integer :: p0(maxvolx,3)
     real*8, allocatable :: fvstd(:,:,:)         ! ==  fv  = 1 -volprot = free volume of cell
     real*8, allocatable :: fvmkl(:)             ! == idem as fvstd but used with mkl libraries
@@ -114,7 +131,9 @@ end module
 module rotchain
     use ematrix, only : maxvolx
     implicit none
-    real*8 :: rotangle(maxvolx)
+    real*8 :: rotangleA(maxvolx)
+    real*8 :: rotangleB(maxvolx)
+    real*8 :: rotangle(maxvolx) ! need to remove in channel.f90
 endmodule
 
 module channel
@@ -123,21 +142,23 @@ module channel
 
     real*8 :: rchannel                  ! == radius nanochannel
     real*8 :: originc(2)                ! == location in x-y plane of long axis channel  
-    real*8 :: echargec, sigmac, eepsc, sigmar
+    real*8 :: echargec                  ! == surface charge : actual volume charge close to surface 
+    real*8 :: sigmac, sigmar
+    real*8 :: eepsc, eepscA, eepscB     ! == surface-polymer interaction
     integer :: NBRUSH
     integer :: RdimZ                    ! size of reservoirs in delta units
     integer :: Nrings                   ! number of rings for systemtype = 42
     real*8, allocatable :: ringpos(:)   ! position along the pore
     integer :: Npolx, Npoly              
-    real*8  :: rchannelL, rchannelS     ! == largest and smalles radius of curved nanochannel 
-                                        ! == used only if curvedflag==1 and systype =42 
+    real*8  :: rchannelL                ! == largest and smalles radius of curved nanochannel 
+    real*8  :: rchannelS                ! == used only if curvedflag==1 and systype =42 
     integer :: nchannelsections   
     integer :: ngrafts                  ! number of graft points used if graftflag =1 : reading if graftpoint postions
-                                 
+    
 endmodule
 
 module s2d  
-     implicit none      
+    implicit none      
     integer :: scx,scy,scz                 ! == dimensional ranges in vtk file 
 endmodule
 
@@ -153,33 +174,56 @@ endmodule
 
 module chainsdat
     implicit none  
-    integer :: cuantas                    ! == number of conformations
-    integer, allocatable :: newcuantas(:) ! == number of conformations per graft point accepted ???
-    integer :: long                       ! == length of polymer chain /number of segments
-    integer, allocatable :: segtype(:)    ! sequence of the chain 
-    integer :: ncha                       ! == number of conformations  
-    real*8, ALLOCATABLE :: in1(:,:)       ! segment positions 
-    integer :: ing                        ! number of gauches in current chain
-    real*8, ALLOCATABLE :: posicion(:,:)  ! posicion graft de la cadena ncha
-    real*8, ALLOCATABLE :: ngpol(:)       ! posicion graft de la cadena ncha
-    integer, ALLOCATABLE :: cpp(:)        ! == conformation per processor 
-    integer, ALLOCATABLE :: cppini(:)     !   
-    integer :: maxcpp                     ! == max number of conformation per processor
-    real*8 :: lseg                        ! == length segment 
-    integer :: readchains                 ! == variable that selects reading stored conformation 
+    integer :: cuantasA                   ! == number of conformations of polymer type A 
+    integer :: cuantasB                   ! == number of conformations of polymer type B
+    integer, allocatable :: newcuantasA(:) ! == number of conformations per graft point accepted
+    integer, allocatable :: newcuantasB(:) ! == number of conformations per graft point accepted
+    integer :: long                       ! == length segment old 
+    integer :: nsegA                      ! == length of polymer chain /number of segments
+    integer :: nsegB                      ! == length of polymer chain /number of segments
+    integer, allocatable :: segtypeA(:)   ! == sequence of the chain  
+    integer, allocatable :: segtypeB(:)   ! == sequence of the chain 
+    integer :: nchaA                      ! == number of conformations of polymer type A
+    integer :: nchaB                      ! == number of conformations of polymer type B
+    integer :: ncha                       ! == ncha = nchaA = nchaB
+
+    real*8, ALLOCATABLE :: inA1(:,:)        ! == segment positions of polymer type A
+    real*8, ALLOCATABLE :: inB1(:,:)        ! == segment positions of polymer type B 
+    integer :: ingA                         ! == number of gauches in current chain A : bookkeeping variables 
+    integer :: ingB                         ! == number of gauches in current chain B 
+
+    real*8 :: lseg
+    real*8 :: lsegA                         ! == length segment 
+    real*8 :: lsegB                         ! == length segment 
+    
+    real*8, ALLOCATABLE  :: posicionA(:,:)  ! == position of graft de la cadena ncha
+    real*8, ALLOCATABLE  :: posicionB(:,:)  ! == position of graft de la cadena ncha
+
+    real*8, ALLOCATABLE  :: ngpol(:)        ! == posicion graft de la cadena ncha
+    integer, ALLOCATABLE :: cpp(:)          ! == number of conformation sets on node i
+    integer, ALLOCATABLE :: cppini(:)       ! == first set number that is lstored on node i
+    integer :: maxcpp                       ! == max number of conformation sets per processor   
+    integer :: readchains                   ! == variable that selects reading stored conformation 
+  
+    logical, allocatable :: hasGraftA(:)    ! = true if graftpoint i has a A type polymer
+    logical, allocatable :: hasGraftB(:)    ! = true if graftpoint i has a B type polymer
+
 endmodule
 
 module molecules
     use system
     implicit none
     real*8 :: vsol                        ! == volume solvent 
-    real*8 :: vpol                        ! == volume polymer segment 
-    real*8 :: vpol0
+    real*8 :: vpolA                       ! == volume polymer segment 
+    real*8 :: vpolB                       ! == volume polymer segment 
+    real*8 :: vpolA0
+    real*8 :: vpolB0
     real*8 :: vsol0
     real*8 :: vsalt                       ! == volume salt ions
     real*8 :: zpos,zneg                   ! == valence ions  
-    real*8 :: benergy                     ! == energy gauche bond ??
-    real*8 :: fz                          ! == ?  
+    real*8 :: benergyA                    ! == energy gauche bond
+    real*8 :: benergyB  
+    real*8 :: fz                          ! == end-group interactions  
 endmodule
 
 module kaist                              ! == variables related to hamilton inception method: for solving poor solvent condition
@@ -207,27 +251,48 @@ endmodule
 module fields_fkfun                             ! == density fields 
     use system
     use chainsdat
+
     implicit none
-    real*8, allocatable :: xtotal(:, :, :, :)   ! xtotal para poor solvent  == xtotal used for poor solvent interaction
+    
+    real*8, allocatable :: xtotalA(:, :, :, :)  ! == xtotal used for poor solvent interaction
+    real*8, allocatable :: xtotalB(:, :, :, :)  ! == xtotal used for poor solvent interaction
     real*8, allocatable :: psi(:, :, :)         ! == electrostatic potential
+   
     real*8, allocatable :: q(:)                 ! == part function 
-    real*8, allocatable :: sumgauche(:)         ! == sum energy gauche bounds
-    real*8, allocatable :: pro(:,:)             ! == probability
+    real*8, allocatable :: qA(:)                ! == part function 
+    real*8, allocatable :: qB(:)                ! == part function 
+    real*8, allocatable :: sumgaucheA(:)        ! == sum energy gauche bounds
+    real*8, allocatable :: sumgaucheB(:)        ! == sum energy gauche bounds
+   
+    real*8, allocatable :: pro(:,:)            ! == probability
+
+    real*8, allocatable :: proA(:,:)            ! == probability
+    real*8, allocatable :: proB(:,:)            ! == probability
+    real*8 :: shiftA                            ! == shift in exponent p(alpha)  
+    real*8 :: shiftB                            ! == shift in exponent p(alpha)  
+    
     real*8, allocatable :: xh(:, :, :)          ! == solvent volume fraction 
-    real*8 :: shift                             ! == shift in exponent p(alpha)  
+
 endmodule
 
 module conformations
     implicit none
-    integer*2, allocatable :: px(:,:,:)         ! == x-position of conformation  range : px(cuantas, long, maxcpp)
-    integer*2, allocatable :: py(:,:,:)         ! == y-position of conformation
-    integer*2, allocatable :: pz(:,:,:)         ! == z-position of conformation
-    integer*1, allocatable :: ngauche(:,:)      ! == number of gauche bond in conf range : ngauche(cuantas,ncha))
-    real*4, allocatable :: zfinal(:,:)          ! == location charged end group real*4 !!
+    ! == A chains
+    integer*2, allocatable :: pxA(:,:,:)         ! == x-position of conformation  range : px(cuantas, long, maxcpp)
+    integer*2, allocatable :: pyA(:,:,:)         ! == y-position of conformation
+    integer*2, allocatable :: pzA(:,:,:)         ! == z-position of conformation
+    integer*1, allocatable :: ngaucheA(:,:)      ! == number of gauche bond in conf range : ngauche(cuantas,ncha))
+    real*4, allocatable :: zfinalA(:,:)          ! == location charged end group real*4 !!
+    ! == B chains
+    integer*2, allocatable :: pxB(:,:,:)         ! == x-position of conformation  range : px(cuantas, long, maxcpp)
+    integer*2, allocatable :: pyB(:,:,:)         ! == y-position of conformation
+    integer*2, allocatable :: pzB(:,:,:)         ! == z-position of conformation
+    integer*1, allocatable :: ngaucheB(:,:)      ! == number of gauche bond in conf range : ngauche(cuantas,ncha))
+    real*4, allocatable :: zfinalB(:,:)          ! == location charged end group real*4 !!
 endmodule
 
 module MPI
-    !include 'mpif.h' ! librerias MPI
+    ! include 'mpif.h' ! librerias MPI
     use mpi_f08
     implicit none
     integer :: rank                         ! local rank node
@@ -265,24 +330,32 @@ module const
     integer :: itmax                        ! == max iteration 
     integer :: infile                       ! == controls input guess for solution vector x  
     integer :: randominput                  ! == random displacement graft
-    integer :: epstype                      
+    integer :: epstype
+    integer :: epstypeA                     ! == mixtures
+    integer :: epstypeB                  
     integer :: verbose                      ! == level of verbosity of output        
     integer :: stdout                       ! == unit number of write of stdout
 
 endmodule
 
-module kai                                  ! == poor solvent/ Van der Waals interaction variables 
+module kai                                   ! == poor solvent/ Van der Waals interaction variables 
     implicit none
-    integer :: Xulimit                      ! == maximum cutoff in unit of delta ??
-    real*8 :: cutoff                        ! == cutoff VdW interaction 
-    real*8, allocatable :: Xu(:,:,:)        ! == VdW interaction matrix 
-    real*8 :: sumXu                         ! == sum VdW matrix elements 
+    integer :: XulimitA                      ! == maximum cutoff in unit of delta ??
+    real*8 :: cutoffA                        ! == cutoff VdW interaction 
+    real*8, allocatable :: XuA(:,:,:)        ! == VdW interaction matrix 
+    real*8 :: sumXuA                         ! == sum VdW matrix elements 
+
+    integer :: XulimitB                      ! == maximum cutoff in unit of delta ??
+    real*8 :: cutoffB                        ! == cutoff VdW interaction 
+    real*8, allocatable :: XuB(:,:,:)        ! == VdW interaction matrix 
+    real*8 :: sumXuB                         ! == sum VdW matrix elements 
 endmodule
 
 module results
     use system
     implicit none
-    real*8, allocatable :: avpol(:,:,:,:)   ! == volume fraction polymer : indices ix iy iz im : im type monomer
+    real*8, allocatable :: avpolA(:,:,:,:)  ! == volume fraction polymer : indices ix iy iz im : im type monomer
+    real*8, allocatable :: avpolB(:,:,:,:)  ! == volume fraction polymer : indices ix iy iz im : im type monomer
     real*8, allocatable :: epsfcn(:,:,:)    ! == dielectric constant at ix iy iz   
     real*8, allocatable :: Depsfcn(:,:,:)   ! == derivative of dielectric constant ?? 
     real*8, allocatable :: xpos(:,:,:)      ! == volume fraction pos ion
@@ -290,7 +363,8 @@ module results
     real*8, allocatable :: qtot(:,:,:)      ! == total charge density 
     real*8, allocatable :: xHplus(:,:,:)    ! == volume fraction of H+
     real*8, allocatable :: xOHmin(:,:,:)    ! == volume fraction of OH-
-    real*8, allocatable :: fdis(:,:,:,:)    ! == degree of dissociation of momomer type im : indices ix, iy ,iz im 
+    real*8, allocatable :: fdisA(:,:,:,:)    ! == degree of dissociation of momomer type im : indices ix, iy ,iz im 
+    real*8, allocatable :: fdisB(:,:,:,:)    ! == degree of dissociation of momomer type im : indices ix, iy ,iz im 
 endmodule
 
 module bulk                                 ! = bulk chemical potentails and volume fractions

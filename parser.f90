@@ -66,13 +66,19 @@ subroutine readinput
     dimy = ndi
     dimz = ndi
     long = ndi
-    cuantas = ndi
+    nsegA = ndi
+    nsegB = ndi
+    cuantasA = ndi
+    cuantasB = ndi
     readchains = ndi
     infile = ndi
     randominput = 0
-    epstype = 0
-    cutoff = ndr
-    lseg = ndr
+    epstypeA = 0
+    epstypeB = 0 
+    cutoffA = ndr
+    cutoffB = ndr
+    lsegA = ndr
+    lsegA = ndr
     nst = ndi
     dielS = ndr
     pHbulk = ndr
@@ -86,7 +92,8 @@ subroutine readinput
     psizmin = ndr
     psizmax = ndr
 
-    vpol = ndr
+    vpolA = ndr
+    vpolB = ndr
     fz=ndr  !yamila
     
     methodflag = ndi    ! == RJN 
@@ -96,7 +103,8 @@ subroutine readinput
 
     vsol0 = ndr
     gama0 = ndr
-    benergy = ndr
+    benergyA = ndr
+    benergyB = ndr
 
     nsc = 1
     scs(1) = 1.0
@@ -152,22 +160,18 @@ subroutine readinput
                 enddo
 
             case ('verbose')
-
                 read(buffer, *, iostat=ios) verbose
                 if(rank.eq.0)write(stdout,*) 'parser:','Set ',trim(label),' = ',trim(buffer)
 
             case ('mkl')
-
                 read(buffer, *, iostat=ios) flagmkl
                 if(rank.eq.0)write(stdout,*) 'parser:','Set ',trim(label),' = ',trim(buffer)
 
             case ('seed')
-
                 read(buffer, *, iostat=ios) seed2
                 if(rank.eq.0)write(stdout,*) 'parser:','Set ',trim(label),' = ',trim(buffer)
 
-            case ('stdout')
-                
+            case ('stdout')     
                 read(buffer, *, iostat=ios) stdout
                 if(rank.eq.0)write(stdout,*) 'parser:','Set ',trim(label),' = ',trim(buffer)
 
@@ -180,7 +184,6 @@ subroutine readinput
                 if(rank.eq.0)write(stdout,*) 'parser:','Set ',trim(label),' = ',trim(buffer)
 
             case ('fluxflag') ! == flag selects Equilibrium or Steady State
-
                 read(buffer, *, iostat=ios) fluxflag
                 if(rank.eq.0)write(stdout,*) 'parser:','Set ',trim(label),' = ',trim(buffer)
 
@@ -188,13 +191,11 @@ subroutine readinput
                 read(buffer, *, iostat=ios) curvedflag
                 if(rank.eq.0)write(stdout,*) 'parser:','Set ',trim(label),' = ',trim(buffer)
   
-            case ('methodflag') ! == selects solver method
-                
+            case ('methodflag') ! == selects solver method     
                 read(buffer, *, iostat=ios) methodflag
                 if(rank.eq.0)write(stdout,*) 'parser:','Set ',trim(label),' = ',trim(buffer)
             
-            case ('graftflag') ! ==  read grafto point from
-                
+            case ('graftflag') ! ==  read grafto point from    
                 read(buffer, *, iostat=ios) graftflag
                 if(rank.eq.0)write(stdout,*) 'parser:','Set ',trim(label),' = ',trim(buffer)
 
@@ -211,15 +212,17 @@ subroutine readinput
                     read(fh, *)longb(1), longb(2)
                 endif
 
-
             case ('randominput')
                 read(buffer, *, iostat=ios) randominput
                 if(rank.eq.0)write(stdout,*) 'parser:','Set ',trim(label),' = ',trim(buffer)
 
-            case ('epstype')
-                read(buffer, *, iostat=ios) epstype
+            case ('epstypeA')
+                read(buffer, *, iostat=ios) epstypeA
                 if(rank.eq.0)write(stdout,*) 'parser:','Set ',trim(label),' = ',trim(buffer)
 
+            case ('epstypeB')
+                read(buffer, *, iostat=ios) epstypeB
+                if(rank.eq.0)write(stdout,*) 'parser:','Set ',trim(label),' = ',trim(buffer)
 
             case ('readchains')
                 read(buffer, *, iostat=ios) readchains
@@ -227,6 +230,14 @@ subroutine readinput
 
             case ('dimx')
                 read(buffer, *, iostat=ios) dimx
+                if(rank.eq.0)write(stdout,*) 'parser:','Set ',trim(label),' = ',trim(buffer)
+
+            case ('dimy')
+                read(buffer, *, iostat=ios) dimy
+                if(rank.eq.0)write(stdout,*) 'parser:','Set ',trim(label),' = ',trim(buffer)
+
+            case ('dimz')
+                read(buffer, *, iostat=ios) dimz
                 if(rank.eq.0)write(stdout,*) 'parser:','Set ',trim(label),' = ',trim(buffer)
 
             case ('scx')
@@ -240,7 +251,6 @@ subroutine readinput
             case ('scz')
                 read(buffer, *, iostat=ios) scz
                 if(rank.eq.0)write(stdout,*) 'parser:','Set ',trim(label),' = ',trim(buffer)
-
 
             case ('delta')
                 read(buffer, *, iostat=ios) delta
@@ -262,27 +272,29 @@ subroutine readinput
                 read(buffer, *, iostat=ios) cdiva
                 if(rank.eq.0)write(stdout,*) 'parser:','Set ',trim(label),' = ',trim(buffer)
 
-
-            case ('dimy')
-                read(buffer, *, iostat=ios) dimy
+            case ('nsegA')
+                read(buffer, *, iostat=ios) nsegA
+                if(rank.eq.0)write(stdout,*) 'parser:','Set ',trim(label),' = ',trim(buffer)
+            
+            case ('nsegB')
+                read(buffer, *, iostat=ios) nsegB
                 if(rank.eq.0)write(stdout,*) 'parser:','Set ',trim(label),' = ',trim(buffer)
 
-            case ('dimz')
-                read(buffer, *, iostat=ios) dimz
+            case ('cuantasA')
+                read(buffer, *, iostat=ios) cuantasA
                 if(rank.eq.0)write(stdout,*) 'parser:','Set ',trim(label),' = ',trim(buffer)
 
-            case ('long')
-                read(buffer, *, iostat=ios) long
+            case ('cuantasB')
+                read(buffer, *, iostat=ios) cuantasB
                 if(rank.eq.0)write(stdout,*) 'parser:','Set ',trim(label),' = ',trim(buffer)
 
-            case ('cuantas')
-                read(buffer, *, iostat=ios) cuantas
+            case ('lsegA')
+                read(buffer, *, iostat=ios) lsegA
                 if(rank.eq.0)write(stdout,*) 'parser:','Set ',trim(label),' = ',trim(buffer)
-
-            case ('lseg')
-                read(buffer, *, iostat=ios) lseg
+ 
+            case ('lsegB')
+                read(buffer, *, iostat=ios) lsegB
                 if(rank.eq.0)write(stdout,*) 'parser:','Set ',trim(label),' = ',trim(buffer)
-
 
             case ('dielP')
                 read(buffer, *, iostat=ios) dielP
@@ -300,12 +312,20 @@ subroutine readinput
                 read(buffer, *, iostat=ios) vsol0
                 if(rank.eq.0)write(stdout,*) 'parser:','Set ',trim(label),' = ',trim(buffer)
 
-            case ('benergy')
-                read(buffer, *, iostat=ios) benergy
+            case ('benergyA')
+                read(buffer, *, iostat=ios) benergyA
                 if(rank.eq.0)write(stdout,*) 'parser:','Set ',trim(label),' = ',trim(buffer)
 
-            case ('vpol')
-                read(buffer, *, iostat=ios) vpol
+            case ('benergyB')
+                read(buffer, *, iostat=ios) benergyB
+                if(rank.eq.0)write(stdout,*) 'parser:','Set ',trim(label),' = ',trim(buffer)
+
+            case ('vpolA')
+                read(buffer, *, iostat=ios) vpolA
+                if(rank.eq.0)write(stdout,*) 'parser:','Set ',trim(label),' = ',trim(buffer)
+
+            case ('vpolB')
+                read(buffer, *, iostat=ios) vpolB
                 if(rank.eq.0)write(stdout,*) 'parser:','Set ',trim(label),' = ',trim(buffer)
 
             case ('vscan')
@@ -382,13 +402,15 @@ subroutine readinput
                 read(fh,*)scs(i)
                 enddo 
 
-            case ('Xucutoff')
+            case ('XucutoffA')
+                read(buffer, *, iostat=ios) cutoffA
+                if(rank.eq.0)write(stdout,*) 'parser:','Set ',trim(label),' = ',trim(buffer)
 
-                read(buffer, *, iostat=ios) cutoff
+            case ('XucutoffB')
+                read(buffer, *, iostat=ios) cutoffB
                 if(rank.eq.0)write(stdout,*) 'parser:','Set ',trim(label),' = ',trim(buffer)
 
             case('fz') !yamila 
-
                 read(buffer, *, iostat=ios) fz
                 if(rank.eq.0)write(stdout,*) 'parser:','Set ',trim(label),' = ',trim(buffer)
 
@@ -442,12 +464,14 @@ subroutine readinput
                         read(fh, *) rchannelS 
                         read(fh, *) basura
                         read(fh, *) nchannelsections
+
                         rchannel = rchannelL
                     
                     else
 
                         read(fh, *) basura
                         read(fh, *) rchannel 
+                        
                         rchannelL = rchannelL  
                         rchannelS = rchannelL 
                     
@@ -630,6 +654,8 @@ subroutine readinput
     endif
 
 
+    long = nsegA  ! assignment for old subroutine need to change this !!!!!
+
     if (branched.eq.1) then
         longbb = long
         long = longbb + longb(1) + longb(2) + longb(3)
@@ -643,16 +669,19 @@ subroutine readinput
 
     if(vtkflag.eq.ndi) call stopundef('vtkflag')
     if(dimx.eq.ndi) call stopundef('dimx')
+    if(dimy.eq.ndi) call stopundef('dimy')
+    if(dimz.eq.ndi) call stopundef('dimz')
     if(scx.eq.ndi) call stopundef('scx')
     if(scy.eq.ndi) call stopundef('scy')
     if(scz.eq.ndi) call stopundef('scz')
-    if(dimy.eq.ndi) call stopundef('dimy')
-    if(dimz.eq.ndi) call stopundef('dimz')
     if(ncha.eq.ndi) call stopundef('ncha')
-    if(long.eq.ndi) call stopundef('long')
-    if(cuantas.eq.ndi) call stopundef('cuantas')
+    if(nsegA.eq.ndi) call stopundef('nsegA')
+    if(cuantasA.eq.ndi) call stopundef('cuantasA')
+    if(nsegB.eq.ndi) call stopundef('nsegB')
+    if(cuantasB.eq.ndi) call stopundef('cuantasB')
     if(infile.eq.ndi) call stopundef('infile')
-    if(cutoff.eq.ndr) call stopundef('Xucutoff')
+    if(cutoffA.eq.ndr) call stopundef('XucutoffA') 
+    if(cutoffB.eq.ndr) call stopundef('XucutoffB')
     if(readchains.eq.ndi) call stopundef('readchains')
     if(systemtype.eq.ndi) call stopundef('systemtype')
     if(nst.eq.ndi) call stopundef('nst')
@@ -665,14 +694,17 @@ subroutine readinput
     if(cdiva.eq.ndr) call stopundef('cdiva')
     if(dielS.eq.ndr) call stopundef('dielS')
     if(dielP.eq.ndr) call stopundef('dielP')
-    if(lseg.eq.ndr) call stopundef('lseg')
+    if(lsegA.eq.ndr) call stopundef('lsegA')
+    if(lsegB.eq.ndr) call stopundef('lsegB')
     if(csalt.eq.ndr) call stopundef('csalt')
     if(pHbulk.eq.ndr) call stopundef('pHbulk')
     if(psizmin.eq.ndr) call stopundef('psizmin')
     if(psizmax.eq.ndr) call stopundef('psizmax')
-    if(vpol0.eq.ndr) call stopundef('vpol')
+    if(vpolA0.eq.ndr) call stopundef('vpolA')
+    if(vpolB0.eq.ndr) call stopundef('vpolB')
     if(vsol0.eq.ndr) call stopundef('vsol')
-    if(benergy.eq.ndr) call stopundef('benergy')
+    if(benergyA.eq.ndr) call stopundef('benergyA')
+    if(benergyB.eq.ndr) call stopundef('benergyB')
     if(gama0.eq.ndr) call stopundef('gama')
     if(fz.eq.ndr) call stopundef('fz') !yamila
 

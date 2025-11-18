@@ -28,11 +28,13 @@ subroutine fkfun(x,f,ier2)
     ! local arguments
 
     integer :: ncells
-    real*8 :: protemp
+    real*8 :: proAtemp, proBtemp
     integer :: i,j, ix, iy, iz, ii, ax, ay, az
     integer :: im, ip
     integer :: jx, jy, jz, jj
-    real*8 :: xpot(dimx, dimy, dimz, N_monomer)
+    real*8 :: xpotA(dimx, dimy, dimz, N_monomerA)
+    real*8 :: xpotB(dimx, dimy, dimz, N_monomerB)
+
     integer :: id, noffset ! == indices used for flux contrubution to f
     real*8 :: normvol, normel 
 
@@ -52,8 +54,9 @@ subroutine fkfun(x,f,ier2)
     integer :: tag
     parameter(tag = 0)
     integer :: err
-    real*8 :: avpol_temp(dimx,dimy,dimz,N_monomer)
-    real*8 :: q_tosend
+    real*8 :: avpolA_temp(dimx,dimy,dimz,N_monomerA) 
+    real*8 :: avpolB_temp(dimx,dimy,dimz,N_monomerB)
+    real*8 :: qA_tosend, qB_tosend
     real*8 :: gradpsi2
     real*8 :: fv
 
@@ -67,7 +70,7 @@ subroutine fkfun(x,f,ier2)
     !-----------------------------------------------------
     ! Common variables
 
-    shift = 1.0
+    shiftA = 1.0d0
 
     ncells = dimx*dimy*dimz ! numero de celdas == number of cells
 
@@ -99,17 +102,24 @@ subroutine fkfun(x,f,ier2)
             do iz=1,dimz
                 xh(ix,iy,iz)=x(ix+dimx*(iy-1)+dimx*dimy*(iz-1))  !fraccion solvente == solvent 
 
-                do ip = 1, N_poorsol
-                    xtotal(ix,iy,iz,ip) = x(ix+dimx*(iy-1)+dimx*dimy*(iz-1)+ ip*ncells) !fraccion polimero de tipo ip
+                do ip = 1, N_poorsolA
+                    xtotalA(ix,iy,iz,ip) = x(ix+dimx*(iy-1)+dimx*dimy*(iz-1)+ ip*ncells) !fraccion polimero de tipo ip
                 enddo
-                if(electroflag.eq.1) psi(ix,iy,iz)=x(ix+dimx*(iy-1)+dimx*dimy*(iz-1)+(N_poorsol+1)*ncells)   !potencial electrostatico
+
+                do ip = 1, N_poorsolB
+                    xtotalB(ix,iy,iz,ip) = x(ix+dimx*(iy-1)+dimx*dimy*(iz-1)+ (ip+N_poorsolA)*ncells) !fraccion polimero de tipo ip
+                enddo
+
+                if(electroflag.eq.1) psi(ix,iy,iz)=&
+                    x(ix+dimx*(iy-1)+dimx*dimy*(iz-1)+(N_poorsolA+N_poorsolB+1)*ncells)   !potencial electrostatico
                
                 if(fluxflag.eq.1) then 
 
-                    xpos(ix, iy, iz)  =  x(ix+dimx*(iy-1)+dimx*dimy*(iz-1)+(N_poorsol+1)*ncells +     ncells)    
-                    xneg(ix, iy, iz)  =  x(ix+dimx*(iy-1)+dimx*dimy*(iz-1)+(N_poorsol+1)*ncells + 2 * ncells) 
-                    xHplus(ix, iy, iz)=  x(ix+dimx*(iy-1)+dimx*dimy*(iz-1)+(N_poorsol+1)*ncells + 3 * ncells)    
-                    xOHmin(ix, iy, iz)=  x(ix+dimx*(iy-1)+dimx*dimy*(iz-1)+(N_poorsol+1)*ncells + 4 * ncells)    
+                    xpos(ix, iy, iz)  =  x(ix+dimx*(iy-1)+dimx*dimy*(iz-1)+(N_poorsolA+N_poorsolB+2)*ncells )    
+                    xneg(ix, iy, iz)  =  x(ix+dimx*(iy-1)+dimx*dimy*(iz-1)+(N_poorsolA+N_poorsolB+3)*ncells ) 
+                    xHplus(ix, iy, iz)=  x(ix+dimx*(iy-1)+dimx*dimy*(iz-1)+(N_poorsolA+N_poorsolB+4)*ncells )    
+                    xOHmin(ix, iy, iz)=  x(ix+dimx*(iy-1)+dimx*dimy*(iz-1)+(N_poorsolA+N_poorsolB+5)*ncells )   
+
                 endif
             enddo
         enddo
@@ -187,8 +197,10 @@ subroutine fkfun(x,f,ier2)
 
     ! volume fraction and frdir
 
-    fdis = 0.0d0    ! == added  d0 
-    avpol = 0.0d0
+    fdisA = 0.0d0    ! == added  d0 
+    avpolA = 0.0d0
+    fdisB = 0.0d0    
+    avpolB = 0.0d0
 
     do ix=1,dimx
         do iy=1,dimy
@@ -203,12 +215,22 @@ subroutine fkfun(x,f,ier2)
                 
                 endif 
 
-                do im =1,N_monomer
+                do im =1,N_monomerA
 
-                    if (zpol(im).eq.1) then !BASE
-                        fdis(ix,iy,iz,im) = 1.0d0 /(1.0d0 + xOHmin(ix,iy,iz)/(K0(im)*xh(ix,iy,iz))) !k0 k en fraccion de volumen
-                    else if (zpol(im).eq.-1) then !ACID
-                        fdis(ix,iy,iz,im) = 1.0d0 /(1.0d0 + xHplus(ix,iy,iz)/(K0(im)*xh(ix,iy,iz)))
+                    if (zpolA(im).eq.1) then !BASE
+                        fdisA(ix,iy,iz,im) = 1.0d0 /(1.0d0 + xOHmin(ix,iy,iz)/(K0A(im)*xh(ix,iy,iz))) !k0 k en fraccion de volumen
+                    else if (zpolA(im).eq.-1) then !ACID
+                        fdisA(ix,iy,iz,im) = 1.0d0 /(1.0d0 + xHplus(ix,iy,iz)/(K0A(im)*xh(ix,iy,iz)))
+                    endif
+
+                enddo
+
+                do im =1,N_monomerB
+
+                    if (zpolB(im).eq.1) then !BASE
+                        fdisB(ix,iy,iz,im) = 1.0d0 /(1.0d0 + xOHmin(ix,iy,iz)/(K0B(im)*xh(ix,iy,iz))) !k0 k en fraccion de volumen
+                    else if (zpolB(im).eq.-1) then !ACID
+                        fdisB(ix,iy,iz,im) = 1.0d0 /(1.0d0 + xHplus(ix,iy,iz)/(K0B(im)*xh(ix,iy,iz)))
                     endif
 
                 enddo
@@ -221,12 +243,19 @@ subroutine fkfun(x,f,ier2)
 
     ! Compute dielectric permitivity
 
-    xtotalsum = 0.0d0 ! sum of all polymers
-    do ip = 1, N_poorsol
-        xtotalsum(:,:,:) = xtotalsum(:,:,:) + xtotal(:,:,:,ip)
+    xtotalsum = 0.0d0 
+    ! sum of all A polymers
+    do ip = 1, N_poorsolA
+        xtotalsum(:,:,:) = xtotalsum(:,:,:) + xtotalA(:,:,:,ip)
     enddo
-    
-    call dielectfcn(xtotalsum,volprot,epsfcn,Depsfcn)
+    ! sum of all B polymers
+    do ip = 1, N_poorsolB
+        xtotalsum(:,:,:) = xtotalsum(:,:,:) + xtotalB(:,:,:,ip)
+    enddo
+
+
+    call dielectfcn(xtotalsum,volprot,epsfcn,Depsfcn) 
+ 
 
     !------------------------------------------------------------------------
     ! PDFs polimero // == polymer 
@@ -237,11 +266,11 @@ subroutine fkfun(x,f,ier2)
     !         
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-    ! Calcula xpot
+    ! Calcula xpotA
 
-    sttemp = st/(vpol*vsol)
+    sttemp = st/(vpolA*vsol)
 
-    do im = 1, N_monomer ! loop over different monomer types
+    do im = 1, N_monomerA ! loop over different monomer types
 
         do ix=1,dimx
             do iy=1,dimy
@@ -274,24 +303,24 @@ subroutine fkfun(x,f,ier2)
                     !   xpot=exp(-Uj(rj)) para P(alpha)
                     !   == xpot is the exponent of the effective Energy function in P(alpha)
 
-                    fv = (1.0 - volprot(ix,iy,iz)) 
+                    fv = (1.0d0 - volprot(ix,iy,iz)) 
                     !   fraccion de volumen de la celda que es sc volprot->fraccion pared
                     !   == volume fraction of the cell that is sc volprot->wall fraction             
 
-                    xpot(ix, iy, iz, im) = xh(ix,iy,iz)**vpol 
+                    xpotA(ix, iy, iz, im) = xh(ix,iy,iz)**vpolA 
                     
                     ! im:tipo de segmento, término de presion osmotica
                     ! == im: segment type, osmotic pressure term
 
-                    xpot(ix, iy, iz, im) = xpot(ix,iy,iz, im)*dexp(voleps(ix,iy,iz))  
+                    xpotA(ix, iy, iz, im) = xpotA(ix,iy,iz, im)*dexp(volepsA(ix,iy,iz))  
                     
                     ! termino de interaccion con sup de la particula
                     ! == interaction term with the particle's sup =surface ???
 
                     ! Electrostatics
 
-                    if(zpol(im).ne.0.0) then
-                        xpot(ix,iy,iz,im) =  xpot(ix,iy,iz,im)/fdis(ix,iy,iz,im)*dexp(-psi(ix,iy,iz)*zpol(im))  
+                    if(zpolA(im).ne.0.0) then
+                        xpotA(ix,iy,iz,im) =  xpotA(ix,iy,iz,im)/fdisA(ix,iy,iz,im)*dexp(-psi(ix,iy,iz)*zpolA(im))  
                         ! fdis: por eq ac. base...  
                     endif
         
@@ -303,20 +332,20 @@ subroutine fkfun(x,f,ier2)
                     !     gradpsi2 = (psi(ix+1,iy,iz)-psi(ix-1,iy,iz))**2+(psi(ix,iy+1,iz)-psi(ix,iy-1,iz))**2+(psi(ix,iy,iz+1)-psi(ix,iy,iz-1))**2 
                     !     xpot(ix, iy, iz) = xpot(ix,iy,iz)*exp(-Depsfcn(ix,iy,iz)*(gradpsi2)*constqE)
 
-                    xpot(ix,iy,iz,im) = xpot(ix,iy,iz,im)*exp(Depsfcn(ix,iy,iz)*(gradpsi2)/constq/2.0d0*vpol/fv)
+                    xpotA(ix,iy,iz,im) = xpotA(ix,iy,iz,im)*exp(Depsfcn(ix,iy,iz)*(gradpsi2)/constq/2.0d0*vpolA/fv)
 
                     ! Poor solvent depende de la grilla donde esta y de sus vecinos
                     ! == Poor solvent depends on the grid where it is and its neighbors
 
 
 
-                    if(hydroph(im).ne.0) then
+                    if(hydrophA(im).ne.0) then
 
-                    protemp=0.0
+                    proAtemp=0.0
 
-                    do ax = -Xulimit,Xulimit 
-                        do ay = -Xulimit,Xulimit
-                            do az = -Xulimit,Xulimit
+                    do ax = -XulimitA,XulimitA 
+                        do ay = -XulimitA,XulimitA
+                            do az = -XulimitA,XulimitA
 
                                 jx = ix+ax
                                 jy = iy+ay
@@ -357,11 +386,11 @@ subroutine fkfun(x,f,ier2)
                                 if((jx.ge.1).and.(jx.le.dimx)) then
                                     if((jy.ge.1).and.(jy.le.dimy)) then
                                         if((jz.ge.1).and.(jz.le.dimz)) then
-                                            fv = (1.0-volprot(jx,jy,jz))
+                                            fv = (1.0d0-volprot(jx,jy,jz))
 
-                                            do ip = 1, N_poorsol
-                                                protemp = protemp + hfactor*Xu(ax,ay,az)*&
-                                                st_matrix(hydroph(im),ip)*sttemp*xtotal(jx,jy,jz,ip)*fv
+                                            do ip = 1, N_poorsolA
+                                                proAtemp = proAtemp + hfactor*XuA(ax,ay,az)*&
+                                                st_matrixA(hydrophA(im),ip)*sttemp*xtotalA(jx,jy,jz,ip)*fv
                                             enddo ! ip
 
                                         endif
@@ -372,7 +401,7 @@ subroutine fkfun(x,f,ier2)
                         enddo
                     enddo
 
-                    xpot(ix,iy,iz,im) = xpot(ix,iy,iz,im)*dexp(protemp)
+                    xpotA(ix,iy,iz,im) = xpotA(ix,iy,iz,im)*dexp(proAtemp)
 
                     endif ! hydrph
 
@@ -384,9 +413,163 @@ subroutine fkfun(x,f,ier2)
 
     enddo ! N_monomer
 
+ ! Calcula xpotA
+
+    sttemp = st/(vpolB*vsol)
+
+    do im = 1, N_monomerB ! loop over different monomer types
+
+        do ix=1,dimx
+            do iy=1,dimy
+                do iz=1,dimz
+
+                    if(hguess .eq. 0) then
+
+                        hd = sqrt(float((2*ix-dimx)**2+(2*iy-dimy)**2))/2.0*delta
+                        hd = hd**2+(oval*float(2*iz-dimz)/2.0*delta)**2
+                        hfactor = dexp(-(kp**2)*hd)
+
+                    elseif(hguess .eq. 1) then
+
+                        hd = sqrt(float((2*ix-dimx)**2+(2*iy-dimy)**2))/2.0*delta-hring
+                        hd = hd**2+(oval*float(2*iz-dimz)/2.0*delta)**2
+                        hfactor = dexp(-(kp**2)*hd)
+
+                    else
+
+                        do i=1,hguess
+                            hds(i) = (float(2*ix-dimx)-2*cos(i*2*pi/hguess)*hring/delta)**2+(float(2*iy-dimy)-&
+                                2*sin(i*2*pi/hguess)*hring/delta)**2
+                            hds(i) = hds(i)/4.0*(delta**2)+(oval*float(2*iz-dimz)/2.0*delta)**2
+                        end do
+                        hd = minval(hds, mask = hds .gt.0)
+                        hfactor = dexp(-(kp**2)*hd)
+
+                    end if
+
+                    !   xpot=exp(-Uj(rj)) para P(alpha)
+                    !   == xpot is the exponent of the effective Energy function in P(alpha)
+
+                    fv = (1.0d0 - volprot(ix,iy,iz)) 
+                    !   fraccion de volumen de la celda que es sc volprot->fraccion pared
+                    !   == volume fraction of the cell that is sc volprot->wall fraction             
+
+                    xpotB(ix, iy, iz, im) = xh(ix,iy,iz)**vpolB 
+                    
+                    ! im:tipo de segmento, término de presion osmotica
+                    ! == im: segment type, osmotic pressure term
+
+                    xpotB(ix, iy, iz, im) = xpotB(ix,iy,iz, im)*dexp(volepsB(ix,iy,iz))  
+                    
+                    ! termino de interaccion con sup de la particula
+                    ! == interaction term with the particle's sup =surface ???
+
+                    ! Electrostatics
+
+                    if(zpolA(im).ne.0.0) then
+                        xpotB(ix,iy,iz,im) =  xpotB(ix,iy,iz,im)/fdisB(ix,iy,iz,im)*dexp(-psi(ix,iy,iz)*zpolB(im))  
+                        ! fdis: por eq ac. base...  
+                    endif
+        
+                    ! Dielectrics
+
+                    gradpsi2 = (psi(ix+1,iy,iz)-psi(ix,iy,iz))**2+(psi(ix,iy+1,iz)-psi(ix,iy,iz))**2+&
+                        (psi(ix,iy,iz+1)-psi(ix,iy,iz))**2 
+
+                    !     gradpsi2 = (psi(ix+1,iy,iz)-psi(ix-1,iy,iz))**2+(psi(ix,iy+1,iz)-psi(ix,iy-1,iz))**2+(psi(ix,iy,iz+1)-psi(ix,iy,iz-1))**2 
+                    !     xpot(ix, iy, iz) = xpot(ix,iy,iz)*exp(-Depsfcn(ix,iy,iz)*(gradpsi2)*constqE)
+
+                    xpotB(ix,iy,iz,im) = xpotB(ix,iy,iz,im)*exp(Depsfcn(ix,iy,iz)*(gradpsi2)/constq/2.0d0*vpolA/fv)
+
+                    ! Poor solvent depende de la grilla donde esta y de sus vecinos
+                    ! == Poor solvent depends on the grid where it is and its neighbors
+
+
+
+                    if(hydrophB(im).ne.0) then
+
+                    proBtemp=0.0
+
+                    do ax = -XulimitB,XulimitB 
+                        do ay = -XulimitB,XulimitB
+                            do az = -XulimitB,XulimitB
+
+                                jx = ix+ax
+                                jy = iy+ay
+                                jz = iz+az
+
+                                if(jx.lt.1) then
+                                    if(PBC(1).eq.1)jx = PBCSYMI(jx,dimx)
+                                    if(PBC(1).eq.3)jx = PBCREFI(jx,dimx)
+                                endif
+
+                                if(jx.gt.dimx) then
+                                    if(PBC(2).eq.1)jx = PBCSYMI(jx,dimx)
+                                    if(PBC(2).eq.3)jx = PBCREFI(jx,dimx)
+                                endif
+
+                                if(jy.lt.1) then
+                                    if(PBC(3).eq.1)jy = PBCSYMI(jy,dimy)
+                                    if(PBC(3).eq.3)jy = PBCREFI(jy,dimy)
+                                endif
+
+                                if(jy.gt.dimy) then
+                                    if(PBC(4).eq.1)jy = PBCSYMI(jy,dimy)
+                                    if(PBC(4).eq.3)jy = PBCREFI(jy,dimy)
+                                endif
+
+
+                                if(jz.lt.1) then
+                                    if(PBC(5).eq.1)jz = PBCSYMI(jz,dimz)
+                                    if(PBC(5).eq.3)jz = PBCREFI(jz,dimz)
+                                endif
+
+                                if(jz.gt.dimz) then
+                                    if(PBC(6).eq.1)jz = PBCSYMI(jz,dimz)
+                                    if(PBC(6).eq.3)jz = PBCREFI(jz,dimz)
+                                endif
+
+
+                                if((jx.ge.1).and.(jx.le.dimx)) then
+                                    if((jy.ge.1).and.(jy.le.dimy)) then
+                                        if((jz.ge.1).and.(jz.le.dimz)) then
+                                            fv = (1.0d0-volprot(jx,jy,jz))
+
+                                            do ip = 1, N_poorsolB
+                                                proBtemp = proBtemp + hfactor*XuB(ax,ay,az)*&
+                                                st_matrixB(hydrophA(im),ip)*sttemp*xtotalB(jx,jy,jz,ip)*fv
+                                            enddo ! ip
+
+                                        endif
+                                    endif
+                                endif
+
+                            enddo
+                        enddo
+                    enddo
+
+                    xpotB(ix,iy,iz,im) = xpotB(ix,iy,iz,im)*dexp(proBtemp)
+
+                    endif ! hydrph
+
+!                    write(567,*)xpot(ix,iy,iz,1)
+
+                enddo ! ix
+            enddo ! iy
+        enddo !iz
+
+    enddo ! N_monomer
+
+ 
+
+
 
     !!!!!!!!!!!!!!!!!!!!!! Calculate pro from xpot !!!!!!!!!!!!!
-    call calcavpol(xpot)
+    call calcavpolA(xpotA)
+
+    call calcavpolB(xpotB)
+
+
     
     !!!!!!!!!!! IMPORTANTE, LOS SUBORDINADOS TERMINAN ACA... 
     if(rank.ne.0)goto 3333
@@ -412,8 +595,12 @@ subroutine fkfun(x,f,ier2)
             qtot(ix, iy, iz) =  (zpos*xpos(ix, iy, iz)+zneg*xneg(ix, iy, iz))/vsalt + &
                 xHplus(ix, iy, iz) - xOHmin(ix, iy, iz)
 
-            do im = 1, N_monomer
-                qtot(ix, iy, iz) =  qtot(ix,iy,iz) + avpol(ix,iy,iz,im)*zpol(im)/vpol*fdis(ix,iy,iz,im)
+            do im = 1, N_monomerA
+                qtot(ix, iy, iz) =  qtot(ix,iy,iz) + avpolA(ix,iy,iz,im)*zpolA(im)/vpolA*fdisA(ix,iy,iz,im)
+            enddo
+
+            do im = 1, N_monomerB
+                qtot(ix, iy, iz) =  qtot(ix,iy,iz) + avpolB(ix,iy,iz,im)*zpolB(im)/vpolB*fdisB(ix,iy,iz,im)
             enddo
 
             qtot(ix, iy,iz) = qtot(ix,iy,iz)*fv + volq(ix,iy,iz)*vsol    ! OJO
@@ -431,9 +618,14 @@ subroutine fkfun(x,f,ier2)
                     xneg(ix, iy, iz) + xpos(ix, iy, iz) + xHplus(ix, iy, iz) + &
                     xOHmin(ix, iy, iz) -1.000000d0  !packing iones+sv
 
-                do im = 1, N_monomer
+                do im = 1, N_monomerA
                     f(ix+dimx*(iy-1)+dimx*dimy*(iz-1)) = f(ix+dimx*(iy-1)+dimx*dimy*(iz-1)) +&
-                         avpol(ix,iy,iz,im) !packing ...+polimero
+                         avpolA(ix,iy,iz,im) !packing ...+polimero
+                enddo
+
+                do im = 1, N_monomerB
+                    f(ix+dimx*(iy-1)+dimx*dimy*(iz-1)) = f(ix+dimx*(iy-1)+dimx*dimy*(iz-1)) +&
+                         avpolB(ix,iy,iz,im) !packing ...+polimero
                 enddo
 
                 ! write(123,*)ix,iy,iz,avpol(ix,iy,iz,1),xh(ix,iy,iz)
@@ -441,19 +633,40 @@ subroutine fkfun(x,f,ier2)
         enddo
     enddo
 
-    ! Poor solvent
+    ! Poor solvent chain A 
 
     do ix=1,dimx
         do iy=1,dimy
             do iz=1,dimz
 
-                do ip = 1, N_poorsol
-                    f(ix+dimx*(iy-1)+dimx*dimy*(iz-1)+ip*ncells) = xtotal(ix,iy,iz,ip)
+                do ip = 1, N_poorsolA
+                    f(ix+dimx*(iy-1)+dimx*dimy*(iz-1)+ip*ncells) = xtotalA(ix,iy,iz,ip)
 
-                    do im = 1, N_monomer
-                        if(hydroph(im).eq.ip) then 
+                    do im = 1, N_monomerA
+                        if(hydrophA(im).eq.ip) then 
                             f(ix+dimx*(iy-1)+dimx*dimy*(iz-1)+ip*ncells) = f(ix+dimx*(iy-1)+dimx*dimy*(iz-1)+ip*ncells) - &
-                                avpol(ix,iy,iz,im)
+                                avpolA(ix,iy,iz,im)
+                        endif
+                    enddo ! im
+                enddo ! ip
+
+            enddo ! ix
+        enddo ! iy
+    enddo ! iz
+
+    !  Poor solvent chain B 
+
+    do ix=1,dimx
+        do iy=1,dimy
+            do iz=1,dimz
+
+                do ip = 1, N_poorsolB
+                    f(ix+dimx*(iy-1)+dimx*dimy*(iz-1)+ip*ncells) = xtotalB(ix,iy,iz,ip)
+
+                    do im = 1, N_monomerB
+                        if(hydrophB(im).eq.ip) then 
+                            f(ix+dimx*(iy-1)+dimx*dimy*(iz-1)+(ip+N_poorsolA)*ncells) = &
+                            f(ix+dimx*(iy-1)+dimx*dimy*(iz-1)+(ip+N_poorsolB)*ncells) -avpolB(ix,iy,iz,im)
                         endif
                     enddo ! im
                 enddo ! ip
@@ -519,7 +732,7 @@ subroutine fkfun(x,f,ier2)
 
                     ! OJO CHECK!!!!
 
-                    f(ix+dimx*(iy-1)+dimx*dimy*(iz-1)+(N_poorsol+1)*ncells)=&
+                    f(ix+dimx*(iy-1)+dimx*dimy*(iz-1)+(N_poorsolA+N_poorsolB+1)*ncells)=&
                         (psitemp + qtot(ix, iy, iz)*constq)/(-2.0d0)
 
                 enddo
@@ -545,7 +758,7 @@ subroutine fkfun(x,f,ier2)
             end select
         enddo    
 
-        noffset=(N_poorsol+2)*ncells 
+        noffset=(N_poorsolA+N_poorsolB+2)*ncells 
         
 
         do i=1,niontypes
@@ -574,7 +787,7 @@ subroutine fkfun(x,f,ier2)
         normvol= normvol +f(i)**2
     enddo
     if(electroflag.eq.1) then 
-        noffset=(N_poorsol+1)*ncells 
+        noffset=(N_poorsolA+N_poorsolB+1)*ncells 
         do i= 1, ncells    
             normel = normel +f(i+noffset)**2
         enddo       
@@ -582,7 +795,7 @@ subroutine fkfun(x,f,ier2)
     
     iter = iter + 1
     if(verbose.ge.3) then
-        if(rank.eq.0) write(stdout,*)'fkfun:', iter, sqrt(norma), sqrt(normvol), sqrt(normel), q(1)
+        if(rank.eq.0) write(stdout,*)'fkfun:', iter, sqrt(norma), sqrt(normvol), sqrt(normel), qA(1)
     endif
 
     3333 continue
@@ -593,7 +806,7 @@ subroutine fkfun(x,f,ier2)
 end subroutine fkfun
 
 
-subroutine calc_std(xpot)
+subroutine calc_stdA(xpotA)
 
     use MPI
     use fields_fkfun
@@ -607,68 +820,76 @@ subroutine calc_std(xpot)
 
     implicit none
 
-    real*8, intent(in) :: xpot(dimx, dimy, dimz, N_monomer)
+    real*8, intent(in) :: xpotA(dimx, dimy, dimz, N_monomerA)
 
     ! local variables 
 
-    real*8 :: avpol_tosend(dimx,dimy,dimz, N_monomer)
+    real*8 :: avpolA_tosend(dimx,dimy,dimz, N_monomerA)
     real*8 :: fv
-    real*8 :: q_tosend
-    real*8 :: avpol_temp(dimx,dimy,dimz,N_monomer)
+    real*8 :: qA_tosend
+    real*8 :: avpolA_temp(dimx,dimy,dimz,N_monomerA)
     integer :: im,jj,i,j, ix, iy, iz, ii, ax, ay, az
     ! MPI
     integer :: tag
     parameter(tag = 0)
     integer :: err
 
-    shift = 1.0d0 ! == added  d0  ! uniform shift in P(alpha)
-    avpol_tosend = 0.0d0
-    q = 0.0d0
+    shiftA = 1.0d0                   ! == added  d0  ! uniform shift in P(alpha)
+    avpolA_tosend = 0.0d0
+    qA = 0.0d0
 
-    do jj = 1, cpp(rank+1)          ! == loop graft  on processor??
-        ii = cppini(rank+1)+jj      ! == graft point ii ??
+    do jj = 1, cpp(rank+1)          ! == graft point on each node
+        ii = cppini(rank+1)+jj      ! == actual graft point ii 
 
-        q_tosend=0.0d0
-        avpol_temp = 0.0d0
+        qA_tosend = 0.0d0
+        avpolA_temp = 0.0d0
 
-        do i=1,newcuantas(ii)       ! loop of chains
-       
-            pro(i, jj)= shift
+        if(hasGraftA(ii)) then 
+
+            do i=1,newcuantasA(ii)       ! == loop of chains conformation for graft point ii 
+        
+                proA(i, jj)= shiftA       ! == pro of conf i belong to graftpoint jj 
+                
+
+                do j=1,nsegA           
+                    ax = pxA(i, j, jj)   ! == each to his own chain
+                    ay = pyA(i, j, jj)
+                    az = pzA(i, j, jj)
+                    proA(i, jj) = proA(i, jj) * xpotA(ax, ay, az, segtypeA(j))
+                enddo
+                
+                proA(i, jj) = proA(i, jj) * dexp(-benergyA*ngaucheA(i,ii)) ! == energy of gauche bonds
+                proA(i, jj) = proA(i, jj) * dexp(-fz*zfinalA(i,jj))       ! == terminal end energy Fz
+
+                do j=1,nsegA
+
+                    fv = fvstd(pxA(i,j, jj),pyA(i,j, jj),pzA(i,j, jj))
+                    im = segtypeA(j)
+                    avpolA_temp(pxA(i,j, jj),pyA(i,j, jj),pzA(i,j, jj),im)= &
+                    avpolA_temp(pxA(i,j, jj),pyA(i,j, jj),pzA(i,j, jj),im)+&
+                        proA(i, jj)*vpolA*vsol/(delta**3)/fv*ngpol(ii)*sc ! ngpol(ii) has the number of chains grafted to the point ii
+                
+                enddo
+
+                qA_tosend=qA_tosend+proA(i, jj)
             
-            do j=1,long
-                ax = px(i, j, jj) ! cada uno para su cadena... == each to his own chain...
-                ay = py(i, j, jj)
-                az = pz(i, j, jj)
-                pro(i, jj) = pro(i, jj) * xpot(ax, ay, az, segtype(j))
-            enddo
-            
-            pro(i, jj) = pro(i, jj) * dexp(-benergy*ngauche(i,ii)) ! energy of gauche bonds
-            pro(i, jj) = pro(i, jj) * dexp(-fz*zfinal(i,jj))  ! termino Fz
-
-            do j=1,long
-                fv = fvstd(px(i,j, jj),py(i,j, jj),pz(i,j, jj))
-                im = segtype(j)
-                avpol_temp(px(i,j, jj),py(i,j, jj),pz(i,j, jj),im)= &
-                avpol_temp(px(i,j, jj),py(i,j, jj),pz(i,j, jj),im)+&
-                pro(i, jj)*vpol*vsol/(delta**3)/fv*ngpol(ii)*sc ! ngpol(ii) has the number of chains grafted to the point ii
-            enddo
-
-            q_tosend=q_tosend+pro(i, jj)
-
-        enddo ! i
-        ! norma 
-        do im = 1, N_monomer
-            do ix=1,dimx
-                do iy=1,dimy
-                    do iz=1,dimz
-                        avpol_tosend(ix,iy,iz,im)=avpol_tosend(ix, iy, iz,im) + &
-                            avpol_temp(ix,iy,iz,im)/q_tosend
+            enddo ! == end loop conf
+      
+            ! norma 
+            do im = 1, N_monomerA
+                do iz=1,dimz
+                    do iy=1,dimy
+                        do ix=1,dimx
+                            avpolA_tosend(ix,iy,iz,im) = avpolA_tosend(ix, iy, iz,im) + &
+                                avpolA_temp(ix,iy,iz,im)/qA_tosend
+                        enddo
                     enddo
                 enddo
             enddo
-        enddo
 
-        q(ii) = q_tosend ! no la envia ahora
+        endif   
+
+        qA(ii) = qA_tosend ! no la envia ahora
 
     enddo ! jj
     !------------------ MPI ----------------------------------------------
@@ -678,25 +899,145 @@ subroutine calc_std(xpot)
     call MPI_Barrier(MPI_COMM_WORLD, err)
 
     ! Junta avpol       
-    call MPI_REDUCE(avpol_tosend, avpol, dimx*dimy*dimz*N_monomer, MPI_DOUBLE_PRECISION, &
+    call MPI_REDUCE(avpolA_tosend, avpolA, dimx*dimy*dimz*N_monomerA, MPI_DOUBLE_PRECISION, &
         MPI_SUM,0, MPI_COMM_WORLD, err)
+        
+end subroutine calc_stdA
 
-end subroutine calc_std
 
-subroutine calcavpol(xpot)
+
+subroutine calc_stdB(xpotB)
+
+    use MPI
+    use fields_fkfun
+    use chainsdat
+    use conformations
+    use molecules
+    use ematrix
+    use kaist
+    use mparameters_monomer
+    use results
+
+    implicit none
+
+    real*8, intent(in) :: xpotB(dimx, dimy, dimz, N_monomerB)
+
+    ! local variables 
+
+    real*8 :: avpolB_tosend(dimx,dimy,dimz, N_monomerA)
+    real*8 :: fv
+    real*8 :: qB_tosend
+    real*8 :: avpolB_temp(dimx,dimy,dimz,N_monomerB)
+    integer :: im,jj,i,j, ix, iy, iz, ii, ax, ay, az
+    ! MPI
+    integer :: tag
+    parameter(tag = 0)
+    integer :: err
+
+    shiftB = 1.0d0                   ! == added  d0  ! uniform shift in P(alpha)
+    avpolB_tosend = 0.0d0
+    qB = 0.0d0
+
+    do jj = 1, cpp(rank+1)          ! == graft point on each node
+        ii = cppini(rank+1)+jj      ! == actual graft point ii 
+
+        qB_tosend = 0.0d0
+        avpolB_temp = 0.0d0
+
+        if(hasGraftB(ii)) then 
+
+            do i=1,newcuantasB(ii)       ! == loop of chains conformation for graft point ii 
+        
+                proA(i, jj)= shiftB       ! == pro of conf i belong to graftpoint jj 
+                
+
+                do j=1,nsegB           
+                    ax = pxB(i, j, jj)   ! == each to his own chain
+                    ay = pyB(i, j, jj)
+                    az = pzB(i, j, jj)
+                    proB(i, jj) = proB(i, jj) * xpotB(ax, ay, az, segtypeB(j))
+                enddo
+                
+                proB(i, jj) = proB(i, jj) * dexp(-benergyA*ngaucheB(i,ii)) ! == energy of gauche bonds
+                proB(i, jj) = proB(i, jj) * dexp(-fz*zfinalB(i,jj))       ! == terminal end energy Fz
+
+                do j=1,nsegB
+
+                    fv = fvstd(pxB(i,j, jj),pyB(i,j, jj),pzB(i,j, jj))
+                    im = segtypeB(j)
+                    avpolB_temp(pxB(i,j, jj),pyB(i,j, jj),pzB(i,j, jj),im)= &
+                    avpolB_temp(pxB(i,j, jj),pyB(i,j, jj),pzB(i,j, jj),im)+&
+                        proB(i, jj)*vpolB*vsol/(delta**3)/fv*ngpol(ii)*sc ! ngpol(ii) has the number of chains grafted to the point ii
+                
+                enddo
+
+                qB_tosend=qB_tosend+proB(i, jj)
+
+            enddo ! == end loop conf
+            ! norma 
+            do im = 1, N_monomerB
+                do iz=1,dimz
+                    do iy=1,dimy
+                        do ix=1,dimx
+                            avpolB_tosend(ix,iy,iz,im) = avpolB_tosend(ix, iy, iz,im) + &
+                                avpolB_temp(ix,iy,iz,im)/qB_tosend
+                        enddo
+                    enddo
+                enddo
+            enddo
+
+        endif 
+
+        qB(ii) = qB_tosend ! no la envia ahora
+
+    enddo ! jj
+    !------------------ MPI ----------------------------------------------
+    !1. Todos al jefe
+
+
+    call MPI_Barrier(MPI_COMM_WORLD, err)
+
+    ! Junta avpol       
+    call MPI_REDUCE(avpolB_tosend, avpolB, dimx*dimy*dimz*N_monomerB, MPI_DOUBLE_PRECISION, &
+        MPI_SUM,0, MPI_COMM_WORLD, err)
+        
+end subroutine calc_stdB
+
+
+subroutine calcavpolA(xpotA)
+
     use mparameters_monomer
     use mkl
     use system
     implicit none
 
-    real*8 xpot(dimx, dimy, dimz, N_monomer)
+    real*8 :: xpotA(dimx, dimy, dimz, N_monomerA)
 
-    if(flagmkl.eq.0)call calc_std(xpot)
+    if(flagmkl.eq.0)call calc_stdA(xpotA)
 #ifdef _MKL
-    if(flagmkl.eq.1)call calc_mkl(xpot)
-    if(flagmkl.eq.2)call calc_mkl_map(xpot)
+    if(flagmkl.eq.1)call calc_mklA(xpotA)
+    if(flagmkl.eq.2)call calc_mklA_map(xpotA)
 #endif
 
-end subroutine calcavpol
+end subroutine calcavpolA
+
+
+
+subroutine calcavpolB(xpotB)
+
+    use mparameters_monomer
+    use mkl
+    use system
+    implicit none
+
+    real*8 :: xpotB(dimx, dimy, dimz, N_monomerB)
+
+    if(flagmkl.eq.0)call calc_stdB(xpotB)
+#ifdef _MKL
+    if(flagmkl.eq.1)call calc_mklB(xpotB)
+    if(flagmkl.eq.2)call calc_mklB_map(xpotB)
+#endif
+
+end subroutine calcavpolB
 
 

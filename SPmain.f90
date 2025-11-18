@@ -237,7 +237,7 @@ program main
 
             counterr = counter + i + ii  - 1
             
-            call Free_Energy_Calc(counterr)
+           ! call Free_Energy_Calc(counterr)
             if(rank.eq.0) write(stdout,*) 'Free energy after solving', free_energy
             
             call savedata(counterr)
@@ -275,7 +275,7 @@ program main
                 if(rank.eq.0) write(stdout,*) 'solved ok, pH: ', pHbulkok
 
                 counterr = counter + i + ii  - 1
-                call free_energy_calc(counterr)
+            !    call free_energy_calc(counterr)
                 if(rank.eq.0) write(stdout,*) 'free energy after solving', free_energy
                 call savedata(counterr)
                 if(rank.eq.0) write(stdout,*) 'save ok'

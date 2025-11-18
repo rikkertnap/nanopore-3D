@@ -17,7 +17,8 @@ subroutine allocation
 
     ! fields_fkfun
     !ALLOCATE(xtotal(1-Xulimit:dimx+Xulimit, 1-Xulimit:dimy+Xulimit, 1-Xulimit:dimz+Xulimit)) ! xtotal para poor solvent
-    ALLOCATE(xtotal(dimx, dimy, dimz, N_poorsol))
+    ALLOCATE(xtotalA(dimx, dimy, dimz, N_poorsolA))
+    ALLOCATE(xtotalB(dimx, dimy, dimz, N_poorsolB))
     ALLOCATE(psi(0:dimx+1, 0:dimy+1, 0:dimz+1))
     ALLOCATE(xh(dimx, dimy, dimz))
 
@@ -26,13 +27,15 @@ subroutine allocation
     ALLOCATE (xpar(dimx*dimy*dimz))
 
     ! results
-    ALLOCATE (avpol(dimx, dimy, dimz, N_monomer))   ! == polymer volume fraction
+    ALLOCATE (avpolA(dimx, dimy, dimz, N_monomerA))   ! == polymer volume fraction
+    ALLOCATE (avpolB(dimx, dimy, dimz, N_monomerB))   ! == polymer volume fraction
     ALLOCATE (xpos(dimx, dimy, dimz))               ! pos ion
     ALLOCATE (xneg(dimx, dimy, dimz))               ! neg ioni
     ALLOCATE (qtot(dimx, dimy, dimz))               ! total charge density 
     ALLOCATE (xHplus(dimx, dimy, dimz))             ! H+
     ALLOCATE (xOHmin(dimx, dimy, dimz))             ! OH-
-    ALLOCATE (fdis(dimx, dimy, dimz, N_monomer))
+    ALLOCATE (fdisA(dimx, dimy, dimz, N_monomerA))
+    ALLOCATE (fdisB(dimx, dimy, dimz, N_monomerB))
     ALLOCATE (epsfcn(0:dimx+1, 0:dimy+1, 0:dimz+1))
     ALLOCATE (Depsfcn(0:dimx+1, 0:dimy+1, 0:dimz+1))
 
@@ -41,6 +44,13 @@ subroutine allocation
     ALLOCATE (volprot1(dimx,dimy,dimz))
     ALLOCATE (voleps(dimx,dimy,dimz))
     ALLOCATE (voleps1(dimx,dimy,dimz))
+
+    ALLOCATE (volepsA(dimx,dimy,dimz))
+    ALLOCATE (volepsA1(dimx,dimy,dimz))
+    ALLOCATE (volepsB(dimx,dimy,dimz))
+    ALLOCATE (volepsB1(dimx,dimy,dimz))
+
+
     ALLOCATE (volq(dimx,dimy,dimz))
     ALLOCATE (volq1(dimx,dimy,dimz))
     ALLOCATE (fvstd(dimx,dimy,dimz))
@@ -49,7 +59,8 @@ subroutine allocation
     ALLOCATE (pp(eqs*dimx*dimy*dimz))
 
     ! chainsdat
-    allocate(in1(long,3))
+    allocate(inA1(nsegA,3))
+    allocate(inB1(nsegB,3))
     allocate(cpp(size))
     allocate(cppini(size))
 

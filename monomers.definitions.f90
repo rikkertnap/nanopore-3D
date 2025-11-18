@@ -4,33 +4,64 @@ subroutine monomer_definitions
     use mparameters_monomer
 
     implicit none
-    integer i,j
+    integer ::i,j
 
     !read epsilon.in: N_poorsol and st_matrix
-    open(file='epsilon.in', unit=333)
-    read(333,*) N_poorsol
-    ALLOCATE (st_matrix(N_poorsol, N_poorsol)) ! interaction between monomer types in fraction of st, scaled by st-scale during running....
-    do i = 1, N_poorsol
-        read(333,*)(st_matrix(i,j), j = 1, i)
+    open(file='epsilonA.in', unit=333)
+    read(333,*) N_poorsolA
+    ALLOCATE (st_matrixA(N_poorsolA, N_poorsolA)) ! interaction between monomer types in fraction of st, scaled by st-scale during running....
+    do i = 1, N_poorsolA
+        read(333,*)(st_matrixA(i,j), j = 1, i)
         do j = 1, i
-            st_matrix(j,i) = st_matrix(i,j)
+            st_matrixA(j,i) = st_matrixA(i,j)
+        enddo
+    enddo
+    close(333)
+ 
+    open(file='epsilonB.in', unit=333)
+    read(333,*) N_poorsolB
+    ALLOCATE (st_matrixB(N_poorsolB, N_poorsolB)) ! interaction between monomer types in fraction of st, scaled by st-scale during running....
+    do i = 1, N_poorsolB
+        read(333,*)(st_matrixB(i,j), j = 1, i)
+        do j = 1, i
+            st_matrixB(j,i) = st_matrixB(i,j)
         enddo
     enddo
     close(333)
 
+
+
     !read monomer.in : N_monomer i zpol, hydroph pka
-    open(file='monomer.in', unit=333)
-    read(333,*) N_monomer
-    ALLOCATE (zpol(N_monomer))    ! charge of monomer segment: 1: base, -1: acid, 0:neutral
-    ALLOCATE (hydroph(N_monomer)) ! 0: hydrophilic, 1 < x < N_poorsol, type of poor solvent
-    ALLOCATE (pKa(N_monomer), Ka(N_monomer), K0(N_monomer))
-    do j =1, N_monomer
+    open(file='monomerA.in', unit=333)
+    read(333,*) N_monomerA
+    ALLOCATE (zpolA(N_monomerA))    ! charge of monomer segment: 1: base, -1: acid, 0:neutral
+    ALLOCATE (hydrophA(N_monomerA)) ! 0: hydrophilic, 1 < x < N_poorsol, type of poor solvent
+    ALLOCATE (pKaA(N_monomerA), KaA(N_monomerA), K0A(N_monomerA))
+    do j =1, N_monomerA
         read(333,*) i
-        read(333,*) zpol(i)
-        read(333,*) hydroph(i)
-        read(333,*) pka(i)
+        read(333,*) zpolA(i)
+        read(333,*) hydrophA(i)
+        read(333,*) pkaA(i)
     enddo
     close(333)
+
+
+
+    !read monomer.in : N_monomer i zpol, hydroph pka
+    open(file='monomerB.in', unit=333)
+    read(333,*) N_monomerB
+    ALLOCATE (zpolB(N_monomerB))    ! charge of monomer segment: 1: base, -1: acid, 0:neutral
+    ALLOCATE (hydrophB(N_monomerB)) ! 0: hydrophilic, 1 < x < N_poorsol, type of poor solvent
+    ALLOCATE (pKaB(N_monomerB), KaB(N_monomerB), K0B(N_monomerB))
+    do j =1, N_monomerB
+        read(333,*) i
+        read(333,*) zpolB(i)
+        read(333,*) hydrophB(i)
+        read(333,*) pkaB(i)
+    enddo
+    close(333)
+
+
 
     !implicit none
     !integer i

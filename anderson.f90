@@ -394,11 +394,6 @@ subroutine  simple_min_loop(xguess, x, TOL, fnorm, isSolution, MAX_INT, N)
     ! free memory 
     deallocate(fvec)
   
-
-
-
-
-  
 end subroutine  simple_min_loop
 
 

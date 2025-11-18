@@ -29,18 +29,18 @@ subroutine Free_Energy_Calc(looped)
 
     ! == local variables
 
-    real*8 :: q_tosend(ncha), sumgauche_tosend(ncha)
-    real*8 :: q0(ncha), sumgauche0(ncha)
-    integer :: newcuantas0(ncha)
+    real*8 :: qA_tosend(ncha), sumgaucheA_tosend(ncha)
+    real*8 :: qA0(ncha), sumgaucheA0(ncha)
+    integer :: newcuantasA0(ncha)
     real*8 :: F_Mix_s, F_Mix_pos
     real*8 :: F_Mix_neg, F_Mix_Hplus
-    real*8 :: Free_energy2, sumpi, sumrho, sumel, sumdiel, suma, mupol
+    real*8 :: Free_energy2, sumpi, sumrho, sumel, sumdiel, suma, mupolA
     real*8 :: temp
-    real*8 :: F_Mix_OHmin, F_gauche, F_Conf, F_Eq, F_vdW, F_eps, F_electro
-    real*8 :: pro0(cuantas, maxcpp)         ! pro(cuantas, maxcpp))
-    real*8 :: entropy(dimx,dimy,dimz)
+    real*8 :: F_Mix_OHmin, F_gaucheA, F_ConfA, F_EqA, F_vdWA, F_epsA, F_electro
+    real*8 :: proA0(cuantasA, maxcpp)         ! pro(cuantas, maxcpp))
+    real*8 :: entropyA(dimx,dimy,dimz)
     character*5 :: title
-    real*8 :: xtotalsum(dimx,dimy,dimz)
+    real*8 :: xtotalAsum(dimx,dimy,dimz)
     
     ! MPI
     !integer :: stat(MPI_STATUS_SIZE) 
@@ -71,17 +71,17 @@ subroutine Free_Energy_Calc(looped)
 
     ! Subordinados
 
-    entropy = 0.0
-    q0 = 0.0
-    q_tosend = 0.0
-    sumgauche_tosend = 0.0
+    entropyA = 0.0d0
+    qA0 = 0.0d0
+    qA_tosend = 0.0d0
+    sumgaucheA_tosend = 0.0d0
 
     if(flagmkl.ne.0) then
-        pro = 0.0
+        proA = 0.0
         do jj = 1, cpp(rank+1)
             iii = cppini(rank+1)+jj
-            do i = 1, newcuantas(iii)
-                pro(i,jj) = promkl(iii)%pro(i)
+            do i = 1, newcuantasA(iii)
+                proA(i,jj) = promkl(iii)%pro(i)
             enddo ! i
         enddo ! jj
     endif
@@ -92,31 +92,31 @@ subroutine Free_Energy_Calc(looped)
 
         do jj = 1, cpp(rank+1)
             iii = cppini(rank+1)+jj
-            q_tosend(iii) = q(iii)
+            qA_tosend(iii) = q(iii)
         enddo
 
-        call MPI_REDUCE(q_tosend, q0, ncha, MPI_DOUBLE_PRECISION, MPI_SUM,0, MPI_COMM_WORLD, err)
+        call MPI_REDUCE(qA_tosend, qA0, ncha, MPI_DOUBLE_PRECISION, MPI_SUM,0, MPI_COMM_WORLD, err)
 
         ! newcuantas
         
-        call MPI_REDUCE(newcuantas, newcuantas0, ncha, MPI_INTEGER, MPI_SUM,0, MPI_COMM_WORLD, err)
+        call MPI_REDUCE(newcuantasA, newcuantasA0, ncha, MPI_INTEGER, MPI_SUM,0, MPI_COMM_WORLD, err)
 
         ! Envia pro
 
         ! pro(cuantas, maxcpp)) 
-        CALL MPI_SEND(pro, cuantas*cpp(rank+1) , MPI_DOUBLE_PRECISION, dest, tag, MPI_COMM_WORLD,err)
+        CALL MPI_SEND(proA, cuantasA*cpp(rank+1) , MPI_DOUBLE_PRECISION, dest, tag, MPI_COMM_WORLD,err)
         
         ! sum gauche
 
         do jj = 1, cpp(rank+1)
             iii = cppini(rank+1)+jj
-            sumgauche_tosend(iii) = 0.0
-            do i = 1, newcuantas(iii)
-                sumgauche_tosend(iii) = sumgauche_tosend(iii)+ ngauche(i,iii)*pro(i,jj)/q(iii)
+            sumgaucheA_tosend(iii) = 0.0
+            do i = 1, newcuantasA(iii)
+                sumgaucheA_tosend(iii) = sumgaucheA_tosend(iii)+ ngaucheA(i,iii)*proA(i,jj)/qA(iii)
             enddo ! i
         enddo ! jj
 
-        call MPI_REDUCE(sumgauche_tosend, sumgauche0, ncha, MPI_DOUBLE_PRECISION, MPI_SUM,0, MPI_COMM_WORLD, err)
+        call MPI_REDUCE(sumgaucheA_tosend, sumgaucheA0, ncha, MPI_DOUBLE_PRECISION, MPI_SUM,0, MPI_COMM_WORLD, err)
 
 
         goto 888
@@ -231,7 +231,7 @@ subroutine Free_Energy_Calc(looped)
 
     ! 6. Entropia interna polimero
 
-    F_Conf = 0.0
+    F_ConfA = 0.0
 
     ! Jefe
 
@@ -239,21 +239,21 @@ subroutine Free_Energy_Calc(looped)
 
         do jj = 1, cpp(rank+1)
             iii = jj
-            q_tosend(iii) = q(iii)
+            qA_tosend(iii) = qA(iii)
         enddo
 
-        call MPI_REDUCE(q_tosend, q0, ncha, MPI_DOUBLE_PRECISION, MPI_SUM,0, MPI_COMM_WORLD, err)
+        call MPI_REDUCE(qA_tosend, qA0, ncha, MPI_DOUBLE_PRECISION, MPI_SUM,0, MPI_COMM_WORLD, err)
 
-        call MPI_REDUCE(newcuantas, newcuantas0, ncha, MPI_INTEGER, MPI_SUM,0, MPI_COMM_WORLD, err)
+        call MPI_REDUCE(newcuantasA, newcuantasA0, ncha, MPI_INTEGER, MPI_SUM,0, MPI_COMM_WORLD, err)
 
         do jj = 1, cpp(rank+1)
-            do i = 1, newcuantas0(jj)
+            do i = 1, newcuantasA0(jj)
                 iii = jj
       
-                F_Conf = F_Conf + (pro(i, jj)/q0(iii)) &
-                    *dlog((pro(i, jj))/q0(iii))*ngpol(iii)
+                F_ConfA = F_ConfA + (proA(i, jj)/qA0(iii)) &
+                    *dlog((proA(i, jj))/qA0(iii))*ngpol(iii)
 
-                entropy(p0(iii,1),p0(iii,2),p0(iii,3)) =  - dlog(q0(iii)/shift) 
+                entropyA(p0(iii,1),p0(iii,2),p0(iii,3)) =  - dlog(qA0(iii)/shiftA) 
             enddo
         enddo 
 
@@ -262,16 +262,16 @@ subroutine Free_Energy_Calc(looped)
 
             source = ii-1
            ! pro(cuantas, maxcpp))
-            call MPI_RECV(pro0, cuantas*cpp(ii), MPI_DOUBLE_PRECISION, source, tag, MPI_COMM_WORLD, stat, err)
+            call MPI_RECV(proA0, cuantasA*cpp(ii), MPI_DOUBLE_PRECISION, source, tag, MPI_COMM_WORLD, stat, err)
 
             do jj = 1, cpp(ii)
                 !       write(stdout,*) ii, jj, pro0(10,jj)
                 iii = cppini(ii)+jj
-                do i = 1, newcuantas0(iii)
+                do i = 1, newcuantasA0(iii)
 
-                    F_Conf = F_Conf + (pro0(i, jj)/q0(iii))*dlog((pro0(i, jj))/q0(iii))*ngpol(iii)
+                    F_ConfA = F_ConfA + (proA0(i, jj)/qA0(iii))*dlog((proA0(i, jj))/qA0(iii))*ngpol(iii)
 
-                    entropy(p0(iii,1),p0(iii,2),p0(iii,3)) =  - dlog(q0(iii)/shift) 
+                    entropyA(p0(iii,1),p0(iii,2),p0(iii,3)) =  - dlog(qA0(iii)/shiftA) 
 
                 enddo
             enddo
@@ -280,23 +280,23 @@ subroutine Free_Energy_Calc(looped)
 
     endif ! rank  == end rank ==0 
 
-    Free_Energy = Free_Energy + F_Conf
+    Free_Energy = Free_Energy + F_ConfA
 
     if(rank.eq.0) then
 
     !      title = 'entpy'
-    !      call savetodisk(entropy, title, looped)
+    !      call savetodisk(entropyA, title, looped)
  
-        open (unit=8, file='entropy.out', form='unformatted')
+        open (unit=8, file='entropyA.out', form='unformatted')
         write(8)dimx,dimy,dimz
-        write(8)entropy
+        write(8)entropyA
         close(8)
 
     endif
 
     ! 6.5 Energy of gauche bonds
 
-    F_gauche = 0.0
+    F_gaucheA = 0.0
 
     ! Jefe
 
@@ -304,63 +304,63 @@ subroutine Free_Energy_Calc(looped)
 
         do jj = 1, cpp(rank+1)
             iii = cppini(rank+1)+jj
-            sumgauche_tosend(iii) = 0.0
-            do i = 1, newcuantas(iii)
-                sumgauche_tosend(iii) = sumgauche_tosend(iii)+ ngauche(i,iii)*pro(i,jj)/q(iii)
+            sumgaucheA_tosend(iii) = 0.0
+            do i = 1, newcuantasA(iii)
+                sumgaucheA_tosend(iii) = sumgaucheA_tosend(iii)+ ngaucheA(i,iii)*proA(i,jj)/qA(iii)
             enddo ! i
         enddo ! jj
 
-        call MPI_REDUCE(sumgauche_tosend, sumgauche0, ncha, &
+        call MPI_REDUCE(sumgaucheA_tosend, sumgaucheA0, ncha, &
             MPI_DOUBLE_PRECISION, MPI_SUM,0, MPI_COMM_WORLD, err)
 
         do ii = 1, ncha
-            F_gauche = F_gauche + sumgauche0(ii)*ngpol(ii)*benergy
+            F_gaucheA = F_gaucheA + sumgaucheA0(ii)*ngpol(ii)*benergyA
         enddo  
 
     endif ! rank
 
-    Free_Energy = Free_Energy + F_gauche
+    Free_Energy = Free_Energy + F_gaucheA
 
     if(rank.eq.0) then
         title = 'entpy'
-        call savetodisk(entropy, title, looped)
+        call savetodisk(entropyA, title, looped)
  
-        open (unit=8, file='entropy.out', form='unformatted')
+        open (unit=8, file='entropyA.out', form='unformatted')
         write(8)dimx,dimy,dimz
-        write(8)entropy
+        write(8)entropyA
         close(8)
     endif
 
     
     ! 7. Chemical Equilibrium
-    F_Eq = 0.0 
+    F_EqA = 0.0 
             
 
     do ix  = 1, dimx
         do iy  = 1, dimy
             do iz  = 1, dimz
 
-                do im = 1, N_monomer
+                do im = 1, N_monomerA
       
                     fv=(1.0-volprot(ix,iy,iz))
 
-                    if(zpol(im).ne.0) then
+                    if(zpolA(im).ne.0) then
 
-                        F_Eq = F_Eq + fdis(ix,iy,iz,im)*dlog(fdis(ix,iy,iz,im)) &
-                            *avpol(ix,iy,iz,im)/vpol*fv
+                        F_EqA = F_EqA + fdisA(ix,iy,iz,im)*dlog(fdisA(ix,iy,iz,im)) &
+                            *avpolA(ix,iy,iz,im)/vpolA*fv
 
-                        F_Eq = F_Eq + (1.0-fdis(ix,iy,iz,im)) &
-                            *dlog(1.0-fdis(ix,iy,iz,im))*avpol(ix,iy,iz,im)/vpol*fv
+                        F_EqA = F_EqA + (1.0d0-fdisA(ix,iy,iz,im)) &
+                            *dlog(1.0d0-fdisA(ix,iy,iz,im))*avpolA(ix,iy,iz,im)/vpolA*fv
 
-                        F_Eq = F_Eq + (1.0-fdis(ix,iy,iz,im))*dlog(K0(im))*avpol(ix,iy,iz,im)/vpol*fv
+                        F_EqA = F_EqA + (1.0-fdisA(ix,iy,iz,im))*dlog(K0A(im))*avpolA(ix,iy,iz,im)/vpolA*fv
 
-                        select case (zpol(im))
+                        select case (zpolA(im))
                         case (-1) ! acid
-                            F_Eq = F_Eq + &
-                                (1.0-fdis(ix,iy,iz,im))*(-dlog(expmuHplus))*avpol(ix,iy,iz,im)/vpol*fv
+                            F_EqA= F_EqA + &
+                                (1.0d0-fdisA(ix,iy,iz,im))*(-dlog(expmuHplus))*avpolA(ix,iy,iz,im)/vpolA*fv
                         case (1) ! base
-                            F_Eq = F_Eq + &
-                                (1.0-fdis(ix,iy,iz,im))*(-dlog(expmuOHmin))*avpol(ix,iy,iz,im)/vpol*fv
+                            F_EqA = F_EqA + &
+                                (1.0-fdisA(ix,iy,iz,im))*(-dlog(expmuOHmin))*avpolA(ix,iy,iz,im)/vpolA*fv
                         end select
 
                     endif ! zpol
@@ -371,13 +371,13 @@ subroutine Free_Energy_Calc(looped)
         enddo
     enddo
 
-    F_eq = F_eq *delta**3/vsol
+    F_eqA = F_eqA * delta**3/vsol
 
-    Free_Energy = Free_Energy + F_Eq
+    Free_Energy = Free_Energy + F_EqA
 
     ! 8.vdW ! Ojo, los kai son negativos => atraccion
 
-    F_vdW = 0.0
+    F_vdWA = 0.0
 
     do ix = 1, dimx
         do iy = 1, dimy
@@ -385,9 +385,9 @@ subroutine Free_Energy_Calc(looped)
 
                 fv=(1.0-volprot(ix,iy,iz))
 
-                do ax = -Xulimit,Xulimit
-                    do ay = -Xulimit,Xulimit
-                        do az = -Xulimit,Xulimit
+                do ax = -XulimitA,XulimitA
+                    do ay = -XulimitA,XulimitA
+                        do az = -XulimitA,XulimitA
 
                             jx = ix+ax
                             jy = iy+ay
@@ -428,11 +428,11 @@ subroutine Free_Energy_Calc(looped)
                             if((jz.ge.1).and.(jz.le.dimz)) then
                                 fv2 = (1.0-volprot(jx,jy,jz)) 
 
-                                do ip = 1, N_poorsol
-                                do ipp = 1, N_poorsol
+                                do ip = 1, N_poorsolA
+                                do ipp = 1, N_poorsolA
                     
-                                    F_vdW = F_vdW - 0.5000*delta**3*xtotal(ix,iy,iz,ip) &
-                        *xtotal(jx,jy,jz,ipp)*Xu(ax, ay, az)*st*st_matrix(ip,ipp)*fv*fv2/(vpol*vpol*vsol*vsol)
+                                    F_vdWA = F_vdWA - 0.5d0*delta**3*xtotalA(ix,iy,iz,ip) &
+                        *xtotalA(jx,jy,jz,ipp)*XuA(ax, ay, az)*st*st_matrixA(ip,ipp)*fv*fv2/(vpolA*vpolA*vsol*vsol)
                     
                                 enddo ! ip
                                 enddo ! ipp
@@ -449,7 +449,7 @@ subroutine Free_Energy_Calc(looped)
         enddo
     enddo
 
-    Free_Energy = Free_Energy + F_vdW
+    Free_Energy = Free_Energy + F_vdWA
 
     ! 9. Electrostatic ! OJO
 
@@ -459,7 +459,7 @@ subroutine Free_Energy_Calc(looped)
         do iy  = 1, dimy
             do iz  = 1, dimz
                 F_electro = F_electro & 
-                    + delta**3*psi(ix, iy, iz)*qtot(ix, iy, iz)/2.0/vsol
+                    + delta**3*psi(ix, iy, iz)*qtot(ix, iy, iz)/2.0d0/vsol
 
             enddo
         enddo
@@ -471,20 +471,20 @@ subroutine Free_Energy_Calc(looped)
 
     ! 10. Pol-prot
 
-    F_eps = 0.0 
+    F_epsA = 0.0 
 
     do ix = 1, dimx
         do iy = 1, dimy
             do iz = 1, dimz
                 fv=(1.0-volprot(ix,iy,iz))
-                do im = 1, N_monomer
-                    F_eps = F_eps - avpol(ix,iy,iz,im)*voleps(ix,iy,iz)*(delta**3)/vpol/vsol*fv
+                do im = 1, N_monomerA
+                    F_epsA = F_epsA - avpolA(ix,iy,iz,im)*volepsA(ix,iy,iz)*(delta**3)/vpolA/vsol*fv
                 enddo
             enddo
         enddo
     enddo
 
-    Free_Energy = Free_Energy + F_eps
+    Free_Energy = Free_Energy + F_epsA
 
     if (verbose.ge.1) then
         write(stdout,*) 'Free_Energy_Calc: Free energy(1) = ', Free_energy
@@ -492,24 +492,24 @@ subroutine Free_Energy_Calc(looped)
 
     ! minimal F
 
-    Free_Energy2 = 0.0
+    Free_Energy2 = 0.0d0
 
-    xtotalsum = 0.0
-    do ip = 1, N_poorsol
-        xtotalsum(:,:,:)= xtotalsum(:,:,:)+xtotal(:,:,:,ip)
+    xtotalAsum = 0.0d0
+    do ip = 1, N_poorsolA
+        xtotalAsum(:,:,:)= xtotalAsum(:,:,:)+xtotalA(:,:,:,ip)
     enddo
 
 
-    sumpi = 0.0
-    sumrho=0.0
-    sumel=0.0
-    sumdiel = 0.0
+    sumpi = 0.0d0
+    sumrho=0.0d0
+    sumel=0.0d0
+    sumdiel = 0.0d0
 
     do ix=1,dimx
         do iy=1,dimy
             do iz=1,dimz
 
-                fv=(1.0-volprot(ix,iy,iz))
+                fv=(1.0d0-volprot(ix,iy,iz))
 
                 sumpi = sumpi+dlog(xh(ix, iy, iz))*fv     
                 sumpi = sumpi-dlog(xsolbulk)*fv
@@ -521,7 +521,7 @@ subroutine Free_Energy_Calc(looped)
                 sumrho = sumrho - ( - xsolbulk -xHplusbulk &
                     -xOHminbulk - (xposbulk+xnegbulk)/vsalt)*fv ! sum over  rho_i i=+,-,s
 
-                sumel = sumel - qtot(ix, iy, iz)*psi(ix, iy, iz)/2.0 
+                sumel = sumel - qtot(ix, iy, iz)*psi(ix, iy, iz)/2.0d0 
       
                 sumel = sumel + volq(ix,iy,iz)*psi(ix,iy,iz)*vsol                   
 
@@ -532,7 +532,7 @@ subroutine Free_Energy_Calc(looped)
 
                 gradpsi2 = DOT_PRODUCT(MATMUL(TMAT, psiv), MATMUL(TMAT, psiv))
          
-                sumdiel = sumdiel + 0.5/constq*xtotalsum(ix,iy,iz)*gradpsi2*Depsfcn(ix,iy,iz)
+                sumdiel = sumdiel + 0.5d0/constq*xtotalAsum(ix,iy,iz)*gradpsi2*Depsfcn(ix,iy,iz)
 
             enddo
         enddo
@@ -548,10 +548,10 @@ subroutine Free_Energy_Calc(looped)
 
 
     do ii = 1, ncha
-        Free_Energy2 = Free_Energy2-dlog(q0(ii)/shift)*ngpol(ii) 
+        Free_Energy2 = Free_Energy2-dlog(qA0(ii)/shiftA)*ngpol(ii) 
     enddo
 
-    Free_Energy2 = Free_Energy2 + suma - F_vdW
+    Free_Energy2 = Free_Energy2 + suma - F_vdWA
 
     if (verbose.ge.1) then
         write(stdout,*) 'Free_Energy_Calc: Free energy(2) = ', Free_energy2, sumdiel
@@ -560,13 +560,13 @@ subroutine Free_Energy_Calc(looped)
     ! Guarda energia libre
 
 
-    mupol = 0.0
+    mupolA = 0.0
     do ii = 1, ncha
-        mupol = mupol - dlog(q0(ii)/shift)*ngpol(ii)
+        mupolA = mupolA - dlog(qA0(ii)/shiftA)*ngpol(ii)
     enddo
 
     temp = sum(ngpol)
-    mupol = mupol/temp
+    mupolA = mupolA/temp
 
     if(rank.eq.0) then
 
@@ -577,16 +577,16 @@ subroutine Free_Energy_Calc(looped)
         write(304,*)looped, F_Mix_neg
         write(305,*)looped, F_Mix_Hplus
         write(306,*)looped, F_Mix_OHmin
-	    write(3071,*)looped, F_gauche
-        write(307,*)looped, F_Conf
-        write(308,*)looped, F_Eq
-        write(309,*)looped, F_vdW
-        write(410,*)looped, F_eps
+	    write(3071,*)looped, F_gaucheA
+        write(307,*)looped, F_ConfA
+        write(308,*)looped, F_EqA
+        write(309,*)looped, F_vdWA
+        write(410,*)looped, F_epsA
         write(311,*)looped, F_electro
 
         write(312,*)looped, Free_energy2
 
-        write(313,*)looped, mupol
+        write(313,*)looped, mupolA
 
     endif
     

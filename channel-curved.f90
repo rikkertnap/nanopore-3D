@@ -173,11 +173,11 @@ contains
         RC = radiusCurvature(RL,RS,Lsect) 
         areachannel = total_surface_area_curv(RL,RC,Lsect,nsect)
 
-        a=-Lsect/2.0d0
-        b=-a
-        nsteps=(b-a)/delta
-        x=a
-        sumarea=0.0d0
+        a = -Lsect/2.0d0
+        b = -a
+        nsteps =(b-a)/delta
+        x = a
+        sumarea = 0.0d0
 
         do i=1,nsteps
             sumarea = sumarea + surface_area_channel(x,(x+delta),RL,RC,Lsect)
@@ -255,7 +255,7 @@ contains
 
         ! area channel islarger then area cylinder with radiusS 
         ! area channel is smaller or larger then area cylinder with radiusL 
-        !  dependingg on if curvature Rc is less or larger radiusL  
+        ! dependingg on if curvature Rc is less or larger radiusL  
         
         if(info==4.or.info==5.or.info==6)  then 
             if(rank==0) write(stdout,*)"unit_test_area_channel: area=",areachannel,&
@@ -294,35 +294,34 @@ contains
     
         real*8 :: radiusSeps, radiusLeps
         real*8 :: radiusSq, radiusLq
-        real*8 :: lenC,LenCsect
+        real*8 :: lenC, LenCsect
         real*8, external :: rands
-        integer :: npoints ! points per cell for numerical integration 
+        integer :: npoints      ! points per cell for numerical integration 
         integer :: counter
         character*5 :: title
-        integer :: j,ix,iy,iz
-        real :: pnumber
+        integer :: i, j, ix, iy, iz
         real*8 :: areachannel, volumechannel
-        real*8 :: sumpolseg 
-        real*8 :: sstemp,vvtemp, maxss
+        integer :: sumpolseg     ! total number graft points 
+       ! real*8 :: sstemp,vvtemp, maxss
         real*8 :: cutarea
         real*8 :: temp
         real*8 :: sumvoleps1, sumvolprot1, sumvolq1, sumvolx1
         integer :: ncha1
         real*8 :: volx1(maxvolx)
         real*8 :: com1(maxvolx,3)
+        real*8 :: comA1(maxvolx,3),comB1(maxvolx,3)
         integer :: p1(maxvolx,3)
-        integer :: i
         real*8 :: volxx1(dimx,dimy,dimz)
         real*8 :: volxx(dimx,dimy,dimz)
         real*8 :: x(3), v(3), hcyl
         integer :: nbands
 
         real*8 :: originc_curv(3)
+        integer :: info
 
-
-        cutarea = 0.0 ! throw away cells that have less area than cutarea x area of the cell with largest area  
-        sumpolseg = 0.0
-
+        cutarea = 0.0d0     ! throw away cells that have less area than cutarea x area of the cell with largest area  
+        sumpolseg = 0
+      
         !rchannel2 = rchannel**2
         !rchannelL2 = (rchannel - 3*delta)**2
         !rchannelS2 = (rchannel + delta)**2
@@ -332,24 +331,31 @@ contains
 
         ! radii for volprot given by radiusS & radiusL
     
-        ! radii for voleps
+        ! radii for voleps  given by radiusSeps & radiusLeps
 
-        radiusSeps = radiusS-3*delta
-        radiusLeps = radiusL-3*delta
+        radiusSeps = radiusS-3.0d0*delta
+        radiusLeps = radiusL-3.0d0*delta
          
-        ! radii for volq
+        ! radii for volq given by radiusSq & radiusLq
 
         radiusSq = radiusS + delta
         radiusLq = radiusL + delta
 
         ! clear all
-        voleps = 0.0
-        volprot = 0.0
-        volq = 0.0
-        volx = 0.0
-        volxx = 0.0
-        com = 0.0
+
+        volepsA = 0.0d0
+        volepsB = 0.0d0
+        volprot = 0.0d0
+        volq = 0.0d0
+        volx = 0.0d0
+        volxx = 0.0d0
+        comA = 0.0d0
+        comB = 0.0d0
         ncha = 0
+
+        ! intin comA1 and comB1
+        comA1=1000.0d0
+        comB1=1000.0d0
 
         ! channel center in x, y plane
 
@@ -360,6 +366,7 @@ contains
         originc_curv(1) = originc(1) 
         originc_curv(2) = originc(2) 
         originc_curv(3) = float(dimz)*delta/2.0  
+
         !originc_curv(3) =  Rdimz*delta + LenCsect/2.0d0 ! location of middle of first curved section nanaochannel
 
         npoints = 50
@@ -370,31 +377,34 @@ contains
 
         call integrate_channel_curved(radiusS,radiusL,RdimZ, originc_curv,npoints, volprot1, sumvolprot1, flag)
 
-        call integrate_channel_curved(radiusSq,radiusLq,RdimZ,originc_curv ,npoints, voleps1 , sumvoleps1, flag)
+        call integrate_channel_curved(radiusSq,radiusLq,RdimZ,originc_curv , npoints, volq1, sumvolq1, flag)
         
-
         call newintegrate_channel_curved(radiusS,radiusL,RdimZ,originc_curv, npoints,volx1,sumvolx1,com1,p1,&
             ncha1,volxx1, NBRUSH)
+
+        call move_com(originc_curv,ncha1,com1, comA1,comB1)
+           
      
-    
         !! eps
         voleps1 = voleps1-volprot1
-        voleps1 = voleps1*eepsc
+        volepsA1 = voleps1*eepscA
+        volepsB1 = voleps1*eepscB
+        
+        !!  epstype
 
-        ! epstype
-
-        select case (epstype)
+        select case (epstypeA)
         case (1)
             nbands = dimz/8
-        do iz = 1, dimz
-            if (mod(int((iz-1)/nbands),2).eq.1) then
-                voleps1(:,:,iz) = 0.0
-            endif
-        enddo
+            do iz = 1, dimz
+                if (mod(int((iz-1)/nbands),2).eq.1) then
+                    volepsA1(:,:,iz) = 0.0
+                endif
+            enddo
         end select
 
 
         !! charge
+
         volq1 = volprot1-volq1
         temp = sum(volq1)
         volq1 = volq1/temp*echargec/(delta**3) ! sum(volq) is echarge
@@ -412,7 +422,6 @@ contains
 
         hcyl = x(3) ! height of the cylinder
 
-
         !! volume  
         volprot1 = volprot1 * 0.9999d0
         volprot = volprot+volprot1
@@ -423,26 +432,22 @@ contains
             flag=.true. 
         endif
         
-        voleps = voleps + voleps1
+        volepsA = volepsA + volepsA1
+        volepsB = volepsB + volepsB1
         volq = volq + volq1 
-
-        ! add com1 and volx to list
-
         volxx = volxx1
-
         ncha = ncha1
+
         do i = 1, ncha
             volx(i)=volx1(i)
-            com(i,:)=com1(i,:)
+            comA(i,:)=comA1(i,:)
+            comB(i,:)=comB1(i,:)
             p0(i,:)=p1(i,:)
-            rotangle(i) = atan2(com1(i,1)-originc(1), com1(i,2)-originc(2))
+            rotangleA(i) = atan2(comA1(i,1)-originc(1), comA1(i,2)-originc(2))
+            rotangleB(i) = atan2(comB1(i,1)-originc(1), comB1(i,2)-originc(2))
         enddo
 
-        title = 'avpro'
-        counter = 1
-        call savetodisk(volprot, title, counter)
-
-        sumpolseg = ncha
+        sumpolseg = ncha    !== total number polymr graft points
 
         if (verbose.ge.2) then
            
@@ -473,9 +478,15 @@ contains
             endif
         endif
 
-        title = 'aveps'
+        ! == output 
+        
+        title = 'avpro'
         counter = 1
-        call savetodisk(voleps, title, counter)
+        call savetodisk(volprot, title, counter)
+
+        title = 'avepsA'
+        counter = 1
+        call savetodisk(volepsA, title, counter)
 
         title = 'avcha'
         counter = 1
@@ -641,17 +652,17 @@ end function integration_cell
 ! == This routine determines the surface coverage and grafting positions only for cylinder
 ! == grafting position returned by variable p1 and com1 
 
-subroutine newintegrate_channel_curved(radiusS,radiusL,RdimZ,origincurv, npoints,volx1,sumvolx1,com1,p1,&
+subroutine newintegrate_channel_curved(radiusS,radiusL,RdimZ,origincurv,npoints,volx1,sumvolx1,com1,p1,&
     ncha1,volxx1, NBRUSH)
     
     use system
     use transform
-    use chainsdat
+    use chainsdat !, only : lsegA, lsegB, ncha
     use ematrix
-    !use const
     use const, only : pi, randominput, stdout
     use channel, only : sigmar, Nrings, ringpos, ngrafts
     use graftpoint, only : read_graftpoint, write_graftpoint
+    use MPI, only : rank, ierr
 
     implicit none
 
@@ -662,34 +673,29 @@ subroutine newintegrate_channel_curved(radiusS,radiusL,RdimZ,origincurv, npoints
     integer, intent(in) :: npoints          ! == number of points used for integration
     real*8, intent(inout) :: volx1(maxvolx) 
     real*8, intent(inout) :: sumvolx1
-    real*8, intent(inout) :: com1(maxvolx,3) ! =  
-    integer, intent(inout)::  p1(maxvolx,3) ! == location  on lattice 
+    real*8, intent(inout) :: com1(maxvolx,3) !
+    integer, intent(inout) :: p1(maxvolx,3) ! == location  on lattice 
     real*8, intent(inout) :: volxx1(dimx,dimy,dimz)
     integer, intent(inout) :: ncha1         ! == number of grafts points maxvolx >= ncha1
     integer, intent(in) :: NBRUSH           ! == number of graft in theta direction
-
-
-    ! real*8 rchannel, rchannel2, originc(2),RdimZ,originc, npoints,volx1,sumvolx1,com1,p1,ncha1,volxx1, NBRUSH
 
     ! == local variables 
 
     real*8 :: rtetha, rz
     integer :: indexvolx(dimx,dimy,dimz)
-    integer :: listvolx(ncha,3)
-    real*8 :: phi, dphi, tetha,dtetha, as, ds
-    integer :: mphi, mtetha
+   ! integer :: listvolx(ncha,3)
+   ! real*8 :: phi, dphi, tetha,dtetha, as, ds
+   ! integer :: mphi, mtetha
     integer :: ix,iy,iz,jx,jy,jz
     real*8 :: x(3), v(3)
     integer :: i,j
     integer :: ncount
-   ! real*8 :: comshift ! how far from the surface of the sphere the grafting point i
     integer :: dims(3), is(3), js(3)
     integer :: jjjz, jjjt, npointz, npointt
-    real*8 :: hcyl         ! == height cylinder/channel 
-    real*8 :: hcyl0        ! == location base of cylinder/channel 
+    real*8 :: hcyl                              ! == height cylinder/channel 
+    real*8 :: hcyl0                             ! == location base of cylinder/channel 
     real*8, external :: rands
     real*8 :: tethaadd   
-
     real*8 :: zcoor                             !== z coordinate relative to z origin
     real*8 :: Radiusz                           !== z dependent radius of channel  
     real*8 :: RC,RL,RS,LenC,LenCsect,rchannelz  ! == local shape varialbes
@@ -697,19 +703,16 @@ subroutine newintegrate_channel_curved(radiusS,radiusL,RdimZ,origincurv, npoints
     integer :: info, pts
     logical :: isWrite
     
-!    disp = delta
-
     dims(1) = dimx
     dims(2) = dimy
     dims(3) = dimz
 
-   ! rchannel = sqrt(rchannel2)
 
     indexvolx = 0
     ncha1 = 0
     volx1 = 0.0
     sumvolx1 = 0.0 ! == total volume, including that outside system
-    com1 = 0.0
+    com1 = 0.0d0
     p1 = 0
     volxx1 = 0.0
 
@@ -838,6 +841,7 @@ subroutine newintegrate_channel_curved(radiusS,radiusL,RdimZ,origincurv, npoints
                 ncha1 = ncha1 + 1
 
                 indexvolx(jx,jy,jz) = ncha1
+
                 p1(ncha1,1)=jx
                 p1(ncha1,2)=jy
                 p1(ncha1,3)=jz
@@ -849,17 +853,6 @@ subroutine newintegrate_channel_curved(radiusS,radiusL,RdimZ,origincurv, npoints
 
             enddo ! jjjt
         enddo ! jjjz
-
-
-
-        do i = 1, ncha1
-            ! == positiongraftpoint(i,:) = com1(i,:) - origincurv(:)
-            ! == Moves the position of the first segment lseg away from the surface to prevent collision due to round errors. 
-            
-            rchannelz = dsqrt((com1(i,1)-origincurv(1))**2+(com1(i,2)-origincurv(2))**2)
-            com1(i,1) = com1(i,1) - lseg*((com1(i,1)-origincurv(1)))/rchannelz ! replace rchannel with rchannelz : radius of channel is z dependent 
-            com1(i,2) = com1(i,2) - lseg*((com1(i,2)-origincurv(2)))/rchannelz 
-        enddo
   
     
     else  
@@ -867,10 +860,15 @@ subroutine newintegrate_channel_curved(radiusS,radiusL,RdimZ,origincurv, npoints
         ! == read graft point from file
         
         allocate(positiongraftpoint(ngrafts,3))
-    
-        isWrite=.false.
-    
+        
         call read_graftpoint(RS,RL,lenC,ngrafts,positiongraftpoint,info)
+        if(info.ne.0) then
+            write(stdout,*) 'Failure to read graftpoint info:',info
+            call MPI_FINALIZE(ierr) ! finaliza MPI
+            stop
+        endif    
+  
+        isWrite=.true.
         
         if(isWrite) call write_graftpoint(RS,RL,lenC,ngrafts,positiongraftpoint,info)
 
@@ -878,13 +876,12 @@ subroutine newintegrate_channel_curved(radiusS,radiusL,RdimZ,origincurv, npoints
            
             x(:) = positiongraftpoint(pts,:) + origincurv(:)   ! == position real space
             v = MATMUL(MAT,x)
-            
+          
             do i = 1,3   
                 js(i) = int(v(i)/delta)+1                     ! == position on lattice 
             
                 if((js(i).le.0).or.(js(i).gt.dims(i))) then
                     write(stdout,*)'newintegrate_channel_curved: error in channel-curved', i, js(i), dims(i)
-                    write(stdout,*) x(1), x(2), x(3)
                     stop
                 endif
             enddo
@@ -898,28 +895,26 @@ subroutine newintegrate_channel_curved(radiusS,radiusL,RdimZ,origincurv, npoints
             jy = js(2)
             jz = js(3)
 
-            ! ==  increase counter
-
             ncha1 = ncha1 + 1
-
+    
             indexvolx(jx,jy,jz) = ncha1
+
             p1(ncha1,1)=jx
             p1(ncha1,2)=jy
             p1(ncha1,3)=jz
 
             volxx1(jx,jy,jz) =  1.0
             volx1(indexvolx(jx,jy,jz)) = 1.0
-            com1(indexvolx(jx,jy,jz),:) = x(:) ! == carefull use coordinate systmam asociated with vector x 
-            sumvolx1 = sumvolx1 + 1.0
+            ! com1(indexvolx(jx,jy,jz),:) = x(:) ! == carefull use coordinate systmam asociated with vector x 
+            
+            com1(indexvolx(jx,jy,jz),1) = x(1)
+            com1(indexvolx(jx,jy,jz),2) = x(2)
+            com1(indexvolx(jx,jy,jz),3) = x(3)
+            
+            
+            sumvolx1 = sumvolx1 + 1.0    
 
         enddo 
-    
-        do i = 1, ncha1
-            ! == Moves the position of the first segment lseg away from the surface to prevent collision due to round errors.
-            rchannelz = dsqrt((com1(i,1)-origincurv(1))**2+(com1(i,2)-origincurv(2))**2)
-            com1(i,1) = com1(i,1) - lseg*((com1(i,1)-origincurv(1)))/rchannelz 
-            com1(i,2) = com1(i,2) - lseg*((com1(i,2)-origincurv(2)))/rchannelz 
-        enddo
 
         deallocate(positiongraftpoint)
 
@@ -927,5 +922,38 @@ subroutine newintegrate_channel_curved(radiusS,radiusL,RdimZ,origincurv, npoints
 
 end subroutine 
 
+ ! == positiongraftpoint(i,:) = com(i,:) - origincurv(:)
+ ! == Moves the position of the first segment lseg away from the surface to prevent collision due to round errors. 
+subroutine move_com(origincurv,ncha,com, comA,comB)
+
+    use chainsdat, only : lsegA, lsegB
+    use ematrix, only : maxvolx
+
+    real*8, intent(in)    :: origincurv(3)     ! == orgincurv center channel  
+    integer, intent(in)   :: ncha
+    real*8, intent(in)    :: com(maxvolx,3) !
+    real*8, intent(inout) :: comA(maxvolx,3) 
+    real*8, intent(inout) :: comB(maxvolx,3) 
+
+    ! local 
+    real*8 :: rchannelz
+    integer :: i 
+ 
+    do i = 1, ncha
+                      
+        rchannelz = dsqrt((com(i,1)-origincurv(1))**2+(com(i,2)-origincurv(2))**2)
+
+        comA(i,1) = com(i,1) - lsegA*((com(i,1)-origincurv(1)))/rchannelz ! replace rchannel with rchannelz : radius of channel is z dependent 
+        comA(i,2) = com(i,2) - lsegA*((com(i,2)-origincurv(2)))/rchannelz 
+        comA(i,3) = com(i,3)
+
+        comB(i,1) = com(i,1) - lsegB*((com(i,1)-origincurv(1)))/rchannelz ! replace rchannel with rchannelz : radius of channel is z dependent 
+        comB(i,2) = com(i,2) - lsegB*((com(i,2)-origincurv(2)))/rchannelz 
+        comB(i,3) = com(i,3)
+
+    enddo
+
+
+end subroutine move_com
 
 end module channelcurved

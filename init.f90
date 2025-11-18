@@ -45,12 +45,12 @@ subroutine initconst
 
     ! == eqs number of equation in unit of lattice size
 
-    if(electroflag.eq.0) eqs = (1+N_poorsol) 
+    if(electroflag.eq.0) eqs = (1+N_poorsolA+N_poorsolB) 
     if(electroflag.eq.1) then 
         if (fluxflag.eq.0) then 
-            eqs = (2+N_poorsol)         !== Equilbrium 
+            eqs = (2+N_poorsolA+N_poorsolB)    !== Equilbrium 
         else if(fluxflag.eq.1) then
-            eqs = (2+4+N_poorsol)       !== Steady state : 4 iontypes
+            eqs = (2+4+N_poorsolA)       !== Steady state : 4 iontypes
         endif
     endif     
          
@@ -98,21 +98,34 @@ subroutine initall
     ! Input-dependent variables
     !!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-    vpol = vpol/vsol ! vpol in units of vsol
-    constqE = vpol/(2.0d0*constq)
+    vpolA = vpolA/vsol ! vpol in units of vsol
+    vpolB = vpolB/vsol
+    constqE = vpolA/(2.0d0*constq)
+    print*,"Warning constqE involvs vpol"
+
     dielW = 78.54d0
     dielPr = dielP/dielW
     dielSr = dielS/dielW
 
     call initbulk
 
-    do im = 1, N_monomer
-        Ka(im)=10.0d0**(-pKa(im))
-        select case (zpol(im))
+    do im = 1, N_monomerA
+        KaA(im)=10.0d0**(-pKaA(im))
+        select case (zpolA(im))
         case (-1) ! acid
-            K0(im) = (Ka(im)*vsol/xsolbulk)*(Na/1.0d24)! intrinstic equilibruim constant, Ka
+            K0A(im) = (KaA(im)*vsol/xsolbulk)*(Na/1.0d24)! intrinstic equilibruim constant, Ka
         case (1) ! base
-            K0(im) = ((Kw/Ka(im))*vsol/xsolbulk)*(Na/1.0d24)! intrinstic equilibruim constant, Kb 
+            K0A(im) = ((Kw/KaA(im))*vsol/xsolbulk)*(Na/1.0d24)! intrinstic equilibruim constant, Kb 
+        end select
+    enddo
+
+     do im = 1, N_monomerB
+        KaB(im)=10.0d0**(-pKaB(im))
+        select case (zpolB(im))
+        case (-1) ! acid
+            K0B(im) = (KaB(im)*vsol/xsolbulk)*(Na/1.0d24)! intrinstic equilibruim constant, Ka
+        case (1) ! base
+            K0B(im) = ((Kw/KaB(im))*vsol/xsolbulk)*(Na/1.0d24)! intrinstic equilibruim constant, Kb 
         end select
     enddo
 
@@ -155,7 +168,6 @@ subroutine initbulk
     expmuneg = xnegbulk /xsolbulk**vsalt
     expmuHplus = xHplusbulk /xsolbulk   ! vsol = vHplus 
     expmuOHmin = xOHminbulk /xsolbulk   ! vsol = vOHmin 
-
 
 end subroutine initbulk
 
@@ -213,7 +225,9 @@ subroutine savedata(cccc)
     character*20 :: filename
     character*5  :: title
     real*8 :: temp(dimx,dimy,dimz)
-    real*8 :: sumpol
+    real*8 :: sumpolA, sumpolB
+    real*8 :: avfdisA(N_monomerA), avfdisB(N_monomerB)
+    real*8 :: sumavpolA, sumavpolB 
     integer :: ix,iy,iz, im
     real*8 :: fv
     real*8 :: area
@@ -224,47 +238,52 @@ subroutine savedata(cccc)
 
     if(rank.eq.0) then 
 
-        ! solo el jefe escribe a disco....
-        ! onlly rank ( boss) write to disk 
-        ! Guarda infile
-        !  write(filename,'(A4, I3.3, A4)')'out.', cccc, '.dat'
-        !  open(unit=45, file=filename)
-        !   do i = 1, 2*n
-        !    write(45, *)x1(i)
-        !   enddo
-        !  close(45)
-
-        !!!!!!!!!!!!!!!!!!! Guarda archivos !!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        ! Polimero, todo
+     ! == save files 
+        ! == polymer 
 
         temp = 0.0d0
-        do im = 1, N_monomer
-            temp(:,:,:) =  temp(:,:,:) + avpol(:,:,:, im)*(1.0d0 - volprot(:,:,:))
+        do im = 1, N_monomerA
+            temp(:,:,:) =  temp(:,:,:) + avpolA(:,:,:, im)*(1.0d0 - volprot(:,:,:))
         enddo
 
-        title = 'avpol'
+        title = 'xpolA' ! 'avpol' 
         call savetodisk(temp, title, cccc)
 
-        ! Polimero, por tipo
-        ! polymer , by type 
+        temp = 0.0d0
+        do im = 1, N_monomerB
+            temp(:,:,:) =  temp(:,:,:) + avpolB(:,:,:, im)*(1.0d0 - volprot(:,:,:))
+        enddo
+
+        title = 'xpolB' ! 'avpol' 
+        call savetodisk(temp, title, cccc)
+
+        ! == polymer, by type 
         
-        do im = 1, N_monomer
-            temp(:,:,:) = avpol(:,:,:,im)*(1.0d0 - volprot(:,:,:))
-            write(title,'(A3, I2.2)')'avp',im
+        do im = 1, N_monomerA
+            temp(:,:,:) = avpolA(:,:,:,im)*(1.0d0 - volprot(:,:,:))
+            write(title,'(A3, I2.2)')'xAp',im      ! avp 
             call savetodisk(temp, title, cccc)
         enddo
 
-        ! Solvente
-        !  temp(:,:,:) = xh(:,:,:)*(1.0 - volprot(:,:,:))
+        do im = 1, N_monomerB
+            temp(:,:,:) = avpolB(:,:,:,im)*(1.0d0 - volprot(:,:,:))
+            write(title,'(A3, I2.2)')'xBp',im      ! avp 
+            call savetodisk(temp, title, cccc)
+        enddo
 
-        !  title = 'avsol'
-        !  call savetodisk(temp, title, cccc)
+        ! == solvent
+        temp(:,:,:) = xh(:,:,:)*(1.0 - volprot(:,:,:))
+
+        title = 'avsol'
+        call savetodisk(temp, title, cccc)
+        
+        
         ! Cationes
-        title = 'avpos'
-        call savetodisk(xpos, title, cccc)
+        ! title = 'avpos'
+        ! call savetodisk(xpos, title, cccc)
         ! Aniones
-        title = 'avneg'
-        call savetodisk(xneg, title, cccc)
+        ! title = 'avneg'
+        ! call savetodisk(xneg, title, cccc)
         ! H+
         !  title = 'avHpl'
         !  call savetodisk(xHplus, title, cccc)
@@ -272,32 +291,31 @@ subroutine savedata(cccc)
         !  title = 'avOHm'
         !  call savetodisk(xOHmin, title, cccc)
         ! fdis
-        title = 'frdis'
-        temp(1:dimx,1:dimy, 1:dimz) = fdis(1:dimx,1:dimy, 1:dimz,1)
+        
+        title = 'fdisA' 
+        temp(1:dimx,1:dimy, 1:dimz) = fdisA(1:dimx,1:dimy, 1:dimz,1)
         call savetodisk(temp, title, cccc)
 
         ! polymer charge
 
-        temp = 0.0d0
+        !temp = 0.0d0
 
-        do ix=1,dimx
-            do iy=1,dimy
-                do iz=1,dimz
-                    fv = (1.0d0-volprot(ix,iy,iz))
-
-                    do im = 1, N_monomer
-                        temp(ix, iy, iz) = temp(ix,iy,iz) + &
-                            avpol(ix,iy,iz,im)*zpol(im)/vpol/vsol*fdis(ix,iy,iz,im)! units of |e|/nm^3 
-                    enddo
-
-                enddo
-            enddo
-        enddo
+        !do ix=1,dimx
+        !    do iy=1,dimy
+        !        do iz=1,dimz
+        !           fv = (1.0d0-volprot(ix,iy,iz))
+        !            do im = 1, N_monomer
+        !                temp(ix, iy, iz) = temp(ix,iy,iz) + &
+        !                    avpol(ix,iy,iz,im)*zpol(im)/vpol/vsol*fdis(ix,iy,iz,im)! units of |e|/nm^3 
+        !            enddo
+        !        enddo
+        !    enddo
+        ! enddo
 
         !  title = 'qpol_'
         !  call savetodisk(temp, title, cccc)
 
-        ! Potencial electrostatico
+        ! electostatic potential 
 
         temp(1:dimx,1:dimy, 1:dimz) = psi(1:dimx,1:dimy, 1:dimz)
 
@@ -305,7 +323,7 @@ subroutine savedata(cccc)
         call savetodisk(temp, title, cccc)
 
 
-        ! Particle
+        !  Particle
         !  title = 'avpar'
         !  call savetodisk(volprot, title, cccc)
 
@@ -324,8 +342,88 @@ subroutine savedata(cccc)
             close(8)
         endif
 
-        ! system
+        ! == system
+
+        ! == total number of segments of chain A
+        sumpolA = 0.0d0  
+        do im = 1, N_monomerA
+            do iz = 1, dimz
+                do iy = 1, dimy
+                    do ix= 1, dimx
+                        sumpolA = sumpolA + avpolA(ix,iy,iz,im)*(delta**3)*(1.0d0-volprot(ix,iy,iz))/vpolA/vsol
+                    enddo
+                enddo
+            enddo
+        enddo
+
+        ! == total number of segments of chain B
+        sumpolB = 0.0d0  
+        do im = 1, N_monomerB
+            do iz = 1, dimz
+                do iy = 1, dimy
+                    do ix= 1, dimx
+                        sumpolB = sumpolB + avpolB(ix,iy,iz,im)*(delta**3)*(1.0d0-volprot(ix,iy,iz))/vpolB/vsol
+                    enddo
+                enddo
+            enddo
+        enddo
+
+
+        ! == average fraction of charged monomers of type im of chain A
+      
+        do im = 1, N_monomerA
+            if (zpolA(im).ne.0) then 
+                avfdisA(im) = 0.0d0
+                sumavpolA = 0.0d0
+                do iz=1,dimz
+                    do iy=1,dimy
+                        do ix=1,dimz
+                            fv = (1.0d0-volprot(ix,iy,iz))
+                            avfdisA(im)= avfdisA(im)+ avpolA(ix,iy,iz,im)*fv*zpolA(im)/vpolA/vsol*fdisA(ix,iy,iz,im) ! units of |e|/nm^3 
+                            sumavpolA= sumavpolA+avpolA(ix,iy,iz,im)*fv/vpolA/vsol      
+                        enddo
+                    enddo
+                enddo
+                avfdisA(im)= avfdisA(im)/sumavpolA
+            else  
+                avfdisA(im) = 0.0d0
+            endif      
+        enddo
+
+        ! == average fraction of charged monomers of type im of chain A
+      
+        do im = 1, N_monomerB
+            if (zpolB(im).ne.0) then 
+                avfdisB(im) = 0.0d0
+                sumavpolB = 0.0d0
+                do iz=1,dimz
+                    do iy=1,dimy
+                        do ix=1,dimz
+                            fv = (1.0d0-volprot(ix,iy,iz))
+                            avfdisB(im)= avfdisB(im)+ avpolB(ix,iy,iz,im)*fv*zpolB(im)/vpolB/vsol*fdisB(ix,iy,iz,im) ! units of |e|/nm^3 
+                            sumavpolB = sumavpolB+avpolB(ix,iy,iz,im)*fv/vpolB/vsol      
+                        enddo
+                    enddo
+                enddo
+                avfdisB(im)= avfdisB(im)/sumavpolB
+            else  
+                avfdisB(im) = 0.0d0
+            endif      
+        enddo
+
+
         if(curvedflag==0) area=dimx*dimy*delta*delta      ! == straight nanopore 
+        if(curvedflag==1) then 
+            area = total_surface_area_curv(radiusL,radiusC,lengthsection,nsections) !== curved nanopore
+        endif
+
+    
+
+        ! system
+        if(curvedflag==0) then 
+            area=dimx*dimy*delta*delta      ! == straight nanopore 
+            print*,"Warning area update needed for curvflag=0"
+        endif    
         if(curvedflag==1) then 
             area = total_surface_area_curv(radiusL,radiusC,lengthsection,nsections) !== curved nanopore
         endif
@@ -333,36 +431,39 @@ subroutine savedata(cccc)
         write(filename,'(A7, I3.3, A4)')'system.', cccc, '.dat'
         
         open (unit=310, file=filename)
-        write(310,*)'st          = ',st    
+        write(310,*)'GIT version = ', _VERSION
         write(310,*)'fnorm       = ',norma      ! residual size of iteration vector
-        write(310,*)'length seg  = ',lseg       
+        write(310,*)'lsegA       = ',lsegA       
         write(310,*)'delta       = ',delta
+        write(310,*)'dimx        = ',dimx
+        write(310,*)'dimy        = ',dimy
+        write(310,*)'dimz        = ',dimz
         write(310,*)'vsol        = ',vsol
         write(310,*)'vsalt       = ',vsalt*vsol
-        write(310,*)'vpol        = ',vpol*vsol
+        write(310,*)'vpolA       = ',vpolA*vsol
+        write(310,*)'vpolB       = ',vpolB*vsol
         write(310,*)'pKw         = ',pKw
         write(310,*)'zpos        = ',zpos
         write(310,*)'zneg        = ',zneg
-        write(310,*)'long        = ',long
+        write(310,*)'nsegA       = ',nsegA
+        write(310,*)'nsegB       = ',nsegB
         write(310,*)'csalt       = ',csalt
         write(310,*)'pH          = ',pHbulk
         write(310,*)'iterations  = ',iter
         write(310,*)'sigma cad/nm2 = ',ncha/area
-        write(310,*)'kai =          ', Xu
-        write(310,*)'GIT version = ', _VERSION
-
-        sumpol = 0.0d0
-        do ix = 1, dimx
-            do iy = 1, dimy
-                do iz = 1, dimz
-                    do im = 1, N_monomer
-                        sumpol = sumpol + avpol(ix,iy,iz,im)*(delta**3)*(1.0d0-volprot(ix,iy,iz))/vpol/vsol
-                    enddo
-                enddo
-            enddo
+        write(310,*)'kaiA        = ', XuA
+        write(310,*)'kaiB        = ', XuB
+        write(310,*)'st          = ',st  
+        write(310,*)'Number of A segments =          ', sumpolA
+        write(310,*)'Number of B segments =          ', sumpolB
+        do im = 1, N_monomerA
+            write(310,*)'avfdisA(',im,') = ',avfdisA(im) 
+        enddo 
+        do im = 1, N_monomerB
+            write(310,*)'avfdisB(',im,') = ',avfdisB(im) 
         enddo
-
-        write(310,*)'Number of segments =          ', sumpol
+        
+        
         close(310)
 
     endif ! == if(rank==)  
@@ -429,7 +530,8 @@ subroutine mirror
     implicit none
 
     real*8 :: xh(dimx,dimy,dimz), psi(dimx,dimy,dimz)
-    real*8 :: xtotal(dimx,dimy,dimz,N_poorsol)
+    real*8 :: xtotalA(dimx,dimy,dimz,N_poorsolA)
+    real*8 :: xtotalB(dimx,dimy,dimz,N_poorsolB)
     integer :: ip
     integer :: ix,iy,iz
     real*8 :: temp
@@ -443,11 +545,17 @@ subroutine mirror
             do iz=1,dimz
                 xh(ix,iy,iz)=xflag(ix+dimx*(iy-1)+dimx*dimy*(iz-1))
 
-                do ip = 1, N_poorsol
-                    xtotal(ix,iy,iz,ip) = xflag(ix+dimx*(iy-1)+dimx*dimy*(iz-1)+ip*ncells)
+                do ip = 1, N_poorsolA
+                    xtotalA(ix,iy,iz,ip) = xflag(ix+dimx*(iy-1)+dimx*dimy*(iz-1)+ip*ncells)
                 enddo
 
-                if(electroflag.eq.1) psi(ix,iy,iz)=xflag(ix+dimx*(iy-1)+dimx*dimy*(iz-1)+(N_poorsol+1)*ncells)
+                do ip = 1, N_poorsolB
+                    xtotalB(ix,iy,iz,ip) = xflag(ix+dimx*(iy-1)+dimx*dimy*(iz-1)+(ip+N_poorsolA)*ncells)
+                enddo
+
+
+                if(electroflag.eq.1) psi(ix,iy,iz)=xflag(ix+dimx*(iy-1)+dimx*dimy*(iz-1)+&
+                    (N_poorsolA+N_poorsolB+1)*ncells)
             enddo
         enddo
     enddo 
@@ -459,10 +567,16 @@ subroutine mirror
                 xh(ix,iy,iz) = xh(dimx-ix,iy,iz)
                 xh(dimx-ix,iy,iz) = temp
 
-                do ip = 1, N_poorsol
-                    temp = xtotal(ix,iy,iz,ip)
-                    xtotal(ix,iy,iz,ip) = xtotal(dimx-ix,iy,iz,ip)
-                    xtotal(dimx-ix,iy,iz,ip) = temp
+                do ip = 1, N_poorsolA
+                    temp = xtotalA(ix,iy,iz,ip)
+                    xtotalA(ix,iy,iz,ip) = xtotalA(dimx-ix,iy,iz,ip)
+                    xtotalA(dimx-ix,iy,iz,ip) = temp
+                enddo
+
+                do ip = 1, N_poorsolB
+                    temp = xtotalB(ix,iy,iz,ip)
+                    xtotalB(ix,iy,iz,ip) = xtotalB(dimx-ix,iy,iz,ip)
+                    xtotalB(dimx-ix,iy,iz,ip) = temp
                 enddo
 
                 if(electroflag.eq.1) then
@@ -481,11 +595,16 @@ subroutine mirror
             do iz=1,dimz
                 xflag(ix+dimx*(iy-1)+dimx*dimy*(iz-1))= xh(ix,iy,iz)
 
-                do ip = 1, N_poorsol
-                xflag(ix+dimx*(iy-1)+dimx*dimy*(iz-1)+ip*ncells) =  xtotal(ix,iy,iz,ip)
+                do ip = 1, N_poorsolA
+                    xflag(ix+dimx*(iy-1)+dimx*dimy*(iz-1)+ip*ncells) =  xtotalA(ix,iy,iz,ip)
                 enddo
 
-                if(electroflag.eq.1)xflag(ix+dimx*(iy-1)+dimx*dimy*(iz-1)+(N_poorsol+1)*ncells)= psi(ix,iy,iz)
+                do ip = 1, N_poorsolB
+                    xflag(ix+dimx*(iy-1)+dimx*dimy*(iz-1)+(ip+N_poorsolA)*ncells) =  xtotalB(ix,iy,iz,ip)
+                enddo
+
+                if(electroflag.eq.1) xflag(ix+dimx*(iy-1)+dimx*dimy*(iz-1)+(N_poorsolA+N_poorsolB+1)*ncells)= &
+                    psi(ix,iy,iz)
             enddo
         enddo
     enddo
