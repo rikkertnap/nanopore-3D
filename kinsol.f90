@@ -49,13 +49,24 @@ subroutine fkpset(udata, uscale, fdata, fscale,vtemp1,vtemp2, ier)
         ! pp(i) = 1
     enddo
 
-    do i = ncells+1, (N_poorsol+1)*ncells
+    do i = ncells+1, (N_poorsolA+1)*ncells
+        !   pp(i) = 0.1 / (1.0+exp(1.0-udata(i)))
+        pp(i) = 0.1 / (1.0+exp(1.0-udata(i)))
+    enddo
+
+    do i = (N_poorsolA+1)*ncells+1,(N_poorsolA+N_poorsolB+1)*ncells
         !   pp(i) = 0.1 / (1.0+exp(1.0-udata(i)))
         pp(i) = 0.1 / (1.0+exp(1.0-udata(i)))
     enddo
 
     if(electroflag.eq.1) then
-        do i = ncells*(N_poorsol+1), ncells*(N_poorsol+2)
+        do i = ncells*(N_poorsolA+N_poorsolB+1)+1, ncells*(N_poorsolA+N_poorsolB+2)
+            pp(i) = 1.0
+        enddo
+    endif
+
+    if(fluxflag.eq.1) then
+        do i = ncells*(N_poorsolA+N_poorsolB+2)+1, ncells*(N_poorsolA+N_poorsolB+6)
             pp(i) = 1.0
         enddo
     endif
@@ -158,19 +169,22 @@ subroutine call_kinsol(x1_old, xg1_old, ier)
         constr(i) = 2.0 ! xh > 0
     enddo
 
-    do i = ncells+1, (N_poorsol+1)*ncells
+    do i = ncells+1, (N_poorsolA+1)*ncells
+        constr(i) = 1.0 ! xtotal >= 0
+    enddo
+        
+    do i =(N_poorsolA+1)*ncells+1, (N_poorsolA+N_poorsolB+1)*ncells
         constr(i) = 1.0 ! xtotal >= 0
     enddo
 
     if(electroflag.eq.1) then
-       ! do i = ncells*(N_poorsol+1), ncells*(N_poorsol+2)  !constraint vector
-        do i = ncells*(N_poorsol+1)+1, ncells*(N_poorsol+2)
+        do i = ncells*(N_poorsolA+N_poorsolB+1)+1, ncells*(N_poorsolA+N_poorsolB+2)
             constr(i) = 0.0 ! no contraint for psi
         enddo
     endif
         
     if(fluxflag.eq.1) then
-        do i = ncells*(N_poorsol+2)+1, ncells*(N_poorsol+6)  !constraint vector
+        do i = ncells*(N_poorsolA+N_poorsolB+2)+1, ncells*(N_poorsolA+N_poorsolB+6)  !constraint vector
             constr(i) = 2.0 ! xpos > 0 etc
         enddo
     endif
