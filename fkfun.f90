@@ -537,7 +537,7 @@ subroutine fkfun(x,f,ier2)
 
                                             do ip = 1, N_poorsolB
                                                 proBtemp = proBtemp + hfactor*XuB(ax,ay,az)*&
-                                                st_matrixB(hydrophA(im),ip)*sttemp*xtotalB(jx,jy,jz,ip)*fv
+                                                st_matrixB(hydrophB(im),ip)*sttemp*xtotalB(jx,jy,jz,ip)*fv
                                             enddo ! ip
 
                                         endif
@@ -924,7 +924,7 @@ subroutine calc_stdB(xpotB)
 
     ! local variables 
 
-    real*8 :: avpolB_tosend(dimx,dimy,dimz, N_monomerA)
+    real*8 :: avpolB_tosend(dimx,dimy,dimz, N_monomerB)
     real*8 :: fv
     real*8 :: qB_tosend
     real*8 :: avpolB_temp(dimx,dimy,dimz,N_monomerB)
@@ -948,9 +948,8 @@ subroutine calc_stdB(xpotB)
 
             do i=1,newcuantasB(ii)       ! == loop of chains conformation for graft point ii 
         
-                proA(i, jj)= shiftB       ! == pro of conf i belong to graftpoint jj 
+                proB(i, jj)= shiftB       ! == pro of conf i belong to graftpoint jj 
                 
-
                 do j=1,nsegB           
                     ax = pxB(i, j, jj)   ! == each to his own chain
                     ay = pyB(i, j, jj)
@@ -958,7 +957,7 @@ subroutine calc_stdB(xpotB)
                     proB(i, jj) = proB(i, jj) * xpotB(ax, ay, az, segtypeB(j))
                 enddo
                 
-                proB(i, jj) = proB(i, jj) * dexp(-benergyA*ngaucheB(i,ii)) ! == energy of gauche bonds
+                proB(i, jj) = proB(i, jj) * dexp(-benergyB*ngaucheB(i,ii)) ! == energy of gauche bonds
                 proB(i, jj) = proB(i, jj) * dexp(-fz*zfinalB(i,jj))       ! == terminal end energy Fz
 
                 do j=1,nsegB

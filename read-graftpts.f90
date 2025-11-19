@@ -190,28 +190,31 @@ contains
 
         info = 0 
 
-        ! == reading sequence of graft point from file
-        write(fname,'(A16)')'graftsequence.in'
-        open(newunit=un,file=fname,iostat=ios,status='old',iomsg=io_msg)
-        inquire(file=fname,exist=exist)
-        if(exist) then 
-            open(newunit=un,file=fname,iostat=ios,status='old',iomsg=io_msg)
-            if(ios >0 ) then
-                if(rank.eq.0)write(stdout,*)'Error opening graftsequence.in file : iostat =', ios
-                info=1
-                return
-            endif
-        else
-            if(rank.eq.0)write(stdout,*)'Error graftsequence.indoes not exist.'
-            info = 7
-            return
-        endif
-      
-
         ! init
         hasGraftA = .False.
         hasGraftB = .False.
 
+        ! == reading sequence of graft point from file
+        ! == opening file 
+        write(fname,'(A16)')'graftsequence.in'
+        ! open(newunit=un,file=fname,iostat=ios,status='old',iomsg=io_msg)
+        inquire(file=fname,exist=exist)
+        if(exist) then 
+            open(newunit=un,file=fname,iostat=ios,status='old',iomsg=io_msg)
+            if(ios >0 ) then
+                if(rank.eq.0) write(stdout,*)'Error opening graftsequence.in file : iostat =', ios
+                if(rank.eq.0) write(stdout,*)'Error io message =', io_msg
+               
+                info=1
+                return
+            endif
+        else
+            if(rank.eq.0) write(stdout,*)'Error graftsequence.in does not exist.'
+            info = 7
+            return
+        endif
+      
+        ! == reading line by line file 
         line = 0
         ios = 0
         maxline = ngraft
@@ -225,7 +228,7 @@ contains
         
         close(un)
 
-         if(line/=maxline.or.ios/=0) then 
+        if(line/=maxline.or.ios/=0) then 
             str="reached end of file before all elements read or ios error"
             if(rank.eq.0)write(stdout,*)str
             str="read file "//trim(adjustl(fname))//" failed"

@@ -82,9 +82,9 @@ subroutine creadorA
         enddo
     enddo
 
-    do il = 1, ncha
-        write(stdout,*) 'creadorA:', rank, newcuantasA(il)
-    enddo
+    !do il = 1, ncha
+    !    write(stdout,*) 'creadorA:', rank, newcuantasA(il)
+    ! enddo
     ! stop
 
     if((readchains.eq.-1).and.(rank.eq.0)) close(3113)
@@ -175,9 +175,9 @@ subroutine creadorB
         enddo
     enddo
 
-    do il = 1, ncha
-        write(stdout,*) 'creadorB:', newcuantasB(il)
-    enddo
+    !do il = 1, ncha
+    !    write(stdout,*) 'creadorB:', newcuantasB(il)
+    !enddo
     ! stop
 
     if((readchains.eq.-1).and.(rank.eq.0)) close(3113)
@@ -185,6 +185,7 @@ subroutine creadorB
 
  111    do jj = 1, cpp(rank+1)
             ii = cppini(rank+1)+jj
+            print*,rank,ii,newcuantasB(ii)
             write(9989,*)rank,ii,newcuantasB(ii)
         enddo
 
@@ -433,6 +434,7 @@ subroutine graftpoints
     use MPI, only : rank, size
     use ematrix, only : comA, comB, volx
     use graftpoint, only : read_pattern_grafts
+    use MPI, only : ierr
     
     implicit none
     
@@ -470,6 +472,12 @@ subroutine graftpoints
     ! == init hasgraftA and hasgraftB 
 
     call read_pattern_grafts(ncha,hasGraftA,hasGraftB,info)
+    
+    if(info.ne.0) then
+        write(stdout,*) 'Failure to read graft pattern info:',info
+        call MPI_FINALIZE(ierr) ! finaliza MPI
+        stop
+    endif    
 
     do i=1,ncha
         if(hasGraftA(i)) sumpolAseg = sumpolAseg+1  !== total number of A polymr graft points
