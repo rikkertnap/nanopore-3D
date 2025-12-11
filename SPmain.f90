@@ -18,6 +18,7 @@ program main
     use flux
     use channelcurved
     use inputtemp
+    use fcnmod
 
     implicit none
 
@@ -102,6 +103,8 @@ program main
 
     ! == select system 
 
+    call set_fcn
+
     if (systemtype.eq.1) then
         call update_matrix(flag)            ! updates 'the matrix'
     elseif (systemtype.eq.2) then
@@ -126,7 +129,12 @@ program main
         call update_matrix_60(flag)         ! == channel + particles
     endif
     
-    call calcfv                             ! == calulate variable fv matrix ! IMPORTANT
+    call calcfv                             ! == calulate free volume fraction matrix fv : important 
+  
+    if(fluxflag.eq.1) then 
+        call calcfvint                      ! == calulate fvstdint integer mask of matrix fv 
+        call savetodisk_fvint               ! == output of fvstdint to file 
+    endif
 
     if(flag.eqv..true.) then
         write(stdout,*) 'Initial position of particle does not fit in z'
@@ -153,7 +161,7 @@ program main
     endif
 #endif
 
-    ! == initial guess  what is flag ??
+    ! == initial guess 
 
     if(infile.ne.0) then
         call retrivefromdisk(counter)
@@ -187,7 +195,7 @@ program main
                     call cpu_time(timeF)
                     if(rank.eq.0) print*,'Timer:',timeF-time0
                     if(flagcrash.eq.1) then
-                        if(i.eq.1) stop
+                        if(i.eq.1) call endall
                         kp = (kp + kpOK)/2.0
                         if(rank.eq.0) write(stdout,*)'Error, switch to kp = ', kp
                     endif
@@ -224,7 +232,7 @@ program main
                     call cpu_time(timeF)
                     if(rank.eq.0) print*,'Timer:',timeF-time0
                     if(flagcrash.eq.1) then
-                        if(i.eq.1) stop
+                        if(i.eq.1) call endall
                         st = (st + stOK)/2.0
                         if(rank.eq.0) write(stdout,*)'Error, switch to st = ', st
                     endif
@@ -265,7 +273,7 @@ program main
                     call cpu_time(timef)
                     if(rank.eq.0) print*,'timer:',timef-time0
                     if(flagcrash.eq.1) then
-                        if(i.eq.1) stop
+                        if(i.eq.1) call endall
                         pHbulk = (pHbulk + pHbulkok)/2.0
                         if(rank.eq.0) write(stdout,*)'error, switch to pH = ', pHbulk
                     endif

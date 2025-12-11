@@ -45,6 +45,9 @@ subroutine allocation
     ALLOCATE (volq1(dimx,dimy,dimz))
     ALLOCATE (fvstd(dimx,dimy,dimz))
     ALLOCATE (fvmkl(dimx*dimy*dimz))
+
+    if(fluxflag.eq.1) ALLOCATE(fvstdint(0:dimx+1,0:dimy+1,0:dimz+1))
+
     ! mkinsol
     ALLOCATE (pp(eqs*dimx*dimy*dimz))
 

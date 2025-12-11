@@ -12,17 +12,18 @@ module nanochannel-curved
 
 contains 
 
+    ! not used init !!
     subroutine init_curved_var
 
         use system, only : dimz, delta 
         use channel :: RdimZ      ! in units of delta 
 
-        lengthchannel = dimz-2.0d0*Rdimz*delta
+        lengthchannel = (dimz-2.0d0*Rdimz)*delta
         lenghtsection = lengthchannel/(1.0d0*nsections)
 
         !radiusC=(radiusL-radiusS)/2.0d0 +lenghtchannel**2/(8.0d0*(radiusL-radiusS))
 
-        radiusC=(radiusL-radiusS)/2.0d0 +lenghtsection **2/(8.0d0*(radiusL-radiusS))
+        radiusC=(radiusL-radiusS)/2.0d0 +lenghtsection**2/(8.0d0*(radiusL-radiusS))
 
     end function  
 

@@ -15,7 +15,7 @@ subroutine fkpsol(udata, uscale, fdata, fscale, vv, ftem, ier)
     common /psize/ neq
 
     do  i = 1, neq
-    vv(i) = vv(i) * pp(i)
+        vv(i) = vv(i) * pp(i)
     enddo
     ier = 0
 
@@ -59,6 +59,13 @@ subroutine fkpset(udata, uscale, fdata, fscale,vtemp1,vtemp2, ier)
             pp(i) = 1.0
         enddo
     endif
+
+    if(fluxflag.eq.1) then
+        do i = ncells*(N_poorsol+2)+1, ncells*(N_poorsol+6)
+            pp(i) = 1.0
+        enddo
+    endif
+
 
     ier = 0
 

@@ -11,6 +11,8 @@ module moleculeslist
     end type moleclist
 
     type(moleclist) :: vol, zval, mumin, mumax, xvolmin, xvolmax, Diffcoeff
+    
+    type(moleclist) :: muexmin, muexmax, rho_tilde_min, rho_tilde_max, Diffcoeff_tilde_min, Diffcoeff_tilde_max
 
 contains
 

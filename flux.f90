@@ -6,8 +6,9 @@ module flux
     implicit none
 
     real*8, allocatable, dimension(:,:,:,:) :: divJ    ! divergence of flux range divJ(nsize,niontypes)
-    real*8, allocatable, dimension(:,:,:)   :: mu      ! chemical potential range mu(nsize)
-    real*8, allocatable, dimension(:,:,:,:,:) :: Jvec    ! vector flux in  range J(nsize,3,niontypes)
+    real*8, allocatable, dimension(:,:,:)   :: mu      ! chemical potential range mu(nsize+bc)
+    real*8, allocatable, dimension(:,:,:)   :: mu_ex   ! excess or non ideal chemical potential part range mu(nsize+bc)
+    real*8, allocatable, dimension(:,:,:,:,:) :: Jvec  ! vector flux in range J(nsize,3,niontypes)
     real*8, allocatable, dimension(:,:,:,:) :: mu_ion  ! chemical potential range mu_ion(nsize,niontypes) 
     
 
@@ -15,19 +16,25 @@ module flux
    
     character(len=5), parameter :: iontype(4)=(/"pos  ","neg  ","Hplus","OHmin"/) 
     integer, parameter :: niontypes=4 
+    integer, parameter :: xpls=1, xmin=2, ypls=3, ymin=4, zpls=5, zmin=6 ! number edges of cell
 
     private 
-    public :: divJ, mu, Jvec, mu_ion, iontype, niontypes
-    public :: div_flux, allocate_flux_var, init_flux_var ,unit_test_divJ
+    public :: divJ, mu, Jvec, mu_ion, iontype, niontypes, bc_psi
+    public :: div_flux, allocate_flux_var, init_flux_var ,unit_test_divJ, linear_interpolation
+    public :: xpls, xmin, ypls, ymin, zpls, zmin
 
 contains
 
     subroutine allocate_flux_var()
+        
+        use system, only :ST_bctype
 
-       call allocate_divJ()
-       call allocate_mu()
-       call allocate_Jvec()
-       call allocate_mu_ion()
+        call allocate_divJ()
+        call allocate_mu()
+        call allocate_Jvec()
+        call allocate_mu_ion()
+
+        if(ST_bctype.eq.3) call allocate_mu_ex()
 
     end subroutine allocate_flux_var
 
@@ -46,6 +53,15 @@ contains
         allocate(mu(0:dimx+1, 0:dimy+1, 0:dimz+1))
 
     end subroutine allocate_mu
+
+    subroutine allocate_mu_ex()
+
+        use system, only : dimx, dimy, dimz
+
+        allocate(mu_ex(0:dimx+1, 0:dimy+1, 0:dimz+1))
+
+    end subroutine allocate_mu_ex
+
 
     subroutine allocate_Jvec()
 
@@ -66,9 +82,12 @@ contains
     subroutine init_flux_var
 
         use moleculeslist, only : vol, zval, mumin, mumax, xvolmin, xvolmax, Diffcoeff
+        use moleculeslist, only : muexmin, muexmax
+        use moleculeslist, only : rho_tilde_min, rho_tilde_max, Diffcoeff_tilde_min, Diffcoeff_tilde_max
         use moleculeslist, only : init_diffusion_coeff, init_vol, init_zval, init_xvolmin
         use inputtemp, only : psizmin, psizmax 
         use molecules, only : vsol
+        use system, only : ST_bctype
 
         real*8 :: pibulk 
 
@@ -90,6 +109,48 @@ contains
         mumax%neg = log(xvolmax%neg / vol%neg) +pibulk*vol%neg + psizmax*zval%neg
         mumax%Hplus = log(xvolmax%Hplus / vol%Hplus) +pibulk*vol%Hplus + psizmax*zval%Hplus
         mumax%OHmin = log(xvolmax%OHmin / vol%OHmin) +pibulk*vol%OHmin + psizmin*zval%OHmin
+
+       ! if(ST_bctype.eq.2) then ! flux using bc of imposedelectric field 
+       ! to be done 
+       ! endif
+        
+        if(ST_bctype.eq.3) then ! flux via Slotboom transformation 
+        
+            ! zmin 
+            
+            muexmin%pos = pibulk*vol%pos + psizmin*zval%pos
+            muexmin%neg = pibulk*vol%neg + psizmin*zval%neg
+            muexmin%Hplus = pibulk*vol%Hplus + psizmin*zval%Hplus
+            muexmin%OHmin = pibulk*vol%OHmin + psizmin*zval%OHmin
+
+            rho_tilde_min%pos = xvolmin%pos * exp ( muexmin%pos) /(vol%pos *vsol)
+            rho_tilde_min%neg = xvolmin%neg * exp ( muexmin%neg) /(vol%neg *vsol)
+            rho_tilde_min%Hplus = xvolmin%Hplus * exp ( muexmin%Hplus) /(vol%Hplus *vsol)
+            rho_tilde_min%OHmin = xvolmin%OHmin * exp ( muexmin%OHmin) /(vol%OHmin *vsol)
+
+            Diffcoeff_tilde_min%pos = exp ( -muexmin%pos)
+            Diffcoeff_tilde_min%neg = exp ( -muexmin%neg)
+            Diffcoeff_tilde_min%Hplus = exp ( -muexmin%Hplus)
+            Diffcoeff_tilde_min%OHmin = exp ( -muexmin%OHmin)
+
+            ! zmax 
+
+            muexmax%pos = pibulk*vol%pos + psizmax*zval%pos
+            muexmax%neg = pibulk*vol%neg + psizmax*zval%neg
+            muexmax%Hplus = pibulk*vol%Hplus + psizmax*zval%Hplus
+            muexmax%OHmin = pibulk*vol%OHmin + psizmax*zval%OHmin
+
+            rho_tilde_max%pos = xvolmin%pos * exp ( muexmax%pos) /(vol%pos *vsol)
+            rho_tilde_max%neg = xvolmin%neg * exp ( muexmax%neg) /(vol%neg *vsol)
+            rho_tilde_max%Hplus = xvolmin%Hplus * exp ( muexmax%Hplus) /(vol%Hplus *vsol)
+            rho_tilde_max%OHmin = xvolmin%OHmin * exp ( muexmax%OHmin) /(vol%OHmin *vsol)
+
+            Diffcoeff_tilde_max%pos = exp ( -muexmax%pos)
+            Diffcoeff_tilde_max%neg = exp ( -muexmax%neg)
+            Diffcoeff_tilde_max%Hplus = exp ( -muexmax%Hplus)
+            Diffcoeff_tilde_max%OHmin = exp ( -muexmax%OHmin)
+            
+        endif
 
     end subroutine init_flux_var
 
@@ -123,8 +184,8 @@ contains
         
         if(DEBUG_ST) then 
             write(stdout,*)"chem_potential: key=",key  
-            write(stdout,*)"chem_potentialvolum=",volum
-            write(stdout,*)"chem_potentialvalence=",valence
+            write(stdout,*)"chem_potential: volum=",volum
+            write(stdout,*)"chem_potential: valence=",valence
         endif
         
         do iz=1,dimz
@@ -215,12 +276,68 @@ contains
         mu(:,:,dimz+1) = mu_zmax
         xvol(:,:,dimz+1) = xvol_zmax
 
-        ! internal membrane still to do ...
-        print*,"bcflux:  Warning: internal membrane symmetries not applied yet"
 
     end subroutine bc_flux
 
-      ! boundary conditions for potential  
+    ! == boundary conditions excess chemical potential and xvol 
+
+    subroutine bc_flux_ex(mu_ex,rho_tilde,Diffcoeff_tilde,iontype) 
+        
+        use system, only : dimx, dimy, dimz  
+        use moleculeslist, only : muexmin, muexmax, rho_tilde_min, rho_tilde_max
+        use moleculeslist, only : Diffcoeff_tilde_min,Diffcoeff_tilde_max
+        use moleculeslist, only : get_value_moleclist
+
+        ! input arguments 
+        real*8, intent(inout) :: mu_ex(0:dimx+1,0:dimy+1,0:dimz+1)
+        real*8, intent(inout) :: rho_tilde(0:dimx+1,0:dimy+1,0:dimz+1)
+        real*8, intent(inout) :: Diffcoeff_tilde(0:dimx+1,0:dimy+1,0:dimz+1)
+        character(len=*), intent(in) :: iontype
+          
+        ! local variables
+
+        character(len=5):: key
+        real*8 :: mu_ex_zmin, mu_ex_zmax, rho_tilde_zmin, rho_tilde_zmax, Diffcoeff_tilde_zmin, Diffcoeff_tilde_zmax
+
+        key = trim(iontype)
+        mu_ex_zmin = get_value_moleclist(muexmin,key)
+        mu_ex_zmax = get_value_moleclist(muexmax,key)
+        rho_tilde_zmin = get_value_moleclist(rho_tilde_min,key)
+        rho_tilde_zmax = get_value_moleclist(rho_tilde_max,key)
+        Diffcoeff_tilde_zmin = get_value_moleclist(Diffcoeff_tilde_min,key)
+        Diffcoeff_tilde_zmax = get_value_moleclist(Diffcoeff_tilde_max,key)
+
+        
+        ! boundary conditions excess chemical potential and xvol 
+
+        ! x = 0
+        mu_ex(0,:,:) = mu_ex(1,:,:) 
+        rho_tilde(0,:,:) = rho_tilde(1,:,:) 
+
+        ! x = dimx
+        mu_ex(dimx+1,:,:) = mu_ex(dimx,:,:)  
+        rho_tilde(dimx+1,:,:) = rho_tilde(dimx,:,:)  
+
+        ! y = 0
+        mu_ex(:,0,:) = mu_ex(:,1,:) 
+        rho_tilde(:,0,:) = rho_tilde(:,1,:) 
+
+        ! y = dimy
+        mu_ex(:,dimy+1,:) = mu_ex(:,dimy,:) 
+        rho_tilde(:,dimy+1,:) = rho_tilde(:,dimy,:) 
+
+        ! z = 0
+        mu_ex(:,:,0) = mu_ex_zmin
+        rho_tilde(:,:,0) = rho_tilde_zmin
+
+        ! z = dimz
+        mu_ex(:,:,dimz+1) = mu_ex_zmax
+        rho_tilde(:,:,dimz+1) = rho_tilde_zmax
+
+
+    end subroutine bc_flux_ex
+
+    ! boundary conditions for potential  
 
     subroutine bc_psi(psi)
         
@@ -315,14 +432,14 @@ contains
 
         if(DEBUG_ST) then
             if(rank.eq.0) then 
-                write(stdout,*)"div_flux_cubic: key= ",key  
-                write(stdout,*)"div_flux_cubic: volum= ",volum
-                write(stdout,*)"div_flux_cubic: valence= ",valence
-                write(stdout,*)"div_flux_cubic: mu_zmin= ",mu_zmin
-                write(stdout,*)"div_flux_cubic: mu_zpls= ",mu_zpls
-                write(stdout,*)"div_flux_cubic: xvol_zpls= ",xvol_zpls
-                write(stdout,*)"div_flux_cubic: xvol_zmin= ",xvol_zmin
-                write(stdout,*)"div_flux_cubic: size(xvol)= ",size(xvol),&
+                write(stdout,*)"div_flux_channel: key= ",key  
+                write(stdout,*)"div_flux_channel: volum= ",volum
+                write(stdout,*)"div_flux_channel: valence= ",valence
+                write(stdout,*)"div_flux_channel: mu_zmin= ",mu_zmin
+                write(stdout,*)"div_flux_channel: mu_zpls= ",mu_zpls
+                write(stdout,*)"div_flux_channel: xvol_zpls= ",xvol_zpls
+                write(stdout,*)"div_flux_channel: xvol_zmin= ",xvol_zmin
+                write(stdout,*)"div_flux_channel: size(xvol)= ",size(xvol),&
                     "expected size= ",(dimx+2)*(dimy+2)*(dimz+2)
             endif
         endif    
@@ -359,36 +476,36 @@ contains
                         if(fvstdint(ix+1,iy,iz).eq.0) then 
                             Jdotxpls = 0.0d0
                         else     
-                            Jdotxpls = (xvol(ix+1,iy,iz) + xvol(ix  ,iy,iz))*(mu(ix+1,iy,iz) - mu(ix,iy,iz)  ) 
+                            Jdotxpls = (xvol(ix+1,iy,iz) + xvol(ix  ,iy,iz))*(mu(ix+1,iy,iz) - mu(ix,iy,iz)  ) ! * Ar (ix,iy,iz,xpls)
                         endif
 
                         if(fvstdint(ix-1,iy,iz).eq.0) then 
                             Jdotxmin = 0.0d0
                         else
-                            Jdotxmin = (xvol(ix  ,iy,iz) + xvol(ix-1,iy,iz))*(mu(ix ,iy,iz)  - mu(ix-1,iy,iz))
+                            Jdotxmin = (xvol(ix  ,iy,iz) + xvol(ix-1,iy,iz))*(mu(ix ,iy,iz)  - mu(ix-1,iy,iz)) ! * Ar (ix,iy,iz,xmin)
                         endif
                          
                         if(fvstdint(ix,iy+1,iz).eq.0) then 
                             Jdotypls = 0.0d0
                         else
-                            Jdotypls = (xvol(ix,iy+1,iz) + xvol(ix,iy  ,iz))*(mu(ix,iy+1,iz) - mu(ix,iy,iz)  ) 
+                            Jdotypls = (xvol(ix,iy+1,iz) + xvol(ix,iy  ,iz))*(mu(ix,iy+1,iz) - mu(ix,iy,iz)  ) ! * Ar (ix,iy,iz,ypls)
                         endif
                         
                         if(fvstdint(ix,iy-1,iz).eq.0) then
                             Jdotymin = 0.0d0
                         else        
-                            Jdotymin = (xvol(ix,iy  ,iz) + xvol(ix,iy-1,iz))*(mu(ix,iy  ,iz) - mu(ix,iy-1,iz))
+                            Jdotymin = (xvol(ix,iy  ,iz) + xvol(ix,iy-1,iz))*(mu(ix,iy  ,iz) - mu(ix,iy-1,iz)) ! * Ar (ix,iy,iz,ymin)
                         endif
 
                         if(fvstdint(ix,iy,iz+1).eq.0) then 
                             Jdotzpls = 0.0d0
                         else
-                            Jdotzpls = (xvol(ix,iy,iz+1) + xvol(ix,iy,iz  ))*(mu(ix,iy,iz+1) - mu(ix,iy,iz)  )
+                            Jdotzpls = (xvol(ix,iy,iz+1) + xvol(ix,iy,iz  ))*(mu(ix,iy,iz+1) - mu(ix,iy,iz)  ) ! * Ar (ix,iy,iz,zpls)
                         endif
                         if(fvstdint(ix,iy,iz-1).eq.0) then
                             Jdotzmin = 0.0d0
                         else      
-                            Jdotzmin = (xvol(ix,iy,iz  ) + xvol(ix,iy,iz-1))*(mu(ix,iy,iz  ) - mu(ix,iy,iz-1))
+                            Jdotzmin = (xvol(ix,iy,iz  ) + xvol(ix,iy,iz-1))*(mu(ix,iy,iz  ) - mu(ix,iy,iz-1)) ! * Ar (ix,iy,iz,zmin)
                         endif    
                 
                         divJtmp  =  Jdotxpls - Jdotxmin + Jdotypls - Jdotymin + Jdotzpls - Jdotzmin
@@ -895,5 +1012,197 @@ contains
         write(stdout,*)"unit_test_divJ: unit test: sumdivJ=",sumdivJ
 
     end subroutine unit_test_divJ
+
+
+    subroutine linear_interpolation(fcn_interp,fcn_begin,fcn_end)
+
+        use system, only : delta, dimz, ST_bctype
+
+        real*8, intent(inout) :: fcn_interp(:)
+        real*8, intent(in) :: fcn_begin, fcn_end
+
+        ! local variable 
+        real*8 :: slope, intercept
+        integer :: k
+        logical :: interpolshift
+
+
+        if(ST_bctype==2) interpolshift=.true. ! not solution test convergence
+        if(ST_bctype==1) interpolshift=.false.
+
+        if(interpolshift) then     
+            slope = (fcn_end-fcn_begin)/((dimz+1.0d0)*delta) 
+            intercept = fcn_begin+slope * delta/2.0d0
+        else 
+            slope = ((fcn_end-fcn_begin)/(dimz*delta))
+            intercept = fcn_begin 
+        endif
+
+        do k=1,dimz 
+            fcn_interp(k) = slope * (k - 0.5d0) * delta  +  intercept  ! middle of lattice cell in z-direction
+        enddo  
+
+    end subroutine linear_interpolation
+    
+
+    ! Computes  a laplace equaton that  indirect representaton div J via a Slotboomn transformations 
+    ! div . J  = div. ( D rho grad beta mu ) )<=> div.( Dtilde grad  rhotilde )=0 
+    ! with Dtilde = D exp( \beta -mu^ex) and rhotilde = rho exp( + beta mu^ex) 
+    ! \beta \mu^ex(r) =  \beta pi(r) v_i +\beta psi(r) q_i :  non-dial part of chemincal potential =
+    ! \beta \mu(r) = \mu_0 + \ln(rho_i(r) v_w) + \beta pi(r) v_i +\beta psi(r) q_i
+
+    subroutine div_flux_channel_slotboom(divJ,xsol,xion,psi,iontype)
+
+        use system, only : dimx, dimy, dimz, delta
+        use molecules, only : vsol
+        use moleculeslist, only : vol, zval, mumin, mumax, xvolmin, xvolmax, Diffcoeff
+        use moleculeslist, only : get_value_moleclist
+        use const, only : stdout
+        use MPI, only : rank
+        use ematrix, only : fvstdint
+        use inputtemp, only : psizmax, psizmin 
+
+        ! input arguments 
+
+        real*8, intent(inout) :: divJ(:,:,:)
+        real*8, intent(in) :: xion(:,:,:), xsol(:,:,:)
+        real*8, intent(in) ::  psi(0:dimx+1,0:dimy+1,0:dimz+1)
+        character(len=*), intent(in) :: iontype
+        
+
+        ! local variables
+        integer :: ix, iy, iz
+        integer ::  id, idxpls, idxmin, idypls, idymin, idzpls, idzmin
+        character(len=5):: key
+        real*8 :: volum, valence, coeff_scaled, Diffconst, J0
+        real*8 :: mu_zmin, mu_zpls, xvol_zmin, xvol_zpls
+        real*8 :: mu_ex_zmin, mu_ex_zpls
+        real*8 :: rho_tilde_zmin, rho_tilde_zpls, Diffcoeff_tilde_zmin,Diffcoeff_tilde_zpls
+        real*8 :: Jdotxpls, Jdotxmin, Jdotypls, Jdotymin, Jdotzpls, Jdotzmin, divJtmp 
+
+
+        real*8 :: mu_ex(0:dimx+1, 0:dimy+1, 0:dimz+1)
+        real*8 :: xvol(0:dimx+1, 0:dimy+1, 0:dimz+1)
+        real*8 :: rho_tilde(0:dimx+1, 0:dimy+1, 0:dimz+1)
+        real*8 :: Diffcoeff_tilde(0:dimx+1, 0:dimy+1, 0:dimz+1)
+
+        key = trim(iontype)
+
+        volum   = get_value_moleclist(vol,key)
+        valence = get_value_moleclist(zval,key)
+        mu_zmin = get_value_moleclist(mumin,key)
+        mu_zpls = get_value_moleclist(mumax,key)
+        xvol_zmin = get_value_moleclist(xvolmin,key)
+        xvol_zpls = get_value_moleclist(xvolmax,key) 
+        Diffconst = get_value_moleclist(Diffcoeff,key)
+
+        ! pre factor in flux factor (1.0e-9)^2 arise from vsol in unit of nm^3 and grad_mu in 1/nm
+        ! unit of Diffccoeff m^2/sec
+        ! J in 1/( nm^2) s)
+        
+        J0 = Diffconst / ( volum * vsol * (1.0d-9)**2) 
+        
+        coeff_scaled =  1.0d0/(volum*delta*2.0d0)
+        coeff_scaled =  1.0d0
+        !coeff_scaled = J0/(delta*2.0_dp)
+
+        !  volum from conversion of volumefraction to density  
+        !  in cylinder coordinates : 2 delta^2 from division by 2 \pi delta^2 {\bar r}_i 
+        !  in cubic coordiantes :  2 delta  :  from interpolation of density
+
+        if(DEBUG_ST) then
+            print*,"DEBUG_ST=",DEBUG_ST
+            print*,"key=",key  
+            print*,"volum=",volum
+            print*,"valence=",valence
+            print*,"mu_zmin=",mu_zmin
+            print*,"mu_zpls=",mu_zpls
+            print*,"xvol_zpls=",xvol_zpls
+            print*,"xvol_zmin=",xvol_zmin
+            print*,"size(xvol)=",size(xvol)
+        endif
+
+        do iz=1,dimz
+            do iy=1,dimy
+                do ix=1,dimx
+                    mu_ex(ix,iy,iz) =-log(xsol(ix,iy,iz))*volum + valence * psi(ix,iy,iz)
+                    rho_tilde(ix,iy,iz) = xvol(ix,iy,iz) * exp ( mu_ex(ix,iy,iz)) /(volum *vsol)
+                    Diffcoeff_tilde(ix,iy,iz)= exp ( -mu_ex(ix,iy,iz)) 
+                enddo
+            enddo 
+        enddo        
+
+        mu_ex_zmin = -log(xvolmin%sol)*volum + valence * psizmin
+        mu_ex_zpls = -log(xvolmax%sol)*volum + valence * psizmax
+        rho_tilde_zmin = xvol_zmin * exp ( mu_ex_zmin) /(volum *vsol)
+        rho_tilde_zpls = xvol_zpls * exp ( mu_ex_zpls) /(volum *vsol)
+        Diffcoeff_tilde_zmin = exp ( -mu_ex_zmin) 
+        Diffcoeff_tilde_zpls = exp ( -mu_ex_zpls) 
+
+        ! need to apply PBC to mu_ex
+
+
+        ! call bc_flux_laplace(mu_ex,rho_tilde) 
+
+        divJ=0.0d0
+        
+        if(DEBUG_ST) divJ= 123435600.0d0 ! used to detect unassinged values of divJ 
+        
+        
+        do iz=1,dimz
+            do iy=1,dimy
+                do ix=1,dimx
+
+                    if(fvstdint(ix,iy,iz).eq.0) then
+
+                        divJ(ix,iy,iz) =  rho_tilde(ix,iy,iz) - 0.0d0 ! == inside channel divJ and xvol zero !!
+                    
+                    else 
+                        
+                        if(fvstdint(ix+1,iy,iz).eq.0) then 
+                            Jdotxpls = 0.0d0
+                        else     
+                            Jdotxpls = (Diffcoeff_tilde(ix+1,iy,iz) + Diffcoeff_tilde(ix  ,iy,iz))*(rho_tilde(ix+1,iy,iz) - rho_tilde(ix,iy,iz)  ) ! * Ar (ix,iy,iz,xpls)
+                        endif
+
+                        if(fvstdint(ix-1,iy,iz).eq.0) then 
+                            Jdotxmin = 0.0d0
+                        else
+                            Jdotxmin = (Diffcoeff_tilde(ix  ,iy,iz) + Diffcoeff_tilde(ix-1,iy,iz))*(rho_tilde(ix ,iy,iz)  - rho_tilde(ix-1,iy,iz)) ! * Ar (ix,iy,iz,xmin)
+                        endif
+                         
+                        if(fvstdint(ix,iy+1,iz).eq.0) then 
+                            Jdotypls = 0.0d0
+                        else
+                            Jdotypls = (Diffcoeff_tilde(ix,iy+1,iz) + Diffcoeff_tilde(ix,iy  ,iz))*(rho_tilde(ix,iy+1,iz) - rho_tilde(ix,iy,iz)  ) ! * Ar (ix,iy,iz,ypls)
+                        endif
+                        
+                        if(fvstdint(ix,iy-1,iz).eq.0) then
+                            Jdotymin = 0.0d0
+                        else        
+                            Jdotymin = (Diffcoeff_tilde(ix,iy  ,iz) + Diffcoeff_tilde(ix,iy-1,iz))*(rho_tilde(ix,iy  ,iz) - rho_tilde(ix,iy-1,iz)) ! * Ar (ix,iy,iz,ymin)
+                        endif
+
+                        if(fvstdint(ix,iy,iz+1).eq.0) then 
+                            Jdotzpls = 0.0d0
+                        else
+                            Jdotzpls = (Diffcoeff_tilde(ix,iy,iz+1) + Diffcoeff_tilde(ix,iy,iz  ))*(rho_tilde(ix,iy,iz+1) - rho_tilde(ix,iy,iz)  ) ! * Ar (ix,iy,iz,zpls)
+                        endif
+                        if(fvstdint(ix,iy,iz-1).eq.0) then
+                            Jdotzmin = 0.0d0
+                        else      
+                            Jdotzmin = (Diffcoeff_tilde(ix,iy,iz  ) + Diffcoeff_tilde(ix,iy,iz-1))*(rho_tilde(ix,iy,iz  ) - rho_tilde(ix,iy,iz-1)) ! * Ar (ix,iy,iz,zmin)
+                        endif    
+                
+                        divJtmp  =  Jdotxpls - Jdotxmin + Jdotypls - Jdotymin + Jdotzpls - Jdotzmin
+                        divJ(ix,iy,iz) = - coeff_scaled * divJtmp
+                    
+                    endif 
+
+                enddo
+            enddo
+        enddo    
+
+    end subroutine div_flux_channel_slotboom
 
 end module flux

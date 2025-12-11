@@ -32,30 +32,28 @@ subroutine readinput
     integer :: ndi          ! == ndi = nondefined integer value assigned to not assigend integers
     real*8 :: ndr           ! == ndr = nondefined real value assigned to not assigend reals
 
-    ! not defined variables, change if any variable can take the value
+    ! defined variables, change if any variable can take the value
 
     seed = 938121
     seed2 = 938121
     PBC = 1
-
-    ndi = -1e5
-    ndr = -1.0d10
-
     verbose = 5
     stdout = 6
-
     electroflag = 1 ! system with electrostatics?
-
     branched = 0 ! branched chains?
-
     sigmar = 0.0 ! random sigma
+    ST_bctype = 0
+    randominput = 0
+    epstype = 0
+    flagmkl = 0
 
-    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     !
     ! Check validity of input
     !
 
-    flagmkl = 0
+    ndi = -1e5
+    ndr = -1.0d10
+
     vscan = ndi
     scx = ndi
     scy = ndi
@@ -69,13 +67,12 @@ subroutine readinput
     cuantas = ndi
     readchains = ndi
     infile = ndi
-    randominput = 0
-    epstype = 0
     cutoff = ndr
     lseg = ndr
     nst = ndi
     dielS = ndr
     pHbulk = ndr
+    npH = ndi 
     dielP = ndr
     delta = ndr
     dx = ndr
@@ -198,6 +195,11 @@ subroutine readinput
                 read(buffer, *, iostat=ios) graftflag
                 if(rank.eq.0)write(stdout,*) 'parser:','Set ',trim(label),' = ',trim(buffer)
 
+            case ('ST_bctype') ! ==  read grafto point from
+                
+                read(buffer, *, iostat=ios) ST_bctype
+                if(rank.eq.0)write(stdout,*) 'parser:','Set ',trim(label),' = ',trim(buffer)
+
             case ('branched')
                 read(buffer, *, iostat=ios) branched
         
@@ -211,7 +213,6 @@ subroutine readinput
                     read(fh, *)longb(1), longb(2)
                 endif
 
-
             case ('randominput')
                 read(buffer, *, iostat=ios) randominput
                 if(rank.eq.0)write(stdout,*) 'parser:','Set ',trim(label),' = ',trim(buffer)
@@ -219,7 +220,6 @@ subroutine readinput
             case ('epstype')
                 read(buffer, *, iostat=ios) epstype
                 if(rank.eq.0)write(stdout,*) 'parser:','Set ',trim(label),' = ',trim(buffer)
-
 
             case ('readchains')
                 read(buffer, *, iostat=ios) readchains
@@ -261,7 +261,6 @@ subroutine readinput
             case ('cdiva')
                 read(buffer, *, iostat=ios) cdiva
                 if(rank.eq.0)write(stdout,*) 'parser:','Set ',trim(label),' = ',trim(buffer)
-
 
             case ('dimy')
                 read(buffer, *, iostat=ios) dimy
@@ -614,7 +613,7 @@ subroutine readinput
     if(systemtype.eq.2.or.systemtype.eq.42) then
         if((cdiva.ne.1.0).or.(gama0.ne.90.0)) then
             write(stdout,*) 'Channel works only for cdiva = 1 and gama0 = 90.0... ending'
-            call MPI_FINALIZE(ierr) ! finaliza MPI
+            call MPI_FINALIZE(ierr) ! finalize MPI
             stop
         endif
     endif
@@ -623,7 +622,7 @@ subroutine readinput
         if(graftflag.eq.1) then
             if(curvedflag.eq.0) then 
                 write(stdout,*) 'Channel works only with graftflag = 1 in combinatin with curvedflag = 1 ending'
-                call MPI_FINALIZE(ierr) ! finaliza MPI
+                call MPI_FINALIZE(ierr) ! finalize MPI
                 stop
             endif
         endif    
@@ -680,6 +679,7 @@ subroutine readinput
     if(fluxflag.eq.ndi) call stopundef('fluxflag')
     if(curvedflag.eq.ndi) call stopundef('curvedflag')
     if(graftflag.eq.ndi) call stopundef('graftflag')
+    if(ST_bctype.eq.ndi) call stopundef('ST_bctype')
 
     if(systemtype.eq.42) then  
         if(rank.eq.0) then 
@@ -704,7 +704,11 @@ subroutine readinput
         endif
     endif    
 
-    
+    call check_value_methodflag(methodflag)
+    call check_value_ST_bctype(ST_bctype)
+    call check_value_fluxflag(fluxflag)
+    call check_combi_fluxflag_ST_bctype(fluxflag,ST_bctype)
+
     
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
@@ -738,7 +742,7 @@ subroutine check_value_methodflag(methodflag)
         if(methodflag==allowedvalue(i)) flag=.true.
     enddo    
     
-    if(flag) then 
+    if(flag.eqv..false.) then 
         write(stdout,*) 'parser:', 'value methodflag not premmitted :', methodflag
         call MPI_FINALIZE(ierr) ! ++end MPI
         stop
@@ -746,3 +750,98 @@ subroutine check_value_methodflag(methodflag)
 
 end subroutine check_value_methodflag
 
+subroutine check_value_ST_bctype(ST_bctype)
+
+    use const, only : stdout
+    use MPI, only : ierr
+
+    integer, intent(in) :: ST_bctype
+
+    integer :: allowedvalue(3)=(/0,1,2/) 
+    logical :: flag
+
+    flag = .false.
+
+    do i=1,3
+        if(ST_bctype==allowedvalue(i)) flag=.true.
+    enddo    
+    
+    if(flag.eqv. .FALSE.) then 
+        write(stdout,*) 'parser:', 'value ST_bctype not premmitted :', ST_bctype
+        call MPI_FINALIZE(ierr) ! ++end MPI
+        stop
+    endif
+
+end subroutine check_value_ST_bctype
+
+subroutine check_value_fluxflag(fluxflag)
+
+    use const, only : stdout
+    use MPI, only : ierr
+
+    integer, intent(in) :: fluxflag
+
+    integer :: allowedvalue(2)=(/0,1/) 
+    logical :: flag
+
+    flag = .false.
+
+    do i=1,2
+        if(fluxflag==allowedvalue(i)) flag= .true.
+    enddo    
+
+    if(flag.eqv. .false.) then 
+        write(stdout,*) 'parser:', 'value fluxflag not permitted :', fluxflag
+        call MPI_FINALIZE(ierr) ! ++end MPI
+        stop
+    endif
+
+end subroutine check_value_fluxflag
+
+subroutine check_combi_fluxflag_ST_bctype(fluxflag,ST_bctype)
+
+    use const, only : stdout
+    use MPI, only : ierr
+
+    integer, intent(in) :: fluxflag,ST_bctype
+
+    integer :: allowedvalue(2)=(/0,1/) 
+    logical :: flag
+
+    flag = .false.
+    
+    if(fluxflag==0.and.ST_bctype==0)  flag=.true.
+    if(fluxflag==1.and.(ST_bctype==1 .or. ST_bctype==2))  flag=.true.
+
+    if(flag.eqv. .FALSE.) then 
+        write(stdout,*) 'parser:', 'combination of fluxflag and ST_bctype not premmitted :', fluxflag, ST_bctype
+        call MPI_FINALIZE(ierr) ! ++end MPI
+        stop
+    endif
+
+end subroutine check_combi_fluxflag_ST_bctype
+
+subroutine override_PBC_flux(fluxflag,ST_bctype)
+
+    use const, only : stdout
+    use MPI, only : ierr
+
+    integer, intent(in) :: fluxflag,ST_bctype
+
+    integer :: allowedvalue(2)=(/0,1/) 
+    logical :: flag
+
+    flag = .false.
+
+    
+    if(fluxflag==1) then 
+            PBC = 0 
+            
+            ! PBC for flux is not equal to existing PBC ? 
+            ! PBC = 0 : bulk, 1:  periodic , 2: impenetrable wall  3 : reflective boundary 
+
+            if(rank.eq.0)write(stdout,*) 'parser:','Flux overide PBC, Set ',PBC
+
+    endif
+
+end subroutine override_PBC_flux

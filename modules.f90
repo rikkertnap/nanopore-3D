@@ -39,6 +39,10 @@ module maps
     
     integer, allocatable :: imap(:,:,:)               ! == hash table form 3D to 1D 
     integer, allocatable :: mapx(:), mapy(:), mapz(:) ! == inverse 1D to 3D
+
+    integer, allocatable :: coordtoindex(:,:,:)       ! == equivalent to imap  
+    integer, allocatable :: indextocoord(:,:)
+
 endmodule
  
 
@@ -84,7 +88,8 @@ module system
     integer :: curvedflag   ! == if flag ==1 use to control shape of nanochannel 0 : straight cylindrical shape 1: hourglass shaped nanopore 
     integer :: fluxflag     ! == if flag ==1 add flux equation : steady system instead of equilibrium
     integer :: methodflag   ! == select solver method :  1= kinsol 2=anderson 3= simple mixing
-    integer :: graftflag     ! == if flag ==1 read in graft point from file only fro systemtyep =42
+    integer :: graftflag    ! == if flag ==1 read in graft point from file only fro systemtyep =42
+    integer :: ST_bctype    ! == 1 or 2 to select flux boundary conditions 
     
 end module
 
@@ -107,7 +112,7 @@ module ematrix
     real*8, allocatable :: fvstd(:,:,:)         ! ==  fv  = 1 -volprot = free volume of cell
     real*8, allocatable :: fvmkl(:)             ! == idem as fvstd but used with mkl libraries
 
-    integer*1, allocatable :: fvstdint(:,:,:)  ! == binarized version of fvstd  0 == fv=0  1= f not 0 RJN  used for computing divJ
+    integer*1, allocatable :: fvstdint(:,:,:)   ! == binarized version of fvstd  0 == fv=0  1= f not 0 RJN  used for computing divJ
 
 end module
 
@@ -124,15 +129,15 @@ module channel
     real*8 :: rchannel                  ! == radius nanochannel
     real*8 :: originc(2)                ! == location in x-y plane of long axis channel  
     real*8 :: echargec, sigmac, eepsc, sigmar
-    integer :: NBRUSH
-    integer :: RdimZ                    ! size of reservoirs in delta units
-    integer :: Nrings                   ! number of rings for systemtype = 42
-    real*8, allocatable :: ringpos(:)   ! position along the pore
+    integer :: NBRUSH                   ! == number of theta direction per ring for systemtyep =42
+    integer :: RdimZ                    ! == size of reservoirs in delta units
+    integer :: Nrings                   ! == number of rings for systemtype = 42
+    real*8, allocatable :: ringpos(:)   ! == position along the pore
     integer :: Npolx, Npoly              
-    real*8  :: rchannelL, rchannelS     ! == largest and smalles radius of curved nanochannel 
-                                        ! == used only if curvedflag==1 and systype =42 
-    integer :: nchannelsections   
-    integer :: ngrafts                  ! number of graft points used if graftflag =1 : reading if graftpoint postions
+    real*8  :: rchannelL                ! == largest and smallest radius of curved nanochannel 
+    real*8  :: rchannelS                ! == used only if curvedflag==1 and systype =42 
+    integer :: nchannelsections         ! == number of curved section pore 
+    integer :: ngrafts                  ! == number of graft points used if graftflag =1 : reading if graftpoint postions
                                  
 endmodule
 

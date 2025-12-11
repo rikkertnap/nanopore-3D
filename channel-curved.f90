@@ -968,7 +968,216 @@ subroutine newintegrate_channel_curved(radiusS,radiusL,RdimZ,origincurv, npoints
 
     endif 
 
-end subroutine 
+end subroutine newintegrate_channel_curved
+
+
+! Integration over surface faces of cell ix,iy,iz that is. 
+! Determine for each surface face the ratio between surface area 
+! that is accesiblle to ion and solvent etc. relative surface area through 
+! which ions can flow
+! input : integer :: ix,iy,iz = integers location of cell
+!         real*8  :: orgincurv  = orgin or com of lattice
+!         integer :: n   = number of curved sections nanopore
+!         real*8 :: Rc,RL, LenCSect = shape variables nanopore
+! output: real*8 :: AreaRatio(6) =  fraction of area accesible for ion to flow through for each face
+
+function integration_cell_surface(origincurv,ix,iy,iz,n,RC,RL,LenCSect) result(AreaRatio)
+
+    use system, only : delta
+    use transform, only : IMAT
+    use channel, only  : RdimZ 
+    use flux, only : xpls,xmin,ypls,ymin,zpls,zmin
+
+    implicit none
+
+    real*8, intent(in)  :: origincurv(3)  
+    integer, intent(in) :: ix,iy,iz
+    integer, intent(in) :: n
+    real*8, intent(in)  :: RC, RL, LenCSect
+   
+    ! retrun argument 
+    real*8 :: AreaRatio(6)
+
+    ! local argument
+    integer :: ax,ay,az
+    integer :: cc
+    real*8 :: vect
+    real*8 :: dr(3), dxr(3), Rz, Rz2, zcoor
+    integer :: nArea
+
+    ! iz-plane
+    nArea = 0
+    dr(3) = iz*delta
+    do ax = 1, n
+        do ay = 1, n
+            ! = points uniform and symmetrically distrubuted over surface 
+            dr(1) = ix*delta-(ax-0.5)*delta/float(n) 
+            dr(2) = iy*delta-(ay-0.5)*delta/float(n) 
+            ! dr in transformed space
+            dxr = MATMUL(IMAT, dr)
+            dxr(1) = dxr(1) - origincurv(1)
+            dxr(2) = dxr(2) - origincurv(2)
+            zcoor=mod(dxr(3)-Rdimz*delta,LenCsect)-LenCsect/2.0d0  
+            ! == transform from lattice coordinates to relative coordinate of first nanopore section
+            Rz = radiusfz(zcoor,RL,RC)
+            Rz2 = Rz**2 
+            vect = dxr(1)**2+dxr(2)**2
+            if(vect<=Rz2) nArea = nArea+1   ! area not inside channel
+        enddo
+    enddo
+
+    AreaRatio(zpls) = float(nArea)/(float(n)**2)
+
+    ! iz-1 -plane
+    nArea=0 
+    dr(3) = (iz-1)*delta
+    do ax = 1, n
+        do ay = 1, n
+            ! = points uniform and symmetrically distrubuted over surface 
+            dr(1) = ix*delta-(ax-0.5)*delta/float(n) 
+            dr(2) = iy*delta-(ay-0.5)*delta/float(n) 
+            ! dr in transformed space
+            dxr = MATMUL(IMAT, dr)
+            dxr(1) = dxr(1) - origincurv(1)
+            dxr(2) = dxr(2) - origincurv(2)
+            zcoor=mod(dxr(3)-Rdimz*delta,LenCsect)-LenCsect/2.0d0  
+            ! == transform from lattice coordinates to relative coordinate of first nanopore section
+            Rz = radiusfz(zcoor,RL,RC)
+            Rz2 = Rz**2 
+            vect = dxr(1)**2+dxr(2)**2
+            if(vect<=Rz2) nArea = nArea+1   ! area not inside channel
+        enddo
+    enddo
+
+    AreaRatio(zmin) = float(nArea)/(float(n)**2)
+
+
+    ! ix-plane
+    nArea=0 
+    dr(1) = ix*delta
+
+    do ay = 1, n
+        do az = 1, n
+            ! = points uniform and symmetrically distrubuted over surface 
+            dr(2) = iy*delta-(ay-0.5)*delta/float(n) 
+            dr(3) = iz*delta-(az-0.5)*delta/float(n) 
+            ! dr in transformed space
+            dxr = MATMUL(IMAT, dr)
+            dxr(1) = dxr(1) - origincurv(1)
+            dxr(2) = dxr(2) - origincurv(2)
+            zcoor=mod(dxr(3)-Rdimz*delta,LenCsect)-LenCsect/2.0d0  
+            ! == transform from lattice coordinates to relative coordinate of first nanopore section
+            Rz = radiusfz(zcoor,RL,RC)
+            Rz2 = Rz**2 
+            vect = dxr(1)**2+dxr(2)**2
+            if(vect<=Rz2) nArea = nArea+1   ! area not inside channel
+        enddo
+    enddo
+
+    AreaRatio(xpls) = float(nArea)/(float(n)**2)
+
+    ! ix-1-plane
+    dr(1) = (ix-1)*delta
+    nArea=0 
+
+    do ay = 1, n
+        do az = 1, n
+            ! = points uniform and symmetrically distrubuted over surface 
+            dr(2) = iy*delta-(ay-0.5)*delta/float(n) 
+            dr(3) = iz*delta-(az-0.5)*delta/float(n) 
+            ! dr in transformed space
+            dxr = MATMUL(IMAT, dr)
+            dxr(1) = dxr(1) - origincurv(1)
+            dxr(2) = dxr(2) - origincurv(2)
+            zcoor=mod(dxr(3)-Rdimz*delta,LenCsect)-LenCsect/2.0d0  
+            ! == transform from lattice coordinates to relative coordinate of first nanopore section
+            Rz = radiusfz(zcoor,RL,RC)
+            Rz2 = Rz**2 
+            vect = dxr(1)**2+dxr(2)**2
+            if(vect<=Rz2) nArea = nArea+1   ! area not inside channel
+        enddo
+    enddo
+
+    AreaRatio(xmin) = float(nArea)/(float(n)**2)
+
+    ! iy - plane
+    dr(2) = iy*delta
+    nArea=0 
+
+    do ax = 1, n
+        do az = 1, n
+            ! = points uniform and symmetrically distributed over surface 
+            dr(1) = ix*delta-(ax-0.5)*delta/float(n) 
+            dr(3) = iz*delta-(az-0.5)*delta/float(n) 
+            ! dr in transformed space
+            dxr = MATMUL(IMAT, dr)
+            dxr(1) = dxr(1) - origincurv(1)
+            dxr(2) = dxr(2) - origincurv(2)
+            zcoor=mod(dxr(3)-Rdimz*delta,LenCsect)-LenCsect/2.0d0  
+            ! == transform from lattice coordinates to relative coordinate of first nanopore section
+            Rz = radiusfz(zcoor,RL,RC)
+            Rz2 = Rz**2 
+            vect = dxr(1)**2+dxr(2)**2
+            if(vect<=Rz2) nArea = nArea+1   ! area not inside channel
+        enddo
+    enddo
+
+    AreaRatio(ypls) = float(nArea)/(float(n)**2)
+
+   
+    ! iy-1 - plane
+    dr(2) = (iy-1)*delta
+    nArea=0 
+
+    do ax = 1, n
+        do az = 1, n
+            ! = points uniform and symmetrically distrubuted over surface 
+            dr(1) = ix*delta-(ax-0.5)*delta/float(n) 
+            dr(3) = iz*delta-(az-0.5)*delta/float(n) 
+            ! dr in transformed space
+            dxr = MATMUL(IMAT, dr)
+            dxr(1) = dxr(1) - origincurv(1)
+            dxr(2) = dxr(2) - origincurv(2)
+            zcoor=mod(dxr(3)-Rdimz*delta,LenCsect)-LenCsect/2.0d0  
+            ! == transform from lattice coordinates to relative coordinate of first nanopore section
+            Rz = radiusfz(zcoor,RL,RC)
+            Rz2 = Rz**2 
+            vect = dxr(1)**2+dxr(2)**2
+            if(vect<=Rz2) nArea = nArea+1   ! area not inside channel
+        enddo
+    enddo
+
+    AreaRatio(ymin) = float(nArea)/(float(n)**2)
+
+
+end function integration_cell_surface
+
+
+
+subroutine savetodisk_fvint
+
+    use system, only : dimx, dimy, dimz
+    use ematrix, only : fvstdint
+
+    character(len=5) :: title
+    integer :: counter, ix, iy, iz
+    real*8 :: temp(dimx,dimy,dimz)
+
+    do iz = 1, dimz
+        do iy = 1, dimy
+            do ix = 1, dimx
+                temp(ix,iy,iz) = fvstdint(ix,iy,iz)
+            enddo
+        enddo
+    enddo
+
+    title = 'fvint'
+    counter = 1
+    call savetodisk(temp, title, counter)
+
+
+end subroutine savetodisk_fvint
+
 
 
 end module channelcurved
