@@ -9,7 +9,10 @@ module channelcurved
     real*8 :: Rzmax           ! for evaluation of radiusfz 
     integer :: nsections      ! number of curved sections == nchannelsections in module channel  
     real*8 :: lengthsection   ! length channel section lengthchannel/nsections
-    
+    logical :: is_channel_curved ! if false then channel is a straight cylinder and radisuL=radisuS
+                                 ! if true  channel is curved and radiusL> radiusS 
+    real*8, parameter :: eps_diffRadii =1.0d-5 ! threshold of is_channel_curved ||radiusL-RadiusS|| >= eps_straight =
+
 contains 
 
     subroutine set_radii_curved
@@ -22,7 +25,14 @@ contains
         nsections = nchannelsections
         lengthchannel = LengthChannelCurvature()
         lengthsection = lengthChannel/(1.0d0*nsections)
-        radiusC = radiusCurvature(radiusL,radiusS,lengthsection)
+          
+        is_channel_curved =  abs(radiusL-radiusS) >= eps_diffRadii 
+
+        if (is_channel_curved) then 
+            radiusC = radiusCurvature(radiusL,radiusS,lengthsection)
+        else
+            radiusC= -1.0d0
+        endif   
 
     end subroutine  
 
@@ -79,14 +89,18 @@ contains
         real*8, intent(in) :: RL,RC
         ! return argument 
         real*8 :: Rz
-        
-        if(RC**2>=z**2) then 
-            Rz = sqrt(RC**2-z**2) -(RC-RL)    
-        else 
-            Rz = Rzmax 
-            print*,"warning radiusfz: Rc<=z : z",z, "RC=",RC
-            stop
-        endif
+
+        if(is_channel_curved) then 
+            if(RC**2>=z**2) then 
+                Rz = sqrt(RC**2-z**2) -(RC-RL)    
+            else 
+                Rz = Rzmax 
+                print*,"warning radiusfz: Rc<=z : z",z, "RC=",RC
+                stop
+            endif
+        else
+            Rz = radiusL    
+        endif    
 
     end function 
 
@@ -97,8 +111,11 @@ contains
         real*8, intent(in) :: RL,RC,L
         ! return argument 
         real*8 :: area
-
-        area= 2.0d0*pi*RC*(b-a)-2.0d0*pi*(RC-RL)*RC*(asin(b/RC) -asin(a/RC) )
+        if(is_channel_curved) then 
+            area= 2.0d0*pi*RC*(b-a)-2.0d0*pi*(RC-RL)*RC*(asin(b/RC) -asin(a/RC) )
+        else
+            area = 2.0d0*pi*RL*(b-a) 
+        endif
 
     end function 
 
@@ -109,20 +126,27 @@ contains
         integer, intent(in) :: nsect
         real*8 :: areatotal
        
-        if(Lsect<=2.0d0*Rc) then 
-        
-            areatotal = 2.0d0*pi*RC*Lsect-4.0d0*pi*(RC-RL)*RC*asin(Lsect/(2.0d0*RC))
-            areatotal = areatotal * nsect
-
-        else if(RC==RL) then 
-
-            areatotal = 2.0d0*pi*RC*Lsect*nsect
-
-        else if(Lsect>2.0d0*Rc) then    
+        if(is_channel_curved) then 
+            if(Lsect<=2.0d0*Rc) then 
             
-            areatotal =  0.0d0
+                areatotal = 2.0d0*pi*RC*Lsect-4.0d0*pi*(RC-RL)*RC*asin(Lsect/(2.0d0*RC))
+                areatotal = areatotal * nsect
+
+            else if(RC==RL) then 
+
+                areatotal = 2.0d0*pi*RC*Lsect*nsect
+
+            else if(Lsect>2.0d0*Rc) then    
+                
+                areatotal =  0.0d0
+                
+                print*,"total_area_curv: arguments out of range."
             
-            print*,"total_area_curv: arguments out of range."
+            endif      
+       
+        else
+
+            areatotal = 2.0d0 * pi * RL * Lsect * nsect
         
         endif              
 
@@ -135,10 +159,17 @@ contains
         integer, intent(in) :: nsect
         real*8 :: voltotal
 
-        voltotal = pi*(RC**2+(RC-RL)**2)*Lsect/2.0d0 -(pi/3.0d0)*(Lsect/2.0d0)**3
-        voltotal = voltotal - pi*(RC-RL)*( (Lsect/2.0d0)*sqrt(RC**2-Lsect**2/4.0d0) +(RC**2)*asin(Lsect/(2.0d0*RC)))
-        voltotal = 2.0d0*voltotal
-        voltotal = voltotal * nsect
+        if( is_channel_curved ) then
+
+            voltotal = pi*(RC**2+(RC-RL)**2)*Lsect/2.0d0 -(pi/3.0d0)*(Lsect/2.0d0)**3
+            voltotal = voltotal - pi*(RC-RL)*( (Lsect/2.0d0)*sqrt(RC**2-Lsect**2/4.0d0)+(RC**2)*asin(Lsect/(2.0d0*RC)))
+            voltotal = 2.0d0*voltotal
+            voltotal = voltotal * nsect
+
+        else
+            voltotal = pi*(RL**2) * Lsect
+            voltotal = voltotal * nsect
+        endif
 
        ! voltotal = pi*(RC**2+(RC-RL)**2)*L -2.0d0*(pi/3.0d0)*(L/2.0d0)**3
        ! voltotal = voltotal - pi*(RC-RL)*( (L)*sqrt(RC**2-L**2/4.0d0) +2.0d0*(RC**2)*asin(L/(2.0d0*RC)) )
@@ -160,7 +191,6 @@ contains
         real*8 :: a, b, x ,RC, RS, RL, Lsect, L
         integer :: nsteps, i, nsect 
 
-
         info = 0
 
         ! test 1 
@@ -170,6 +200,7 @@ contains
         RS =  5.0d0        ! smallest radius 
         Lsect =  20.0d0    !
         nsect = 3   
+        is_channel_curved = abs(RL-RS) >= eps_diffRadii 
         RC = radiusCurvature(RL,RS,Lsect) 
         areachannel = total_surface_area_curv(RL,RC,Lsect,nsect)
 
@@ -200,6 +231,7 @@ contains
         RS = RL
         Lsect = 20.0d0
         nsect = 1 
+        is_channel_curved =  abs(RL-RS) >= eps_diffRadii 
 
         areatotalL= 2.0d0*pi*RL*Lsect*nsect
         areachannel= total_surface_area_curv(RL,RC,Lsect,nsect)
@@ -219,6 +251,8 @@ contains
         rS =   0.5d0     
         rC =   1.8750d0  
         nsect = 1 
+        is_channel_curved =  abs(RL-RS) >= eps_diffRadii 
+
         volchan = total_volume_curv(RL,RC,L,nsect)
         volchan_math = 10.31808099299808d0       ! from Mathematica 
 
@@ -242,22 +276,35 @@ contains
         Lsect = lengthsection
         nsect = nsections
 
+        ! is_channel_curved =  abs(RL-RS) >= eps_diffRadii done by set_raddi_curved()
+
+
         areachannel = total_surface_area_curv(RL,RC,Lsect,nsect)
 
-        L = Lsect * nsect                       
-        areatotalL = 2.0d0*pi*RL*L
-        areatotalS = 2.0d0*pi*RS*L 
-
-        if(areachannel<areatotalS) info = 4
-        if((RC<Rl).and.(areachannel<areatotalL)) info = 5
-        if((RC>Rl).and.(areachannel>areatotalL)) info = 6  
-
-
-        ! area channel islarger then area cylinder with radiusS 
-        ! area channel is smaller or larger then area cylinder with radiusL 
-        ! dependingg on if curvature Rc is less or larger radiusL  
+        L = Lsect * nsect   
         
-        if(info==4.or.info==5.or.info==6)  then 
+        if(is_channel_curved) then                       
+        
+            areatotalL = 2.0d0*pi*RL*L
+            areatotalS = 2.0d0*pi*RS*L 
+
+            if(areachannel<areatotalS) info = 4
+            if((RC<Rl).and.(areachannel<areatotalL)) info = 5
+            if((RC>Rl).and.(areachannel>areatotalL)) info = 6  
+
+            ! area channel islarger then area cylinder with radiusS 
+            ! area channel is smaller or larger then area cylinder with radiusL 
+            ! dependingg on if curvature Rc is less or larger radiusL  
+
+        else 
+
+            areatotalL = 2.0d0*pi*RL*L
+            areatotalS = areatotalL
+            if(abs(areachannel-areatotalL)> 0.000000001d0) info = 7 
+        
+        endif
+            
+        if(info==4.or.info==5.or.info==6.or.info==7)  then 
             if(rank==0) write(stdout,*)"unit_test_area_channel: area=",areachannel,&
                 " areaL =",areatotalL," areaS =",areatotalS
         endif
@@ -460,6 +507,7 @@ contains
                 write(stdout,*) 'channel-curved: rL =',radiusL
                 write(stdout,*) 'channel-curved: rS =',radiusS
                 write(stdout,*) 'channel-curved: rC =',radiusC
+                write(stdout,*) 'channel-curved: is_channel_curved =',is_channel_curved 
                 write(stdout,*) 'channel-curved: size reservoir =',Rdimz*delta  
                 write(stdout,*) 'channel-curved: update_matrix: Total volume =',dimx*dimy*dimz*delta**3
                 write(stdout,*) 'channel-curved: update_matrix: Total free volume =',&
