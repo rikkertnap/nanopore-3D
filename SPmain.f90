@@ -67,7 +67,7 @@ program main
     call makemaps
 
     call initconst      ! == init constants
-    call inittransf     ! == create transformation matrixes
+    call inittransf     ! == create transformation matrices
     call initellpos     ! == calculate real positions for ellipsoid centers
     call initall        ! == init all variables
     call allocation     ! == allocate all variables 
@@ -75,7 +75,7 @@ program main
     !!! General files
 
     if(systemtype.eq.1) then
-        do j = 1, NNN                                   ! == Nmuber nanopartilces N
+        do j = 1, NNN                                   ! == number nanopartilces N
             write(filename,'(A3,I3.3, A4)')'pos',j,'.dat'
             open(file=filename, unit=5000+j)
             write(filename,'(A3,I3.3, A4)')'orn',j,'.dat'
@@ -91,11 +91,6 @@ program main
     
     if(rank.eq.0) write(stdout,*) 'Kai OK'
 
-    if(fluxflag.eq.1) then 
-        call unit_test_divJ(info)
-        if(rank.eq.0) write(stdout,*) 'Flux test OK'   
-    endif
-
     if(curvedflag.eq.1) then 
         call unit_test_area_channel(info) 
         if(rank.eq.0) write(stdout,*) 'Area test OK'
@@ -103,10 +98,10 @@ program main
 
     ! == select system 
 
-    call set_fcn
+    call set_fcn                            ! == select the appropriate 'fcn' function
 
     if (systemtype.eq.1) then
-        call update_matrix(flag)            ! updates 'the matrix'
+        call update_matrix(flag)            ! == updates the geometry matrix
     elseif (systemtype.eq.2) then
         call update_matrix_channel(flag)    ! == channel 
     elseif (systemtype.eq.3) then
@@ -117,7 +112,7 @@ program main
         call update_matrix_channel_4(flag)  ! == channel with one ring 
     elseif (systemtype.eq.42) then
         if(curvedflag.eq.1) then 
-            call update_matrix_channel_4_curved(flag)  ! == channel with mutiple rings 
+            call update_matrix_channel_4_curved(flag)  ! == curved channel with mutiple rings or arbitray postions
         else    
             call update_matrix_channel_4(flag)  ! == channel with mutiple rings 
         endif
@@ -132,7 +127,7 @@ program main
     call calcfv                             ! == calulate free volume fraction matrix fv : important 
   
     if(fluxflag.eq.1) then 
-        call calcfvint                      ! == calulate fvstdint integer mask of matrix fv 
+        call calcfvint                      ! == calulate fvstdint integer mask of matrix fv used for flux
         call savetodisk_fvint               ! == output of fvstdint to file 
     endif
 
@@ -161,6 +156,23 @@ program main
     endif
 #endif
 
+    if(fluxflag.eq.1) then 
+        call unit_test_divJ(info) 
+        if(info==0) then 
+            if(rank.eq.0) write(stdout,*) 'Flux divJ test OK' 
+        else
+            if(rank.eq.0) write(stdout,*) 'Flux divJ test failed'
+        endif
+        call unit_test_divJ_slotboom(info)
+        print*,"rank=",rank,"info=",info
+        if(info==0) then 
+            if(rank.eq.0) write(stdout,*) 'Flux divJ_slotboom test OK' 
+        else
+            if(rank.eq.0) write(stdout,*) 'Flux divJ_slotboom test failed'
+        endif         
+    endif
+
+
     ! == initial guess 
 
     if(infile.ne.0) then
@@ -179,7 +191,7 @@ program main
     ii = 1
     sc = scs(ii)  ! == what is scs  == 0 
 
-    select case (vscan)  ! == variable scan over variabel kp, st , or pHbulk
+    select case (vscan)  ! == variable scan over variable kp, st , or pHbulk
     case (1)             ! == loop over VdW kp values give in array sts
         st = sts(1)
         kp = 1.0d10+kps(1)
@@ -288,13 +300,18 @@ program main
                 call savedata(counterr)
                 if(rank.eq.0) write(stdout,*) 'save ok'
                 call store2disk(counterr)
-
+                if(rank.eq.0) write(stdout,*) 'end calculation: next'
             enddo
         enddo
 
     end select
+    print*,'end calculation rank', rank
+
+    !call MPI_FINALIZE(ierr) 
 
     call endall
+    
+    if(rank.eq.0) write(stdout,*) 'end calculation'
 
 end program main
 

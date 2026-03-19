@@ -743,8 +743,8 @@ subroutine check_value_methodflag(methodflag)
     enddo    
     
     if(flag.eqv..false.) then 
-        write(stdout,*) 'parser:', 'value methodflag not premmitted :', methodflag
-        call MPI_FINALIZE(ierr) ! ++end MPI
+        write(stdout,*) 'parser:', 'value methodflag not permmitted :', methodflag
+        call MPI_FINALIZE(ierr) ! == end MPI
         stop
     endif
 
@@ -757,18 +757,18 @@ subroutine check_value_ST_bctype(ST_bctype)
 
     integer, intent(in) :: ST_bctype
 
-    integer :: allowedvalue(3)=(/0,1,2/) 
+    integer :: allowedvalue(4)=(/0,1,2,3/) 
     logical :: flag
 
     flag = .false.
 
-    do i=1,3
+    do i=1,4
         if(ST_bctype==allowedvalue(i)) flag=.true.
     enddo    
     
     if(flag.eqv. .FALSE.) then 
-        write(stdout,*) 'parser:', 'value ST_bctype not premmitted :', ST_bctype
-        call MPI_FINALIZE(ierr) ! ++end MPI
+        write(stdout,*) 'parser:', 'value ST_bctype not premitted :', ST_bctype
+        call MPI_FINALIZE(ierr) ! == end MPI
         stop
     endif
 
@@ -792,7 +792,7 @@ subroutine check_value_fluxflag(fluxflag)
 
     if(flag.eqv. .false.) then 
         write(stdout,*) 'parser:', 'value fluxflag not permitted :', fluxflag
-        call MPI_FINALIZE(ierr) ! ++end MPI
+        call MPI_FINALIZE(ierr) ! == end MPI
         stop
     endif
 
@@ -811,11 +811,11 @@ subroutine check_combi_fluxflag_ST_bctype(fluxflag,ST_bctype)
     flag = .false.
     
     if(fluxflag==0.and.ST_bctype==0)  flag=.true.
-    if(fluxflag==1.and.(ST_bctype==1 .or. ST_bctype==2))  flag=.true.
+    if(fluxflag==1.and.(ST_bctype==1 .or. ST_bctype==2 .or. ST_bctype==3))  flag=.true.
 
     if(flag.eqv. .FALSE.) then 
         write(stdout,*) 'parser:', 'combination of fluxflag and ST_bctype not premmitted :', fluxflag, ST_bctype
-        call MPI_FINALIZE(ierr) ! ++end MPI
+        call MPI_FINALIZE(ierr) ! == end MPI
         stop
     endif
 

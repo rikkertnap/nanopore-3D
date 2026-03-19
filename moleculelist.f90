@@ -86,7 +86,7 @@ contains
         use molecules, only : vsol, vsalt
 
         vol%sol   = 1.0d0
-        vol%pos   = vsalt ! == deivide by vsol
+        vol%pos   = vsalt ! == divide by vsol
         vol%neg   = vsalt 
         vol%Hplus = 1.0d0
         vol%OHmin = 1.0d0

@@ -22,8 +22,8 @@ subroutine allocation
     ALLOCATE(xh(dimx, dimy, dimz))
 
     ! kinsol
-    ALLOCATE (xflag(eqs*dimx*dimy*dimz))
-    ALLOCATE (xpar(dimx*dimy*dimz))
+    ALLOCATE (xflag(neqs))  ! == negs == eqs*dimx*dimz or eqs*dimx*dimy*dimz + dimx*dimy
+    ALLOCATE (xpar(ncells)) ! == range : ncells= dimx*dimy*dimz
 
     ! results
     ALLOCATE (avpol(dimx, dimy, dimz, N_monomer))   ! == polymer volume fraction
@@ -49,13 +49,11 @@ subroutine allocation
     if(fluxflag.eq.1) ALLOCATE(fvstdint(0:dimx+1,0:dimy+1,0:dimz+1))
 
     ! mkinsol
-    ALLOCATE (pp(eqs*dimx*dimy*dimz))
+    ALLOCATE (pp(neqs))
 
     ! chainsdat
     allocate(in1(long,3))
     allocate(cpp(size))
     allocate(cppini(size))
 
-
-
-end subroutine
+end subroutine allocation

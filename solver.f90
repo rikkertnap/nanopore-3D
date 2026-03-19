@@ -1,21 +1,20 @@
 subroutine solver(xvec, xvecguess, ier)
 
-    use system, only : eqs, dimx, dimy, dimz, methodflag 
+    use system, only : eqs, dimx, dimy, dimz, methodflag, neq
     use anderson
 
     implicit none
 
-    real*8, intent(inout) :: xvec(eqs*dimx*dimy*dimz), xvecguess(eqs*dimx*dimy*dimz)
+    real*8, intent(inout) :: xvec(neqs), xvecguess(neqs)
     integer*4, intent(inout) :: ier ! error flag type given  by kinsol
 
     ! local : put into system  
     real*8 :: accuracy, residual
     logical :: isSolution
     integer :: maxfkfunevals
-    integer*8 :: neq
+  
     
     if(methodflag/=1) then 
-        neq= eqs * dimx * dimy * dimz  
         maxfkfunevals = 1000 ! == defined in kinsol.f90 
         accuracy = 1.0d-6    ! == defined fnormtol defined in kinsol.f90
     endif
@@ -45,7 +44,6 @@ subroutine solver(xvec, xvecguess, ier)
         endif    
     endif
 
-
 end subroutine solver
 
 
@@ -60,11 +58,11 @@ end subroutine solver
 !
 !    integer i
 
-!    real*8 :: x1_old(eqs*dimx*dimy*dimz) 
+!    real*8 :: x1_old(neqs) 
 
     ! == local arguments 
-!    real*8 :: x1(eqs*dimx*dimy*dimz)     ! == this make a local copy call x1 independetly of the one defien din solve in 3D.f90
-!    real*8 :: f(eqs*dimx*dimy*dimz)
+!    real*8 :: x1(neqs)     ! == this make a local copy call x1 independetly of the one defien din solve in 3D.f90
+!    real*8 :: f(neqs)
 
     ! MPI
 
@@ -73,11 +71,11 @@ end subroutine solver
 !    integer err
 
 !    x1 = 0.0
-!    do i = 1,eqs*dimx*dimy*dimz
+!    do i = 1,neqs
 !        x1(i) = x1_old(i)
 !    enddo
 
-!    CALL MPI_BCAST(x1, eqs*dimx*dimy*dimz , MPI_DOUBLE_PRECISION,0, MPI_COMM_WORLD,err)
+!    CALL MPI_BCAST(x1, neqs , MPI_DOUBLE_PRECISION,0, MPI_COMM_WORLD,err)
 
 !    call fkfun(x1,f, ier) ! todavia no hay solucion => fkfun 
 !end

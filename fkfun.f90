@@ -14,7 +14,7 @@ subroutine fkfun(x,f,ier)
 
     call fcnptr(x,f,ier)
 
-    return
+    return 
 
 end subroutine fkfun
 

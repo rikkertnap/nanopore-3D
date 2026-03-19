@@ -12,16 +12,17 @@ module flux
     real*8, allocatable, dimension(:,:,:,:) :: mu_ion  ! chemical potential range mu_ion(nsize,niontypes) 
     
 
-    logical, parameter  :: DEBUG_ST=.true.
+    logical, parameter  :: DEBUG_ST=.false.
    
     character(len=5), parameter :: iontype(4)=(/"pos  ","neg  ","Hplus","OHmin"/) 
     integer, parameter :: niontypes=4 
     integer, parameter :: xpls=1, xmin=2, ypls=3, ymin=4, zpls=5, zmin=6 ! number edges of cell
 
     private 
-    public :: divJ, mu, Jvec, mu_ion, iontype, niontypes, bc_psi
-    public :: div_flux, allocate_flux_var, init_flux_var ,unit_test_divJ, linear_interpolation
+    public :: divJ, mu, Jvec, mu_ion, iontype, niontypes, bc_psi, linear_interpolation
+    public :: div_flux, allocate_flux_var, init_flux_var, unit_test_divJ, unit_test_divJ_slotboom
     public :: xpls, xmin, ypls, ymin, zpls, zmin
+    public :: div_flux_channel_slotboom, xvol_slotboom
 
 contains
 
@@ -110,33 +111,33 @@ contains
         mumax%Hplus = log(xvolmax%Hplus / vol%Hplus) +pibulk*vol%Hplus + psizmax*zval%Hplus
         mumax%OHmin = log(xvolmax%OHmin / vol%OHmin) +pibulk*vol%OHmin + psizmin*zval%OHmin
 
-       ! if(ST_bctype.eq.2) then ! flux using bc of imposedelectric field 
+       ! if(ST_bctype.eq.2) then ! flux using bc by imposing electric field 
        ! to be done 
        ! endif
         
-        if(ST_bctype.eq.3) then ! flux via Slotboom transformation 
+        !if(ST_bctype.eq.3) then ! flux via Slotboom transformation 
         
             ! zmin 
             
-            muexmin%pos = pibulk*vol%pos + psizmin*zval%pos
-            muexmin%neg = pibulk*vol%neg + psizmin*zval%neg
+            muexmin%pos   = pibulk*vol%pos + psizmin*zval%pos
+            muexmin%neg   = pibulk*vol%neg + psizmin*zval%neg
             muexmin%Hplus = pibulk*vol%Hplus + psizmin*zval%Hplus
             muexmin%OHmin = pibulk*vol%OHmin + psizmin*zval%OHmin
 
-            rho_tilde_min%pos = xvolmin%pos * exp ( muexmin%pos) /(vol%pos *vsol)
-            rho_tilde_min%neg = xvolmin%neg * exp ( muexmin%neg) /(vol%neg *vsol)
+            rho_tilde_min%pos   = xvolmin%pos * exp ( muexmin%pos) /(vol%pos *vsol)
+            rho_tilde_min%neg   = xvolmin%neg * exp ( muexmin%neg) /(vol%neg *vsol)
             rho_tilde_min%Hplus = xvolmin%Hplus * exp ( muexmin%Hplus) /(vol%Hplus *vsol)
             rho_tilde_min%OHmin = xvolmin%OHmin * exp ( muexmin%OHmin) /(vol%OHmin *vsol)
 
-            Diffcoeff_tilde_min%pos = exp ( -muexmin%pos)
-            Diffcoeff_tilde_min%neg = exp ( -muexmin%neg)
+            Diffcoeff_tilde_min%pos   = exp ( -muexmin%pos)
+            Diffcoeff_tilde_min%neg   = exp ( -muexmin%neg)
             Diffcoeff_tilde_min%Hplus = exp ( -muexmin%Hplus)
             Diffcoeff_tilde_min%OHmin = exp ( -muexmin%OHmin)
 
             ! zmax 
 
-            muexmax%pos = pibulk*vol%pos + psizmax*zval%pos
-            muexmax%neg = pibulk*vol%neg + psizmax*zval%neg
+            muexmax%pos   = pibulk*vol%pos + psizmax*zval%pos
+            muexmax%neg   = pibulk*vol%neg + psizmax*zval%neg
             muexmax%Hplus = pibulk*vol%Hplus + psizmax*zval%Hplus
             muexmax%OHmin = pibulk*vol%OHmin + psizmax*zval%OHmin
 
@@ -145,12 +146,12 @@ contains
             rho_tilde_max%Hplus = xvolmin%Hplus * exp ( muexmax%Hplus) /(vol%Hplus *vsol)
             rho_tilde_max%OHmin = xvolmin%OHmin * exp ( muexmax%OHmin) /(vol%OHmin *vsol)
 
-            Diffcoeff_tilde_max%pos = exp ( -muexmax%pos)
-            Diffcoeff_tilde_max%neg = exp ( -muexmax%neg)
+            Diffcoeff_tilde_max%pos   = exp ( -muexmax%pos)
+            Diffcoeff_tilde_max%neg   = exp ( -muexmax%neg)
             Diffcoeff_tilde_max%Hplus = exp ( -muexmax%Hplus)
             Diffcoeff_tilde_max%OHmin = exp ( -muexmax%OHmin)
             
-        endif
+        !endif
 
     end subroutine init_flux_var
 
@@ -279,7 +280,7 @@ contains
 
     end subroutine bc_flux
 
-    ! == boundary conditions excess chemical potential and xvol 
+    ! == boundary conditions excess chemical potential and rho_tilde
 
     subroutine bc_flux_ex(mu_ex,rho_tilde,Diffcoeff_tilde,iontype) 
         
@@ -389,8 +390,9 @@ contains
 
     subroutine div_flux_channel(divJ,xsol,xion,psi,iontype)
 
-        use system, only : dimx, dimy, dimz
-        use moleculeslist, only : vol, zval, mumin, mumax, xvolmin, xvolmax
+        use system, only : dimx, dimy, dimz, delta
+        use molecules, only : vsol
+        use moleculeslist, only : vol, zval, mumin, mumax, xvolmin, xvolmax, Diffcoeff
         use moleculeslist, only : get_value_moleclist
         use const, only : stdout
         use MPI, only : rank
@@ -408,7 +410,7 @@ contains
         integer :: ix, iy, iz
         integer ::  id, idxpls, idxmin, idypls, idymin, idzpls, idzmin
         character(len=5):: key
-        real*8 :: volum, valence, coeff_scaled
+        real*8 :: volum, valence, coeff_scaled, Diffconst, J0
         real*8 :: mu_zmin, mu_zpls, xvol_zmin, xvol_zpls
         real*8 :: mu(0:dimx+1, 0:dimy+1, 0:dimz+1)
         real*8 :: xvol(0:dimx+1, 0:dimy+1, 0:dimz+1)
@@ -422,13 +424,20 @@ contains
         mu_zpls = get_value_moleclist(mumax,key)
         xvol_zmin = get_value_moleclist(xvolmin,key)
         xvol_zpls = get_value_moleclist(xvolmax,key)
+        Diffconst = get_value_moleclist(Diffcoeff,key)
+         
         
-        !coeff_scaled = 1.0_dp/(volum*delta*2.0_dp)
-        coeff_scaled =  1.0d0
+        J0 = - Diffconst / ( volum * vsol * ((1.0d-9)**2) * delta * 2.0d0) ! prefactor flux 
 
+        coeff_scaled = J0/delta
+        
+        ! coeff_scaled =  -1.0d0
+        
+        !  pre factor in div flux factor (1.0e-9)^2 arise from vsol in unit of nm and grad mu in 1/nm
+        !  and unitsof D in m^2/sec. J in 1/( nm^2) s) and div J in 1/(nm^3 s)
         !  volum from conversion of volumefraction to density  
         !  in cylinder coordinates : 2 delta^2 from division by 2 \pi delta^2 {\bar r}_i 
-        !  in cubic coordiantes :  2 delta  :  from interpolation of density
+        !  in cubic coordiantes :  2 delta :  from interpolation of density an center difference mu 
 
         if(DEBUG_ST) then
             if(rank.eq.0) then 
@@ -509,7 +518,7 @@ contains
                         endif    
                 
                         divJtmp  =  Jdotxpls - Jdotxmin + Jdotypls - Jdotymin + Jdotzpls - Jdotzmin
-                        divJ(ix,iy,iz) = - coeff_scaled * divJtmp
+                        divJ(ix,iy,iz) = coeff_scaled * divJtmp
                     
                     endif 
 
@@ -534,8 +543,9 @@ contains
 
     subroutine div_flux_cubic(divJ,xsol,xion,psi,iontype)
 
-        use system, only : dimx, dimy, dimz
-        use moleculeslist, only : vol, zval, mumin, mumax, xvolmin, xvolmax
+        use system, only : dimx, dimy, dimz, delta
+        use molecules, only : vsol
+        use moleculeslist, only : vol, zval, mumin, mumax, xvolmin, xvolmax, Diffcoeff
         use moleculeslist, only : get_value_moleclist
         use const, only : stdout
         use MPI, only : rank
@@ -552,7 +562,7 @@ contains
         integer :: ix, iy, iz
         integer ::  id, idxpls, idxmin, idypls, idymin, idzpls, idzmin
         character(len=5):: key
-        real*8 :: volum, valence, coeff_scaled
+        real*8 :: volum, valence, coeff_scaled, Diffconst, J0
         real*8 :: mu_zmin, mu_zpls, xvol_zmin, xvol_zpls
         real*8 :: mu(0:dimx+1, 0:dimy+1, 0:dimz+1)
         real*8 :: xvol(0:dimx+1, 0:dimy+1, 0:dimz+1)
@@ -565,14 +575,20 @@ contains
         mu_zmin = get_value_moleclist(mumin,key)
         mu_zpls = get_value_moleclist(mumax,key)
         xvol_zmin = get_value_moleclist(xvolmin,key)
-        xvol_zpls = get_value_moleclist(xvolmax,key)
-        
-        !coeff_scaled = 1.0_dp/(volum*delta*2.0_dp)
-        coeff_scaled =  1.0d0
+        xvol_zpls = get_value_moleclist(xvolmax,key) 
+        Diffconst = get_value_moleclist(Diffcoeff,key)
+         
+        J0 = - Diffconst / ( volum * vsol * ((1.0d-9)**2) * delta * 2.0d0) ! prefactor flux 
+       
+        coeff_scaled = J0/delta 
 
+        ! coeff_scaled =  -1.0d0
+        
+        !  pre factor in div flux factor (1.0e-9)^2 arise from vsol in unit of nm and grad mu in 1/nm
+        !  and unitsof D in m^2/sec. J in 1/( nm^2) s) and div J in 1/(nm^3 s)
         !  volum from conversion of volumefraction to density  
-        !  in cylinder coordinates : 2 delta^2 from division by 2 \pi delta^2 {\bar r}_i 
         !  in cubic coordiantes :  2 delta  :  from interpolation of density
+
 
         if(DEBUG_ST) then
             if(rank.eq.0) then 
@@ -622,7 +638,7 @@ contains
                     Jdotzmin = (xvol(ix,iy,iz  ) + xvol(ix,iy,iz-1))*(mu(ix,iy,iz  ) - mu(ix,iy,iz-1))
                
                     divJtmp  =  Jdotxpls - Jdotxmin + Jdotypls - Jdotymin + Jdotzpls - Jdotzmin
-                    divJ(ix,iy,iz) = - coeff_scaled * divJtmp
+                    divJ(ix,iy,iz) = coeff_scaled * divJtmp
 
                 enddo
             enddo
@@ -966,7 +982,8 @@ contains
         ! need to apply boundary. conditions of psi
         call bc_psi(psi) 
 
-        call div_flux_cubic(divJ,xsol,xion,psi,key)
+       ! call div_flux_cubic(divJ,xsol,xion,psi,key)
+        call div_flux(divJ,xsol,xion,psi,key)  
    
         sumdivJ = 0.0d0
 
@@ -1013,6 +1030,245 @@ contains
 
     end subroutine unit_test_divJ
 
+    subroutine unit_test_divJ_slotboom(info)
+
+        use system, only : delta, dimx, dimy, dimz
+        use moleculeslist, only : mumin, mumax, xvolmin, xvolmax, zval,vol
+        use moleculeslist, only : get_value_moleclist
+        use molecules, only : vsol
+        use bulk, only : xsolbulk
+        use const, only : stdout
+        use inputtemp, only : psizmax, psizmin
+        use ematrix, only : fvstdint
+        use MPI, only : rank 
+
+        integer, intent(inout) :: info
+
+        ! local arguments
+
+        integer :: ix,iy,iz
+        integer :: un_flux, ios
+        character(len=13) :: outfilename
+
+        ! local variable  not in module just for testing
+        real*8 :: xion(dimx,dimy,dimz)
+        real*8 :: xsol(dimx,dimy,dimz)
+        real*8 :: psi(0:dimx+1,0:dimy+1,0:dimz+1)
+        real*8 :: divJ(dimx, dimy, dimz)
+        real*8 :: rho_tilde(0:dimx+1, 0:dimy+1, 0:dimz+1)
+        
+
+        real*8 ::  mu_zmin, mu_zpls, xvol_zmin, xvol_zpls,valence, volum, mu_ex_val
+        character(len=5):: key
+        real*8 :: slope, intercept , sumdivJ        
+
+        key = "pos"
+
+        mu_zmin = get_value_moleclist(mumin,key)
+        mu_zpls = get_value_moleclist(mumax,key)
+        xvol_zmin = get_value_moleclist(xvolmin,key)
+        xvol_zpls = get_value_moleclist(xvolmax,key)
+        valence = get_value_moleclist(zval,key)
+        volum = get_value_moleclist(vol,key)
+
+        if(DEBUG_ST) then
+            if(rank.eq.0) then 
+                write(stdout,*)"unit_test_divJ : key = ",key  
+                write(stdout,*)"unit_test_divJ : mu_zmin = ",mu_zmin
+                write(stdout,*)"unit_test_divJ : mu_zpls = ",mu_zpls
+                write(stdout,*)"unit_test_divJ : xvol_zpls = ",xvol_zpls
+                write(stdout,*)"unit_test_divJ : xvol_zmin = ",xvol_zmin
+            endif
+        endif    
+
+
+        slope = (psizmax-psizmin)/((dimz+1.0d0)*delta)
+        intercept = psizmin + slope * delta/2.0d0
+
+        do iz=1,dimz
+            do iy=1,dimy
+                do ix=1,dimx
+                    if(fvstdint(ix,iy,iz).eq.1) then  
+                        xion(ix,iy,iz) = xvol_zmin 
+                    else
+                        xion(ix,iy,iz) = 0.0d0
+                    endif
+
+                    xsol(ix,iy,iz) = xsolbulk
+                    psi(ix,iy,iz) =  slope * (iz - 0.5d0) * delta  + intercept
+                    mu_ex_val= -log(xsol(ix,iy,iz))*volum + valence * psi(ix,iy,iz)
+                    rho_tilde(ix,iy,iz) = xion(ix,iy,iz) * exp (mu_ex_val) /( volum * vsol)
+                enddo
+            enddo
+        enddo        
+
+        ! need to apply boundary conditions of psi
+        call bc_psi(psi) 
+
+        call div_flux_channel_slotboom(divJ,rho_tilde,xsol,psi,key)
+     
+   
+        sumdivJ = 0.0d0
+
+        do iz=1,dimz
+            do iy=1,dimy
+                do ix=1,dimx
+                    sumdivJ=sumdivJ+divJ(ix,iy,iz)**2
+                enddo
+            enddo
+        enddo      
+
+        if(DEBUG_ST) then 
+            if(rank.eq.0) then 
+                outfilename = "flux_slot.out"
+                open(newunit=un_flux,file=outfilename, iostat=ios, action="write")
+                do iz=1,dimz
+                    do iy=1,dimy
+                        do ix=1,dimx
+                            write(un_flux,*)ix,iy,iz,divJ(ix,iy,iz)
+                        enddo
+                    enddo
+                enddo          
+                close(un_flux)
+
+                outfilename = "psi_slot.out"
+                open(newunit=un_flux,file=outfilename, iostat=ios, action="write")
+                do iz=0,dimz+1
+                    do iy=0,dimy+1
+                        do ix=0,dimx+1
+                            write(un_flux,*)ix,iy,iz,psi(ix,iy,iz),rho_tilde(ix,iy,iz)
+                        enddo
+                    enddo
+                enddo          
+                close(un_flux)
+
+
+            endif
+        endif        
+
+        info=0 ! ok 
+        if(sumdivJ>0.0001d0) info=1
+
+        write(stdout,*)"unit_test_divJ_slotboom: unit test: sumdivJ=",sumdivJ
+
+    end subroutine unit_test_divJ_slotboom
+
+
+    subroutine unit_test_divJ_slotboom_xvol(info)
+
+        use system, only : delta, dimx, dimy, dimz
+        use moleculeslist, only : mumin, mumax, xvolmin, xvolmax
+        use moleculeslist, only : get_value_moleclist
+        use bulk, only : xsolbulk
+        use const, only : stdout
+        use inputtemp, only : psizmax, psizmin 
+        use ematrix, only : fvstdint
+        use MPI, only : rank 
+
+        integer, intent(inout) :: info
+
+        ! local arguments
+
+        integer :: ix,iy,iz
+        integer :: un_flux, ios
+        character(len=13) :: outfilename
+
+        ! local variable  not in module just for testing
+        real*8 :: xion(dimx,dimy,dimz)
+        real*8 :: xsol(dimx,dimy,dimz)
+        real*8 :: psi(0:dimx+1,0:dimy+1,0:dimz+1)
+        real*8 :: divJ(dimx, dimy, dimz)
+
+        real*8 ::  mu_zmin, mu_zpls, xvol_zmin, xvol_zpls
+        character(len=5):: key
+        real*8 :: slope, intercept , sumdivJ        
+
+        key = "pos"
+
+        mu_zmin = get_value_moleclist(mumin,key)
+        mu_zpls = get_value_moleclist(mumax,key)
+        xvol_zmin = get_value_moleclist(xvolmin,key)
+        xvol_zpls = get_value_moleclist(xvolmax,key)
+
+        if(DEBUG_ST) then
+            if(rank.eq.0) then 
+                write(stdout,*)"unit_test_divJ : key = ",key  
+                write(stdout,*)"unit_test_divJ : mu_zmin = ",mu_zmin
+                write(stdout,*)"unit_test_divJ : mu_zpls = ",mu_zpls
+                write(stdout,*)"unit_test_divJ : xvol_zpls = ",xvol_zpls
+                write(stdout,*)"unit_test_divJ : xvol_zmin = ",xvol_zmin
+            endif
+        endif    
+
+
+        slope = (psizmax-psizmin)/((dimz+1.0d0)*delta)
+        intercept = psizmin + slope * delta/2.0d0
+
+        do iz=1,dimz
+            do iy=1,dimy
+                do ix=1,dimx
+                    if(fvstdint(ix,iy,iz).eq.1) then  
+                        xion(ix,iy,iz) = xvol_zmin                     
+                    else 
+                        xion(ix,iy,iz) = 0.0d0
+                    endif 
+                    xsol(ix,iy,iz) = xsolbulk
+                    psi(ix,iy,iz) =  slope * (iz - 0.5d0) * delta  + intercept
+                enddo
+            enddo
+        enddo        
+
+        ! need to apply boundary. conditions of psi
+        call bc_psi(psi) 
+
+        call div_flux_channel_slotboom_xvol(divJ,xsol,xion,psi,key)
+   
+        sumdivJ = 0.0d0
+
+        do iz=1,dimz
+            do iy=1,dimy
+                do ix=1,dimx
+                    sumdivJ=sumdivJ+divJ(ix,iy,iz)**2
+                enddo
+            enddo
+        enddo      
+
+        if(DEBUG_ST) then 
+            if(rank.eq.0) then 
+                outfilename = "flux_slot.out"
+                open(newunit=un_flux,file=outfilename, iostat=ios, action="write")
+                do iz=1,dimz
+                    do iy=1,dimy
+                        do ix=1,dimx
+                            write(un_flux,*)ix,iy,iz,divJ(ix,iy,iz)
+                        enddo
+                    enddo
+                enddo          
+                close(un_flux)
+
+                outfilename = "psi_slot.out"
+                open(newunit=un_flux,file=outfilename, iostat=ios, action="write")
+                do iz=0,dimz+1
+                    do iy=0,dimy+1
+                        do ix=0,dimx+1
+                            write(un_flux,*)ix,iy,iz,psi(ix,iy,iz)
+                        enddo
+                    enddo
+                enddo          
+                close(un_flux)
+
+
+            endif
+        endif        
+
+        info=0 ! ok 
+        if((sumdivJ/(xvol_zmin**2))>0.0001d0) info=1
+
+        write(stdout,*)"unit_test_divJ_slotboom_xvol: unit test: sumdivJ=",sumdivJ
+
+
+    end subroutine unit_test_divJ_slotboom_xvol
+
 
     subroutine linear_interpolation(fcn_interp,fcn_begin,fcn_end)
 
@@ -1026,7 +1282,7 @@ contains
         integer :: k
         logical :: interpolshift
 
-
+        if(ST_bctype==3) interpolshift=.true. 
         if(ST_bctype==2) interpolshift=.true. ! not solution test convergence
         if(ST_bctype==1) interpolshift=.false.
 
@@ -1045,13 +1301,13 @@ contains
     end subroutine linear_interpolation
     
 
-    ! Computes  a laplace equaton that  indirect representaton div J via a Slotboomn transformations 
+    ! Computes  a laplace equation that  indirect representaton div J via a Slotboomn transformations 
     ! div . J  = div. ( D rho grad beta mu ) )<=> div.( Dtilde grad  rhotilde )=0 
     ! with Dtilde = D exp( \beta -mu^ex) and rhotilde = rho exp( + beta mu^ex) 
     ! \beta \mu^ex(r) =  \beta pi(r) v_i +\beta psi(r) q_i :  non-dial part of chemincal potential =
     ! \beta \mu(r) = \mu_0 + \ln(rho_i(r) v_w) + \beta pi(r) v_i +\beta psi(r) q_i
 
-    subroutine div_flux_channel_slotboom(divJ,xsol,xion,psi,iontype)
+    subroutine div_flux_channel_slotboom_xvol(divJ,xsol,xion,psi,iontype)
 
         use system, only : dimx, dimy, dimz, delta
         use molecules, only : vsol
@@ -1096,18 +1352,14 @@ contains
         xvol_zpls = get_value_moleclist(xvolmax,key) 
         Diffconst = get_value_moleclist(Diffcoeff,key)
 
-        ! pre factor in flux factor (1.0e-9)^2 arise from vsol in unit of nm^3 and grad_mu in 1/nm
-        ! unit of Diffccoeff m^2/sec
-        ! J in 1/( nm^2) s)
+        Diffconst = get_value_moleclist(Diffcoeff,key)
+         
+        J0 = - Diffconst / ( volum * vsol * ((1.0d-9)**2) * delta * 2.0d0) ! prefactor flux 
+        coeff_scaled =  J0 / delta
         
-        J0 = Diffconst / ( volum * vsol * (1.0d-9)**2) 
-        
-        coeff_scaled =  1.0d0/(volum*delta*2.0d0)
-        coeff_scaled =  1.0d0
-        !coeff_scaled = J0/(delta*2.0_dp)
-
+        !  pre factor in div flux factor (1.0e-9)^2 arise from vsol in unit of nm^3 and grad mu in 1/nm
+        !  and unitsof D in m^2/sec. J in 1/( nm^2) s) and div J in 1/(nm^3 s)
         !  volum from conversion of volumefraction to density  
-        !  in cylinder coordinates : 2 delta^2 from division by 2 \pi delta^2 {\bar r}_i 
         !  in cubic coordiantes :  2 delta  :  from interpolation of density
 
         if(DEBUG_ST) then
@@ -1125,7 +1377,7 @@ contains
         do iz=1,dimz
             do iy=1,dimy
                 do ix=1,dimx
-                    mu_ex(ix,iy,iz) =-log(xsol(ix,iy,iz))*volum + valence * psi(ix,iy,iz)
+                    mu_ex(ix,iy,iz) = -log(xsol(ix,iy,iz))*volum + valence * psi(ix,iy,iz)
                     rho_tilde(ix,iy,iz) = xvol(ix,iy,iz) * exp ( mu_ex(ix,iy,iz)) /(volum *vsol)
                     Diffcoeff_tilde(ix,iy,iz)= exp ( -mu_ex(ix,iy,iz)) 
                 enddo
@@ -1139,10 +1391,9 @@ contains
         Diffcoeff_tilde_zmin = exp ( -mu_ex_zmin) 
         Diffcoeff_tilde_zpls = exp ( -mu_ex_zpls) 
 
-        ! need to apply PBC to mu_ex
+        ! apply PBC to mu_ex and rho_tilde
 
-
-        ! call bc_flux_laplace(mu_ex,rho_tilde) 
+        call bc_flux_ex(mu_ex,rho_tilde,Diffcoeff_tilde,iontype) 
 
         divJ=0.0d0
         
@@ -1195,7 +1446,170 @@ contains
                         endif    
                 
                         divJtmp  =  Jdotxpls - Jdotxmin + Jdotypls - Jdotymin + Jdotzpls - Jdotzmin
-                        divJ(ix,iy,iz) = - coeff_scaled * divJtmp
+                        divJ(ix,iy,iz) = coeff_scaled * divJtmp
+                    
+                    endif 
+
+                enddo
+            enddo
+        enddo    
+
+    end subroutine div_flux_channel_slotboom_xvol
+
+
+    ! Computes  a laplace equaton that  indirect representaton div J via a Slotboomn transformations 
+    ! div . J  = div. ( D rho grad beta mu ) )<=> div.( Dtilde grad  rhotilde )=0 
+    ! with Dtilde = D exp( \beta -mu^ex) and rhotilde = rho exp( + beta mu^ex) 
+    ! \beta \mu^ex(r) =  \beta pi(r) v_i +\beta psi(r) q_i :  non-dial part of chemincal potential =
+    ! \beta \mu(r) = \mu_0 + \ln(rho_i(r) v_w) + \beta pi(r) v_i +\beta psi(r) q_i
+
+    subroutine div_flux_channel_slotboom(divJ,rho_tilde,xsol,psi,iontype)
+
+        use system, only : dimx, dimy, dimz, delta
+        use molecules, only : vsol
+        use moleculeslist, only : vol, zval, mumin, mumax, xvolmin, xvolmax, Diffcoeff
+        use moleculeslist, only : get_value_moleclist
+        use const, only : stdout
+        use MPI, only : rank
+        use ematrix, only : fvstdint
+        use inputtemp, only : psizmax, psizmin 
+
+        ! input arguments 
+
+        real*8, intent(inout) :: divJ(:,:,:)
+        real*8, intent(inout) :: rho_tilde(0:dimx+1, 0:dimy+1, 0:dimz+1) ! change intent !!
+        real*8, intent(in) :: xsol(:,:,:)
+        real*8, intent(in) :: psi(0:dimx+1,0:dimy+1,0:dimz+1)
+        character(len=*), intent(in) :: iontype
+        
+
+        ! local variables
+        integer :: ix, iy, iz
+        integer ::  id, idxpls, idxmin, idypls, idymin, idzpls, idzmin
+        character(len=5):: key
+        real*8 :: volum, valence, coeff_scaled, Diffconst, J0
+        real*8 :: mu_zmin, mu_zpls, xvol_zmin, xvol_zpls
+        real*8 :: mu_ex_zmin, mu_ex_zpls
+        real*8 :: rho_tilde_zmin, rho_tilde_zpls, Diffcoeff_tilde_zmin,Diffcoeff_tilde_zpls
+        real*8 :: Jdotxpls, Jdotxmin, Jdotypls, Jdotymin, Jdotzpls, Jdotzmin, divJtmp 
+
+
+        real*8 :: mu_ex(0:dimx+1, 0:dimy+1, 0:dimz+1)
+        real*8 :: xvol(0:dimx+1, 0:dimy+1, 0:dimz+1)
+        real*8 :: Diffcoeff_tilde(0:dimx+1, 0:dimy+1, 0:dimz+1)
+
+        key = trim(iontype)
+
+        volum   = get_value_moleclist(vol,key)
+        valence = get_value_moleclist(zval,key)
+        mu_zmin = get_value_moleclist(mumin,key)
+        mu_zpls = get_value_moleclist(mumax,key)
+        xvol_zmin = get_value_moleclist(xvolmin,key)
+        xvol_zpls = get_value_moleclist(xvolmax,key) 
+        Diffconst = get_value_moleclist(Diffcoeff,key)
+         
+        J0 = - Diffconst / ( volum * vsol * ((1.0d-9)**2) * delta * 2.0d0)  ! prefactor flux 
+        
+        coeff_scaled = J0 /delta 
+
+        coeff_scaled =  -1.0d0
+        
+        !  pre factor in div flux factor (1.0e-9)^2 arise from vsol in unit of nm and grad mu in 1/nm
+        !  J in 1/( nm^2) s) and div J in 1/(nm^3 s)
+        !  volum from conversion of volumefraction to density  
+        !  in cubic coordiantes :  2 delta  :  from interpolation of density
+    
+
+        if(DEBUG_ST) then
+            print*,"DEBUG_ST=",DEBUG_ST
+            print*,"key=",key  
+            print*,"volum=",volum
+            print*,"valence=",valence
+            print*,"mu_zmin=",mu_zmin
+            print*,"mu_zpls=",mu_zpls
+            print*,"xvol_zpls=",xvol_zpls
+            print*,"xvol_zmin=",xvol_zmin
+            print*,"size(xvol)=",size(xvol)
+        endif
+
+        do iz=1,dimz
+            do iy=1,dimy
+                do ix=1,dimx
+                    mu_ex(ix,iy,iz) = -log(xsol(ix,iy,iz))*volum + valence * psi(ix,iy,iz)
+                    Diffcoeff_tilde(ix,iy,iz) = exp ( -mu_ex(ix,iy,iz)) 
+                enddo
+            enddo 
+        enddo        
+
+        mu_ex_zmin = -log(xvolmin%sol)*volum + valence * psizmin
+        mu_ex_zpls = -log(xvolmax%sol)*volum + valence * psizmax
+        rho_tilde_zmin = xvol_zmin * exp ( mu_ex_zmin) /(volum *vsol)
+        rho_tilde_zpls = xvol_zpls * exp ( mu_ex_zpls) /(volum *vsol)
+        Diffcoeff_tilde_zmin = exp ( -mu_ex_zmin) 
+        Diffcoeff_tilde_zpls = exp ( -mu_ex_zpls) 
+
+        ! apply PBC to mu_ex and rho_tilde
+
+        call bc_flux_ex(mu_ex,rho_tilde,Diffcoeff_tilde,iontype) 
+
+        divJ=0.0d0
+        
+        if(DEBUG_ST) divJ= 123435600.0d0 ! used to detect unassinged values of divJ 
+        
+        
+        do iz=1,dimz
+            do iy=1,dimy
+                do ix=1,dimx
+
+                    if(fvstdint(ix,iy,iz).eq.0) then
+
+                        divJ(ix,iy,iz) =  rho_tilde(ix,iy,iz) - 0.0d0 ! == inside channel divJ and xvol zero !!
+                    
+                    else 
+                        
+                        if(fvstdint(ix+1,iy,iz).eq.0) then 
+                            Jdotxpls = 0.0d0
+                        else     
+                            Jdotxpls = (Diffcoeff_tilde(ix+1,iy,iz) + Diffcoeff_tilde(ix  ,iy,iz))* & 
+                                (rho_tilde(ix+1,iy,iz) - rho_tilde(ix,iy,iz)  )  !* Ar (ix,iy,iz,xpls)
+                        endif
+
+                        if(fvstdint(ix-1,iy,iz).eq.0) then 
+                            Jdotxmin = 0.0d0
+                        else
+                            Jdotxmin = (Diffcoeff_tilde(ix  ,iy,iz) + Diffcoeff_tilde(ix-1,iy,iz))* &
+                                (rho_tilde(ix ,iy,iz)  - rho_tilde(ix-1,iy,iz)) ! * Ar (ix,iy,iz,xmin)
+                        endif
+                         
+                        if(fvstdint(ix,iy+1,iz).eq.0) then 
+                            Jdotypls = 0.0d0
+                        else
+                            Jdotypls = (Diffcoeff_tilde(ix,iy+1,iz) + Diffcoeff_tilde(ix,iy  ,iz))*&
+                                (rho_tilde(ix,iy+1,iz) - rho_tilde(ix,iy,iz)  ) ! * Ar (ix,iy,iz,ypls)
+                        endif
+                        
+                        if(fvstdint(ix,iy-1,iz).eq.0) then
+                            Jdotymin = 0.0d0
+                        else        
+                            Jdotymin = (Diffcoeff_tilde(ix,iy  ,iz) + Diffcoeff_tilde(ix,iy-1,iz))*&
+                                (rho_tilde(ix,iy  ,iz) - rho_tilde(ix,iy-1,iz)) ! * Ar (ix,iy,iz,ymin)
+                        endif
+
+                        if(fvstdint(ix,iy,iz+1).eq.0) then 
+                            Jdotzpls = 0.0d0
+                        else
+                            Jdotzpls = (Diffcoeff_tilde(ix,iy,iz+1) + Diffcoeff_tilde(ix,iy,iz  ))*&
+                                (rho_tilde(ix,iy,iz+1) - rho_tilde(ix,iy,iz)  ) ! * Ar (ix,iy,iz,zpls)
+                        endif
+                        if(fvstdint(ix,iy,iz-1).eq.0) then
+                            Jdotzmin = 0.0d0
+                        else      
+                            Jdotzmin = (Diffcoeff_tilde(ix,iy,iz  ) + Diffcoeff_tilde(ix,iy,iz-1))*&
+                                (rho_tilde(ix,iy,iz  ) - rho_tilde(ix,iy,iz-1)) ! * Ar (ix,iy,iz,zmin)
+                        endif    
+                
+                        divJtmp  =  Jdotxpls - Jdotxmin + Jdotypls - Jdotymin + Jdotzpls - Jdotzmin
+                        divJ(ix,iy,iz) =  coeff_scaled * divJtmp
                     
                     endif 
 
@@ -1204,5 +1618,53 @@ contains
         enddo    
 
     end subroutine div_flux_channel_slotboom
+
+
+    subroutine xvol_slotboom(rho_tilde,xsol,xvol,psi,iontype)
+
+        use system, only : dimx, dimy, dimz
+        use molecules, only : vsol
+        use moleculeslist, only : vol, zval
+        use moleculeslist, only : get_value_moleclist
+    
+        ! input arguments 
+
+        real*8, intent(in) :: rho_tilde(0:dimx+1, 0:dimy+1, 0:dimz+1) 
+        real*8, intent(in) :: xsol(:,:,:)
+        real*8, intent(inout) :: xvol(:,:,:)
+        real*8, intent(in) :: psi(0:dimx+1,0:dimy+1,0:dimz+1)
+        character(len=*), intent(in) :: iontype
+        
+
+        ! local variables
+
+        integer :: ix, iy, iz
+        character(len=5):: key
+        real*8 :: volum, valence
+        real*8 :: mu_ex
+
+        key = trim(iontype)
+
+        volum   = get_value_moleclist(vol,key)
+        valence = get_value_moleclist(zval,key)
+       
+
+        if(DEBUG_ST) then
+            print*,"DEBUG_ST=",DEBUG_ST
+            print*,"key=",key  
+            print*,"volum=",volum
+            print*,"valence=",valence
+        endif
+
+        do iz=1,dimz
+            do iy=1,dimy
+                do ix=1,dimx
+                    mu_ex = -log(xsol(ix,iy,iz))*volum + valence * psi(ix,iy,iz)
+                    xvol(ix,iy,iz) = rho_tilde(ix,iy,iz) *exp (-mu_ex) *( volum * vsol)
+                enddo
+            enddo 
+        enddo   
+
+    end subroutine xvol_slotboom     
 
 end module flux

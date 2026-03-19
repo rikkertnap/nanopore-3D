@@ -4,7 +4,7 @@ subroutine monomer_definitions
     use mparameters_monomer
 
     implicit none
-    integer i,j
+    integer :: i,j
 
     !read epsilon.in: N_poorsol and st_matrix
     open(file='epsilon.in', unit=333)
@@ -82,5 +82,5 @@ subroutine monomer_definitions
     !hydroph(4) = 1
     !pKa(4) = 1 ! set any number if zpol = 0....
     !
-end
+end subroutine monomer_definitions
 

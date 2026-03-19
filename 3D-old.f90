@@ -1,22 +1,5 @@
 subroutine init_guess(x1,xg1)
 
-    use system, only : neqs
-    use system, only : fluxflag
-
-    implicit none
-
-    real*8, intent(inout) :: x1(neqs), xg1(neqs)
-
-    if(fluxflag.eq.1) then 
-        call init_guess_flux(x1,xg1)
-    else
-        call init_guess_general(x1,xg1) 
-    endif 
-
-end subroutine init_guess
-
-subroutine init_guess_flux(x1,xg1)
-
     use system, only : dimx,dimy,dimz, neqs, ncells
     use system, only : electroflag, curvedflag, fluxflag, st_bctype     
     use const, only : infile
@@ -68,90 +51,6 @@ subroutine init_guess_flux(x1,xg1)
             xg1(i) = 0.0d0
         enddo
 
-        call linear_interpolation(psiz,psizmin,psizmin)
-        ! potential 
-        do iz=1,dimz
-            psitemp=psiz(iz)
-            do iy=1,dimy
-                do ix=1,dimx
-                    idx = ix + dimx*(iy-1) + dimx*dimy*(iz-1) +(N_poorsol+1)*ncells
-                    xg1(idx) = psitemp
-                enddo
-            enddo
-        enddo
-            
-        do k=1,niontypes ! == loop over ion types
-            
-            key = trim(iontype(k))
-            xvolbulk = get_value_moleclist(xvolmin,key)
-            volum   = get_value_moleclist(vol,key)
-            valence = get_value_moleclist(zval,key)
-            
-            do idx=1, ncells
-
-                ix = mapx(idx)
-                iy = mapy(idx)
-                iz = mapz(idx)
-
-                if(fvstdint(ix,iy,iz).eq.1) then  
-                    if(ST_bctype/=3) then  
-                        xg1(idx+noffset(k)) = xvolbulk
-                    else 
-                        ! mu_ex(r) = -ln(xsol(r) )*volum + valence * psi(r)
-                        ! rho_tilde(r) =xvol(r)  *exp (+mu_ex) /(volum *vsol)
-                        mu_ex = -log(xg1(idx))*volum + valence * xg1(idx+(N_poorsol+1)*ncells)
-                        xg1(idx+noffset(k))= xvolbulk * exp( mu_ex )/(volum * vsol)
-                    endif 
-                else 
-                    xg1(idx+noffset(k)) = 0.0d0
-                endif
-            enddo   
-
-        enddo  ! ion loop
-
-        x1 = xg1 ! == assign x1 to xg1
-
-    endif ! infile
-
-end subroutine init_guess_flux
-
-subroutine init_guess_general(x1,xg1)
-
-    use system, only : dimx,dimy,dimz, neqs, ncells
-    use system, only : electroflag, fluxflag 
-    use const, only : infile
-    use MPI, only : rank 
-    use const, only : stdout
-    use kinsol, only : xflag
-    use mparameters_monomer, only : N_poorsol
-    use bulk, only : xsolbulk 
-
-    implicit none
-
-    real*8, intent(inout) :: x1(neqs), xg1(neqs)
- 
-    ! ==  local variables 
-
-    integer :: i, ix, iy, iz, ip, k, idx 
-    
-    ! == Initial guess
-
-    if((infile.eq.2).or.(infile.eq.-1).or.(infile.eq.3)) then
-        do i = 1, neqs 
-            xg1(i) = xflag(i)     
-        enddo
-    endif
-
-    if(infile.eq.0) then
-    
-        do i = 1, ncells
-            xg1(i) = xsolbulk
-        enddo
-
-        do i = ncells+1, (N_poorsol+1)*ncells
-            xg1(i) = 0.0d0
-        enddo
-
         if(electroflag.eq.1) then 
         
             if(fluxflag.eq.0) then
@@ -162,17 +61,57 @@ subroutine init_guess_general(x1,xg1)
 
             else if(fluxflag.eq.1) then 
 
-                if(rank.eq.0) write(stdout,*) 'solve: Error in init_guess_general'
+                call linear_interpolation(psiz,psizmin,psizmin)
+                ! potential 
+                do iz=1,dimz
+                    psitemp=psiz(iz)
+                    do iy=1,dimy
+                        do ix=1,dimx
+                            idx = ix + dimx*(iy-1) + dimx*dimy*(iz-1) +(N_poorsol+1)*ncells
+                            xg1(idx) = psitemp
+                        enddo
+                    enddo
+                enddo
+            
+                do k=1,niontypes ! == loop over ion types
+                    
+                    key = trim(iontype(k))
+                    xvolbulk = get_value_moleclist(xvolmin,key)
+                    volum   = get_value_moleclist(vol,key)
+                    valence = get_value_moleclist(zval,key)
+                    
+                    do idx=1, ncells
+
+                        ix = mapx(idx)
+                        iy = mapy(idx)
+                        iz = mapz(idx)
+
+                        if(fvstdint(ix,iy,iz).eq.1) then  
+                            if(ST_bctype/=3) then  
+                                xg1(idx+noffset(k)) = xvolbulk
+                            else 
+                                ! mu_ex(r) = -ln(xsol(r) )*volum + valence * psi(r)
+                                ! rho_tilde(r) =xvol(r)  *exp (+mu_ex) /(volum *vsol)
+                                mu_ex = -log(xg1(idx))*volum + valence * xg1(idx+(N_poorsol+1)*ncells)
+                                xg1(idx+noffset(k))= xvolbulk * exp( mu_ex )/(volum * vsol)
+                            endif 
+                        else 
+                            xg1(idx+noffset(k)) = 0.0d0
+                        endif
+                    enddo   
+
+                enddo  ! ion loop
             
             endif ! flux flag
 
         endif ! electroflag    
 
+
         x1 = xg1 ! == assign x1 to xg1
 
     endif ! infile
 
-end subroutine init_guess_general
+end subroutine init_guess
 
 
 subroutine solve(flagcrash)
@@ -184,6 +123,7 @@ subroutine solve(flagcrash)
     use molecules
     use results
     use kinsol
+    ! use bulk
     use MPI
     use ellipsoid
     use ematrix
@@ -226,9 +166,93 @@ subroutine solve(flagcrash)
     integer :: ier_tosend
     double  precision :: norma_tosend
 
-    ! init guess vector 
+    ! == number of equations
 
-    call init_guess(x1,xg1)
+    !    ncells = dimx*dimy*dimz
+
+    ! == stride in x vector storage 
+
+    do k=1,4     
+        noffset(k) =(N_poorsol+2)*ncells + (k-1) * ncells
+    enddo 
+
+    ! == Initial guess
+
+    if((infile.eq.2).or.(infile.eq.-1).or.(infile.eq.3)) then
+        do i = 1, neqs 
+            xg1(i) = xflag(i)     
+        enddo
+    endif
+
+    if(infile.eq.0) then
+    
+        do i = 1, ncells
+            xg1(i) = xsolbulk
+        enddo
+
+        do i = ncells+1, (N_poorsol+1)*ncells
+            xg1(i) = 0.0d0
+        enddo
+
+        if(electroflag.eq.1) then 
+        
+            if(fluxflag.eq.0) then
+         
+                do i=(N_poorsol+1)*ncells+1, (N_poorsol+2)*ncells 
+                    xg1(i) = 0.0d0   ! potential 
+                enddo
+
+            else if(fluxflag.eq.1) then 
+
+                call linear_interpolation(psiz,psizmin,psizmin)
+                ! potential 
+                do iz=1,dimz
+                    psitemp=psiz(iz)
+                    do iy=1,dimy
+                        do ix=1,dimx
+                            idx = ix + dimx*(iy-1) + dimx*dimy*(iz-1) +(N_poorsol+1)*ncells
+                            xg1(idx) = psitemp
+                        enddo
+                    enddo
+                enddo
+            
+                do k=1,niontypes ! == loop over ion types
+                    
+                    key = trim(iontype(k))
+                    xvolbulk = get_value_moleclist(xvolmin,key)
+                    volum   = get_value_moleclist(vol,key)
+                    valence = get_value_moleclist(zval,key)
+                    
+                    do idx=1, ncells
+
+                        ix = mapx(idx)
+                        iy = mapy(idx)
+                        iz = mapz(idx)
+
+                        if(fvstdint(ix,iy,iz).eq.1) then  
+                            if(ST_bctype/=3) then  
+                                xg1(idx+noffset(k)) = xvolbulk
+                            else 
+                                ! mu_ex(r) = -ln(xsol(r) )*volum + valence * psi(r)
+                                ! rho_tilde(r) =xvol(r)  *exp (+mu_ex) /(volum *vsol)
+                                mu_ex = -log(xg1(idx))*volum + valence * xg1(idx+(N_poorsol+1)*ncells)
+                                xg1(idx+noffset(k))= xvolbulk * exp( mu_ex )/(volum * vsol)
+                            endif 
+                        else 
+                            xg1(idx+noffset(k)) = 0.0d0
+                        endif
+                    enddo   
+
+                enddo  ! ion loop
+            
+            endif ! flux flag
+
+        endif ! electroflag    
+
+
+        x1 = xg1 ! == assign x1 to xg1
+
+    endif ! infile
 
     !--------------------------------------------------------------
     ! Solve               

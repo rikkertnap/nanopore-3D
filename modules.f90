@@ -55,7 +55,7 @@ module mparameters_monomer
     real*8, allocatable  :: st_matrix(:,:)  ! interaction between monomer types in fraction of st, scaled by st-scale during running....
     integer, allocatable :: zpol(:)         ! charge of monomer segment: 1: base, -1: acid, 0:neutral
     integer, allocatable :: hydroph(:)      ! 0: hydrophilic, 1 < x < N_poorsol, type of poor solvent
-    real*8, allocatable  ::  pKa(:), Ka(:), K0(:) 
+    real*8, allocatable  :: pKa(:), Ka(:), K0(:) 
 
 endmodule mparameters_monomer
 
@@ -64,10 +64,12 @@ module branches            ! == variable for branched polymer
     
     implicit none
 
-    integer longb(3), longbb
-    integer branched
-    integer indexncha
+    integer :: longb(3), longbb
+    integer :: branched
+    integer :: indexncha
+
 endmodule
+
 
 module system 
     
@@ -76,15 +78,18 @@ module system
     integer :: systemtype   ! == descriptor of system, see parser.f90 
     integer :: vscan        ! == select type of loop of VdW variable 
     real*8 :: delta         ! == unit of length volume cell  in nm  
-    real*8 :: dx,dy,dz      ! ==  laticce shift fraction of delta only works for systemtype ==1 
+    real*8 :: dx,dy,dz      ! == laticce shift fraction of delta only works for systemtype ==1 
     real*8 :: cdiva         ! == cdiva not cubic :  length c axis divided by a-axis tetragonal latice
     integer :: dimx         ! == number of cell  in x-directions
     integer :: dimy         ! == number of cell  in y-directions
     integer :: dimz         ! == number of cell  in z-directions
     integer :: PBC(6)       ! == Periodic bondary conditions 
+    integer :: eqs          ! == number of set of equations, total number of non-linear equatios eqs * (nsize = dimx *dimy *dimz)  
+    integer :: neqs         ! == number of non-linear equations
+    integer*8 :: neqsint8   ! == number of non-linear equations same as neq in module kinsol!!! 
+    integer :: ncells       ! == size lattice ncells = dimx* dimy * dimz
     integer :: vtkflag      ! == if flag ==1 make vtk output formatted file  
     integer :: electroflag  ! == if flag ==1 use electrostatics i.e. solve Poisson Eq
-    integer :: eqs          ! == number of set of equations, total number of non-linear equatios eqs * (nsize = dimx *dimy *dimz)  
     integer :: curvedflag   ! == if flag ==1 use to control shape of nanochannel 0 : straight cylindrical shape 1: hourglass shaped nanopore 
     integer :: fluxflag     ! == if flag ==1 add flux equation : steady system instead of equilibrium
     integer :: methodflag   ! == select solver method :  1= kinsol 2=anderson 3= simple mixing
@@ -111,7 +116,6 @@ module ematrix
     integer :: p0(maxvolx,3)
     real*8, allocatable :: fvstd(:,:,:)         ! ==  fv  = 1 -volprot = free volume of cell
     real*8, allocatable :: fvmkl(:)             ! == idem as fvstd but used with mkl libraries
-
     integer*1, allocatable :: fvstdint(:,:,:)   ! == binarized version of fvstd  0 == fv=0  1= f not 0 RJN  used for computing divJ
 
 end module
@@ -158,6 +162,7 @@ endmodule
 
 module chainsdat
     implicit none  
+
     integer :: cuantas                    ! == number of conformations
     integer, allocatable :: newcuantas(:) ! == number of conformations per graft point accepted ???
     integer :: long                       ! == length of polymer chain /number of segments
@@ -172,6 +177,7 @@ module chainsdat
     integer :: maxcpp                     ! == max number of conformation per processor
     real*8 :: lseg                        ! == length segment 
     integer :: readchains                 ! == variable that selects reading stored conformation 
+
 endmodule
 
 module molecules
@@ -255,9 +261,9 @@ endmodule
 
 module const
     implicit none
-    real*8 :: dielW, dielP, dielS           ! == dielectric contant of water, polymer and surfce    
+    real*8 :: dielW, dielP, dielS           ! == dielectric contant of water, polymer and surface    
     real*8 :: constqE                       ! == pre factor in Poisson Equation 
-    real*8 :: dielPr, dielSr                ! == relative dielectric constant ?? 
+    real*8 :: dielPr, dielSr                ! == relative dielectric constant 
     real*8 :: pKw, Kw                       ! == water equilibrium
     real*8 :: pi  
     real*8, parameter :: Na = 6.022140857e23    ! == Avogadro's number 
@@ -330,8 +336,9 @@ module inputtemp
     real*8 :: xsalt            ! == volume fraction salt in reservoir
     real*8 :: pHbulk           ! == pH  reservoir 
     real*8 :: pOHbulk          ! == pOH reservoir 
-    real*8 :: csalt            ! == concentration of salt in Mol/L 
-    real*8 :: cHplus, cOHmin   ! == concentration of H+ and OH- 
+    real*8 :: csalt            ! == concentration of salt in M= mol/l 
+    real*8 :: cHplus           ! == concentration of H+ 
+    real*8 :: cOHmin           ! == concentration of OH- 
     real*8 :: psizmin          ! == electrostatic pot of lower reservoir used for Steady State
     real*8 :: psizmax          ! == electrostatic pol of upper reservoir used for Steady State
 end module

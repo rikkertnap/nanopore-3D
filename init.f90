@@ -14,11 +14,17 @@ end subroutine initmpi
 
 subroutine initconst
 
-    use const
-    use molecules
-    use ellipsoid
-    use mparameters_monomer
+    use const, only : stdout, pi, pKw, Kw, constq, lb     
+    use const, only : error, errel, itmax     
+    use system, only : delta, dimx, dimy, dimz, ncells, eqs, neqs, neqsint8
+    use kinsol, only : neq
+    use system,only :electroflag, fluxflag, ST_bctype
+    use molecules,only : zpos, zneg, vsol, vsol0, vsalt
+    use flux, only : niontypes  
+   ! use ellipsoid
+    use mparameters_monomer, only : N_poorsol
     use MPI, only : rank
+
 
     implicit none
 
@@ -27,7 +33,7 @@ subroutine initconst
     !pi = acos(-1.0)  
     pi = acos(-1.0d0)
 
-    if(abs(pi-pi_my)>0.0d0) then ! check accuracy 
+    if(abs(pi-pi_my)>0.0d0) then ! test accuracy 
         if(rank.eq.0)write(stdout,*) 'init const: pi',pi,' pi_my', pi_my
     endif    
 
@@ -36,24 +42,38 @@ subroutine initconst
     zneg = -1.0d0
     vsol = vsol0
     vsalt = ((4.0d0/3.0d0)*pi*(0.2d0)**3)/vsol  ! volume salt in units of vsol 0.2=radius salt  
-    constq = delta*delta*4.0d0*pi*lb/vsol   ! multiplicative factor in poisson eq  
+    constq = delta*delta*4.0d0*pi*lb/vsol       ! multiplicative factor in poisson eq  
     pKw = 14.0d0
     Kw = 10.0d0**(-pKw)
     error = 1e-4 ! para comparar con la norma... ! == to compare to norm
     errel = 1d-6
     itmax = 200
 
-    ! == eqs number of equation in unit of lattice size
 
-    if(electroflag.eq.0) eqs = (1+N_poorsol) 
+    ncells = dimx * dimy *dimz     ! == size lattice 
+
+    ! == eqs number of set equations in unit of lattice size
+    ! == neqs number of equations 
+
+    if(electroflag.eq.0) then 
+        eqs = (1+N_poorsol)
+        neqs = eqs * dimx * dimy * dimz ! == number of equation to solve
+    endif      
     if(electroflag.eq.1) then 
         if (fluxflag.eq.0) then 
-            eqs = (2+N_poorsol)         !== Equilbrium 
+            eqs = (2+N_poorsol)         !== Equilibrium 
+            neqs = eqs * dimx *dimy * dimz 
         else if(fluxflag.eq.1) then
-            eqs = (2+4+N_poorsol)       !== Steady state : 4 iontypes
+            eqs = (2+niontypes+N_poorsol)       !== Steady state : niontypes
+            if(ST_bctype.eq.1) neqs = eqs * dimx *dimy * dimz
+            if(ST_bctype.eq.2) neqs = eqs * dimx *dimy * dimz + dimx * dimy
+            if(ST_bctype.eq.3) neqs = eqs * dimx *dimy * dimz
         endif
     endif     
          
+    neqsint8 = int(neqs,kind(neqsint8)) !  equal to neqs but in integer*8
+    neq = neqsint8 
+
 end subroutine
 
 ! == init Input-dependent variables
@@ -159,6 +179,25 @@ subroutine initbulk
 
 end subroutine initbulk
 
+! closes file fiven by unit_num 
+! checks that file is open 
+
+subroutine close_file(unit_num)
+
+    integer :: unit_num
+    logical :: is_open
+
+    inquire(unit=unit_num, opened=is_open)
+
+    if(is_open) then
+        close(unit_num)
+    else 
+        write(*,*) 'Unit', unit_num, ' is not open: not closed.'
+    endif 
+
+end subroutine close_file
+
+
 ! == close all open 301.. 313 file and ends mpi and stop program
 subroutine endall
     use MPI
@@ -168,20 +207,21 @@ subroutine endall
     ! Close common files
     !!!!!!!!!!!!!!!!!!!!!!
 
-    close(301)
-    close(302)
-    close(303)
-    close(304)
-    close(305)
-    close(306)
-    close(307)
-    close(3071)
-    close(308)
-    close(309)
-    close(310)
-    close(311)
-    close(312)
-    close(313)
+
+    call close_file(301)
+    call close_file(302)
+    call close_file(303)
+    call close_file(304)
+    call close_file(305)
+    call close_file(306)
+    call close_file(307)
+    call close_file(3071)
+    call close_file(308)
+    call close_file(309)
+    call close_file(310)
+    call close_file(311)
+    call close_file(312)
+    call close_file(313)
 
     call MPI_FINALIZE(ierr) ! finaliza MPI    
     stop
@@ -455,10 +495,10 @@ subroutine mirror
     integer :: ip
     integer :: ix,iy,iz
     real*8 :: temp
-    integer :: ncells
+!    integer :: ncells
 
 
-    ncells = dimx*dimy*dimz
+!    ncells = dimx*dimy*dimz
 
     do ix=1,dimx
         do iy=1,dimy

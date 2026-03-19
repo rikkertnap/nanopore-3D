@@ -25,7 +25,7 @@ end subroutine
 
 subroutine calcfv
 
-    use system
+    use system, only : dimx, dimy, dimz 
     use ematrix
     use maps
 
@@ -105,7 +105,7 @@ subroutine calcfvint
     ! z = dimz
     fvstdint(:,:,dimz+1) = fvstdint(:,:,dimz)
 
-    if(rank.eq.0) write(stdout,*) 'calcintfv: teller=', teller, " max_teller= ",maxteller
+    if(rank.eq.0) write(stdout,*) 'calcintfv: teller=', teller, " max_teller= ",maxteller,"  epsfv= ", epsfv
 
 end subroutine calcfvint 
 
@@ -183,8 +183,8 @@ subroutine make_hashtable
     do idx=1,nsize
             
         call coordinateFromLinearIndex(idx, ix, iy, iz)
-        coordtoindex(ix,iy,iz) = idx  ! equivalent to imap
 
+        coordtoindex(ix,iy,iz) = idx  ! equivalent to imap
         indextocoord(idx,1) = ix       ! equivalent to mapx, mapy, mapz
         indextocoord(idx,2) = iy
         indextocoord(idx,3) = iz

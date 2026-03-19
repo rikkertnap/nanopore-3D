@@ -7,10 +7,10 @@ subroutine fkpsol(udata, uscale, fdata, fscale, vv, ftem, ier)
     use mkinsol
     implicit none
 
-    integer ier
-    integer*8 neq, i
-    double precision udata(*), uscale(*), fdata(*), fscale(*)
-    double precision vv(*), ftem(*)
+    integer :: ier
+    integer*8 :: neq, i
+    double precision :: udata(*), uscale(*), fdata(*), fscale(*)
+    double precision :: vv(*), ftem(*)
 
     common /psize/ neq
 
@@ -20,7 +20,8 @@ subroutine fkpsol(udata, uscale, fdata, fscale, vv, ftem, ier)
     ier = 0
 
     return
-end
+end subroutine fkpsol 
+
 
 !* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 !* * *
@@ -34,11 +35,11 @@ subroutine fkpset(udata, uscale, fdata, fscale,vtemp1,vtemp2, ier)
     use mparameters_monomer
     implicit none
 
-    integer ier
-    integer*8 neq, i
-    double precision udata(*), uscale(*), fdata(*), fscale(*)
-    double precision vtemp1(*), vtemp2(*)
-    integer ncells
+    integer :: ier
+    integer*8 :: neq, i
+    double precision :: udata(*), uscale(*), fdata(*), fscale(*)
+    double precision :: vtemp1(*), vtemp2(*)
+    integer :: ncells
 
     common /psize/ neq
 
@@ -70,77 +71,105 @@ subroutine fkpset(udata, uscale, fdata, fscale,vtemp1,vtemp2, ier)
     ier = 0
 
     return
-end
+
+end subroutine fkpset
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! Subrutina que llama a kinsol
      
 
-subroutine call_fkfun(x1_old)
-    use system
-    use MPI
+subroutine call_fkfun(x)
+    use system, only : neqs
+    use MPI 
+    
+    implicit none 
 
-    integer i
+    real*8 :: x(neqs)
 
-    real*8 x1_old(eqs*dimx*dimy*dimz)
-    real*8 x1(eqs*dimx*dimy*dimz)
-    real*8 f(eqs*dimx*dimy*dimz)
+    ! == local arguments 
+    real*8 :: f(neqs)
+    integer :: err  ! == mpi 
+    integer :: ier
+    
+    CALL MPI_BCAST(x, neqs , MPI_DOUBLE_PRECISION,0, MPI_COMM_WORLD,err)
 
-    ! MPI
+    call fkfun(x, f, ier) 
 
-    integer tag
-    parameter(tag = 0)
-    integer err
+end subroutine call_fkfun
 
-    x1 = 0.0
-    do i = 1,eqs*dimx*dimy*dimz
-        x1(i) = x1_old(i)
-    enddo
 
-    CALL MPI_BCAST(x1, eqs*dimx*dimy*dimz , MPI_DOUBLE_PRECISION,0, MPI_COMM_WORLD,err)
+!subroutine call_fkfun(x1_old)
+!    use system, only : neqs
+!    use MPI!
 
-    call fkfun(x1,f, ier) ! todavia no hay solucion => fkfun 
-end
+!    implicit none 
+
+!    real*8 :: x1_old(neqs)
+    
+!    ! == local arguments 
+!    real*8 :: x1(neqs)
+!    real*8 :: f(neqs)
+
+!    ! MPI
+
+!    integer :: tag
+!    parameter(tag = 0)
+!    integer :: err 
+!    integer i
+
+!    x1 = 0.0d0
+!    do i = 1,neqs
+!        x1(i) = x1_old(i)
+!    enddo
+
+!    CALL MPI_BCAST(x1, neqs , MPI_DOUBLE_PRECISION,0, MPI_COMM_WORLD,err)
+
+!    call fkfun(x1, f, ier) ! todavia no hay solucion => fkfun 
+
+! end subroutine call_fkfun
 
 subroutine call_kinsol(x1_old, xg1_old, ier)
     use system
     use const
     use mparameters_monomer
+
     implicit none
-    integer i
-    real*8 :: x1(eqs*dimx*dimy*dimz), xg1(eqs*dimx*dimy*dimz)
-    real*8 :: x1_old(eqs*dimx*dimy*dimz), xg1_old(eqs*dimx*dimy*dimz)
+
+    real*8 :: x1_old(neqs), xg1_old(neqs)
+    integer*4 :: ier      ! Kinsol error flag
+
+    integer ::i
+    real*8 :: x1(neqs), xg1(neqs)
     integer*8 :: iout(15) ! Kinsol additional output information
-    real*8 :: rout(2) ! Kinsol additional out information
+    real*8 :: rout(2)     ! Kinsol additional out information
     integer*8 :: msbpre
     real*8 :: fnormtol, scsteptol
-    real*8 :: scale(eqs*dimx*dimy*dimz)
-    real*8 :: constr(eqs*dimx*dimy*dimz)
+    real*8 :: scale(neqs)
+    real*8 :: constr(neqs)
     integer*4 :: globalstrat, maxl, maxlrst
-    integer*4 :: ier ! Kinsol error flag
     integer*8 :: neq ! Kinsol number of equations
     integer*4 :: max_niter
 
 
     common /psize/ neq ! Kinsol
-    integer ierr
-    integer ncells
+    integer :: ierr
+    integer :: ncells
 
 
     ! INICIA KINSOL
     ncells = dimx*dimy*dimz
-    neq = eqs*dimx*dimy*dimz
-    msbpre  = 10 ! maximum number of iterations without prec. setup (?)
-    fnormtol = 1.0d-6 ! Function-norm stopping tolerance
+    neq = eqs*dimx*dimy*dimz 
+    msbpre  = 10        ! maximum number of iterations without prec. setup (?)
+    fnormtol = 1.0d-6   ! Function-norm stopping tolerance
     scsteptol = 1.0d-6 ! Function-norm stopping tolerance
 
-    maxl = 500 ! maximum Krylov subspace dimesion (?!?!?!) ! Esto se usa para el preconditioner
-    maxlrst = 5 ! maximum number of restarts
+    maxl = 500   ! maximum Krylov subspace dimension (?!?!?!) ! Esto se usa para el preconditioner
+    maxlrst = 5  ! maximum number of restarts
     max_niter = 1000
     globalstrat = 0
 
     call fnvinits(3, neq, ier) ! fnvinits inits NVECTOR module
-    if (ier .ne. 0) then       ! 3 for Kinsol, neq ecuantion number, ier error flag (0 is OK)
+    if (ier .ne. 0) then       ! 3 for Kinsol, neq number of equantions , ier error flag (0 is OK)
         write(stdout,*) 'call_kinsol: SUNDIALS_ERROR: FNVINITS returned IER = ', ier
         call MPI_FINALIZE(ierr) ! finaliza MPI
         stop
@@ -218,10 +247,11 @@ subroutine call_kinsol(x1_old, xg1_old, ier)
     do i = 1, neq ! output
         x1_old(i) = x1(i)
         xg1_old(i) = x1(i)
-        enddo
+    enddo
 
     return
-end
+    
+end subroutine call_kinsol
 
 
 
