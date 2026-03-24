@@ -1,7 +1,9 @@
 subroutine solver(xvec, xvecguess, ier)
 
-    use system, only : eqs, dimx, dimy, dimz, methodflag, neq
+    use system, only : neqs, methodflag
     use anderson
+    use kinsol, only : neq 
+
 
     implicit none
 

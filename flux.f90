@@ -1413,36 +1413,42 @@ contains
                         if(fvstdint(ix+1,iy,iz).eq.0) then 
                             Jdotxpls = 0.0d0
                         else     
-                            Jdotxpls = (Diffcoeff_tilde(ix+1,iy,iz) + Diffcoeff_tilde(ix  ,iy,iz))*(rho_tilde(ix+1,iy,iz) - rho_tilde(ix,iy,iz)  ) ! * Ar (ix,iy,iz,xpls)
+                            Jdotxpls = (Diffcoeff_tilde(ix+1,iy,iz) + Diffcoeff_tilde(ix  ,iy,iz))*&
+                                    (rho_tilde(ix+1,iy,iz) - rho_tilde(ix,iy,iz)  ) ! * Ar (ix,iy,iz,xpls)
                         endif
 
                         if(fvstdint(ix-1,iy,iz).eq.0) then 
                             Jdotxmin = 0.0d0
                         else
-                            Jdotxmin = (Diffcoeff_tilde(ix  ,iy,iz) + Diffcoeff_tilde(ix-1,iy,iz))*(rho_tilde(ix ,iy,iz)  - rho_tilde(ix-1,iy,iz)) ! * Ar (ix,iy,iz,xmin)
+                            Jdotxmin = (Diffcoeff_tilde(ix  ,iy,iz) + Diffcoeff_tilde(ix-1,iy,iz))*&
+                                    (rho_tilde(ix ,iy,iz)  - rho_tilde(ix-1,iy,iz)) ! * Ar (ix,iy,iz,xmin)
                         endif
                          
                         if(fvstdint(ix,iy+1,iz).eq.0) then 
                             Jdotypls = 0.0d0
                         else
-                            Jdotypls = (Diffcoeff_tilde(ix,iy+1,iz) + Diffcoeff_tilde(ix,iy  ,iz))*(rho_tilde(ix,iy+1,iz) - rho_tilde(ix,iy,iz)  ) ! * Ar (ix,iy,iz,ypls)
+                            Jdotypls = (Diffcoeff_tilde(ix,iy+1,iz) + Diffcoeff_tilde(ix,iy  ,iz))*&
+                                    (rho_tilde(ix,iy+1,iz) - rho_tilde(ix,iy,iz)  ) ! * Ar (ix,iy,iz,ypls)
                         endif
                         
                         if(fvstdint(ix,iy-1,iz).eq.0) then
                             Jdotymin = 0.0d0
                         else        
-                            Jdotymin = (Diffcoeff_tilde(ix,iy  ,iz) + Diffcoeff_tilde(ix,iy-1,iz))*(rho_tilde(ix,iy  ,iz) - rho_tilde(ix,iy-1,iz)) ! * Ar (ix,iy,iz,ymin)
+                            Jdotymin = (Diffcoeff_tilde(ix,iy  ,iz) + Diffcoeff_tilde(ix,iy-1,iz))*&
+                                    (rho_tilde(ix,iy  ,iz) - rho_tilde(ix,iy-1,iz)) ! * Ar (ix,iy,iz,ymin)
                         endif
 
                         if(fvstdint(ix,iy,iz+1).eq.0) then 
                             Jdotzpls = 0.0d0
                         else
-                            Jdotzpls = (Diffcoeff_tilde(ix,iy,iz+1) + Diffcoeff_tilde(ix,iy,iz  ))*(rho_tilde(ix,iy,iz+1) - rho_tilde(ix,iy,iz)  ) ! * Ar (ix,iy,iz,zpls)
+                            Jdotzpls = (Diffcoeff_tilde(ix,iy,iz+1) + Diffcoeff_tilde(ix,iy,iz  ))*&
+                                    (rho_tilde(ix,iy,iz+1) - rho_tilde(ix,iy,iz)  ) ! * Ar (ix,iy,iz,zpls)
                         endif
                         if(fvstdint(ix,iy,iz-1).eq.0) then
                             Jdotzmin = 0.0d0
                         else      
-                            Jdotzmin = (Diffcoeff_tilde(ix,iy,iz  ) + Diffcoeff_tilde(ix,iy,iz-1))*(rho_tilde(ix,iy,iz  ) - rho_tilde(ix,iy,iz-1)) ! * Ar (ix,iy,iz,zmin)
+                            Jdotzmin = (Diffcoeff_tilde(ix,iy,iz  ) + Diffcoeff_tilde(ix,iy,iz-1))*&
+                                    (rho_tilde(ix,iy,iz  ) - rho_tilde(ix,iy,iz-1)) ! * Ar (ix,iy,iz,zmin)
                         endif    
                 
                         divJtmp  =  Jdotxpls - Jdotxmin + Jdotypls - Jdotymin + Jdotzpls - Jdotzmin

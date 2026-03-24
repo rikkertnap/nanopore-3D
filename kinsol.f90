@@ -39,11 +39,11 @@ subroutine fkpset(udata, uscale, fdata, fscale,vtemp1,vtemp2, ier)
     integer*8 :: neq, i
     double precision :: udata(*), uscale(*), fdata(*), fscale(*)
     double precision :: vtemp1(*), vtemp2(*)
-    integer :: ncells
+  !  integer :: ncells
 
     common /psize/ neq
 
-    ncells =  dimx*dimy*dimz
+  !  ncells =  dimx*dimy*dimz
 
     do i = 1, ncells
         pp(i) = 0.1 / (1.0+exp(1.0-udata(i)))
@@ -153,11 +153,11 @@ subroutine call_kinsol(x1_old, xg1_old, ier)
 
     common /psize/ neq ! Kinsol
     integer :: ierr
-    integer :: ncells
+    ! integer :: ncells placed in system 
 
 
     ! INICIA KINSOL
-    ncells = dimx*dimy*dimz
+    ! ncells = dimx*dimy*dimz
     neq = eqs*dimx*dimy*dimz 
     msbpre  = 10        ! maximum number of iterations without prec. setup (?)
     fnormtol = 1.0d-6   ! Function-norm stopping tolerance
