@@ -790,6 +790,7 @@ subroutine newintegrate_channel_curved(radiusS,radiusL,RdimZ,origincurv,npoints,
     LenCsect = LenC/(1.0d0*nsections)  
     RC = radiusCurvature(RL,RS,LenCsect)
  
+    print*,"graftflag=",graftflag
 
     if(graftflag.ne.1) then                 ! == place graftpoint on a regular grid 
 
@@ -929,6 +930,7 @@ subroutine newintegrate_channel_curved(radiusS,radiusL,RdimZ,origincurv,npoints,
                 js(i) = int(v(i)/delta)+1                     ! == position on lattice 
             
                 if((js(i).le.0).or.(js(i).gt.dims(i))) then
+                    write(stdout,*)'newintegrate_channel_curved: postion graft point outside lattice'
                     write(stdout,*)'newintegrate_channel_curved: error in channel-curved', i, js(i), dims(i)
                     stop
                 endif

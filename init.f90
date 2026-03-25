@@ -377,7 +377,7 @@ subroutine savedata(cccc)
                 sumavpolA = 0.0d0
                 do iz=1,dimz
                     do iy=1,dimy
-                        do ix=1,dimz
+                        do ix=1,dimx
                             fv = (1.0d0-volprot(ix,iy,iz))
                             avfdisA(im)= avfdisA(im)+ avpolA(ix,iy,iz,im)*fv*zpolA(im)/vpolA/vsol*fdisA(ix,iy,iz,im) ! units of |e|/nm^3 
                             sumavpolA= sumavpolA+avpolA(ix,iy,iz,im)*fv/vpolA/vsol      
@@ -398,7 +398,7 @@ subroutine savedata(cccc)
                 sumavpolB = 0.0d0
                 do iz=1,dimz
                     do iy=1,dimy
-                        do ix=1,dimz
+                        do ix=1,dimx
                             fv = (1.0d0-volprot(ix,iy,iz))
                             avfdisB(im)= avfdisB(im)+ avpolB(ix,iy,iz,im)*fv*zpolB(im)/vpolB/vsol*fdisB(ix,iy,iz,im) ! units of |e|/nm^3 
                             sumavpolB = sumavpolB+avpolB(ix,iy,iz,im)*fv/vpolB/vsol      
