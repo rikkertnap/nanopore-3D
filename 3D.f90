@@ -109,9 +109,9 @@ subroutine init_guess_flux(x1,xg1)
 
         enddo  ! ion loop
 
-        x1 = xg1 ! == assign x1 to xg1
-
     endif ! infile
+
+    x1 = xg1 ! == assign x1 to xg1
 
 end subroutine init_guess_flux
 
@@ -168,9 +168,10 @@ subroutine init_guess_general(x1,xg1)
 
         endif ! electroflag    
 
-        x1 = xg1 ! == assign x1 to xg1
-
     endif ! infile
+
+    x1 = xg1 ! == assign x1 to xg1
+
 
 end subroutine init_guess_general
 

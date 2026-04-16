@@ -376,7 +376,7 @@ subroutine savedata(cccc)
                 sumavpol = 0.0d0
                 do iz=1,dimz
                     do iy=1,dimy
-                        do ix=1,dimz
+                        do ix=1,dimx
                             fv = (1.0d0-volprot(ix,iy,iz))
                             avfdis(im)= avfdis(im)+ avpol(ix,iy,iz,im)*fv*zpol(im)/vpol/vsol*fdis(ix,iy,iz,im) ! units of |e|/nm^3 
                             sumavpol= sumavpol+avpol(ix,iy,iz,im)*fv/vpol/vsol      
