@@ -33,7 +33,7 @@ endif
 
 # some definitions
 SHELL = /bin/bash
-FFLAGS=  -fcheck=all -fbounds-check -Warray-bounds -g -fbacktrace  
+FFLAGS=  -O3 -Wline-truncation -fbacktrace # -fcheck=all -fbounds-check -Warray-bounds -g -fbacktrace  
 
 ifeq ($(HOST),piluso.rosario-conicet.gov.ar)
 LFLAGS = -L/home/mtagliazucchi.inquimae/software/kinsol/lib -lsundials_fkinsol -lsundials_kinsol -lsundials_fnvecserial -lsundials_nvecserial -lm -L/usr/lib/gcc/x86_64-redhat-linux/4.4.7 -L/usr/lib/gcc/x86_64-redhat-linux/4.4.7/../../../../lib64 -L/lib/../lib64 -L/usr/lib/../lib64 -L/usr/lib/gcc/x86_64-redhat-linux/4.4.7/../../.. -lgfortranbegin -lgfortran -lm -lgcc_s
@@ -49,6 +49,7 @@ endif
 
 
 ifeq ($(HOST),mccbmec02cc21mlvdm)
+FFLAGS=  -fcheck=all -fbounds-check -Warray-bounds -g -fbacktrace  
 LDFLAGS=
 LFLAGS= -lm  -framework Accelerate
 endif

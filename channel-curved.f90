@@ -99,7 +99,7 @@ contains
                 stop
             endif
         else
-            Rz = radiusL    
+            Rz = RL ! radiusL    
         endif    
 
     end function 
@@ -324,7 +324,7 @@ contains
 
         use system
         use channel
-        use ematrix
+        use ematrix ! , only : volq,volq1 etc 
         use MPI
         use const
         use chainsdat
@@ -449,12 +449,19 @@ contains
             enddo
         end select
 
-
         !! charge
 
         volq1 = volprot1-volq1
         temp = sum(volq1)
         volq1 = volq1/temp*echargec/(delta**3) ! sum(volq) is echarge
+
+        ! print*,"update_matrix_channel_4_curved: radiusSq:",radiusSq
+        ! print*,"update_matrix_channel_4_curved: radiusLq:",radiusLq
+        ! print*,"update_matrix_channel_4_curved: temp:",temp
+        ! print*,"update_matrix_channel_4_curved: sumvolq1:", sumvolq1
+        ! print*,"update_matrix_channel_4_curved: sumvolprot1:", sumvolprot1
+        ! print*,"update_matrix_channel_4_curved: sumvoleps1:",sumvoleps1
+        ! print*,"update_matrix_channel_4_curved: echargec:",echargec
 
         !! grafting
 

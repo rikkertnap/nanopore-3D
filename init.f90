@@ -117,6 +117,7 @@ subroutine initall
         case (1) ! base
             K0A(im) = ((Kw/KaA(im))*vsol/xsolbulk)*(Na/1.0d24)! intrinstic equilibruim constant, Kb 
         end select
+    !   write(stdout,*) 'initall: acid: K0A',K0A
     enddo
 
      do im = 1, N_monomerB
@@ -127,7 +128,9 @@ subroutine initall
         case (1) ! base
             K0B(im) = ((Kw/KaB(im))*vsol/xsolbulk)*(Na/1.0d24)! intrinstic equilibruim constant, Kb 
         end select
+        write(stdout,*) 'initall: acid K0B:',K0B
     enddo
+
 
     if(fluxflag.eq.1) then
         ! allocate flux variables
@@ -238,7 +241,7 @@ subroutine savedata(cccc)
 
     if(rank.eq.0) then 
 
-     ! == save files 
+        ! == save files 
         ! == polymer 
 
         temp = 0.0d0
@@ -246,6 +249,7 @@ subroutine savedata(cccc)
             temp(:,:,:) =  temp(:,:,:) + avpolA(:,:,:, im)*(1.0d0 - volprot(:,:,:))
         enddo
 
+        print*,"Saving xpolA" 
         title = 'xpolA' ! 'avpol' 
         call savetodisk(temp, title, cccc)
 
@@ -254,6 +258,7 @@ subroutine savedata(cccc)
             temp(:,:,:) =  temp(:,:,:) + avpolB(:,:,:, im)*(1.0d0 - volprot(:,:,:))
         enddo
 
+        print*,"Saving xpolB" 
         title = 'xpolB' ! 'avpol' 
         call savetodisk(temp, title, cccc)
 
@@ -292,9 +297,22 @@ subroutine savedata(cccc)
         !  call savetodisk(xOHmin, title, cccc)
         ! fdis
         
-        title = 'fdisA' 
-        temp(1:dimx,1:dimy, 1:dimz) = fdisA(1:dimx,1:dimy, 1:dimz,1)
-        call savetodisk(temp, title, cccc)
+        do im = 1, N_monomerA
+            if (zpolA(im).eq.1.or.zpolA(im).eq.-1) then
+                write(title,'(A3, I2.2)')'fAp',im      ! avp 
+                temp(1:dimx,1:dimy, 1:dimz) = fdisA(1:dimx,1:dimy, 1:dimz,im)
+                call savetodisk(temp, title, cccc)
+            endif    
+        enddo
+
+        do im = 1, N_monomerB
+            if (zpolB(im).eq.1.or.zpolB(im).eq.-1) then
+                write(title,'(A3, I2.2)')'fBp',im      ! avp 
+                temp(1:dimx,1:dimy, 1:dimz) = fdisB(1:dimx,1:dimy, 1:dimz,im)
+                call savetodisk(temp, title, cccc)
+            endif
+        enddo
+
 
         ! polymer charge
 
@@ -318,7 +336,6 @@ subroutine savedata(cccc)
         ! electostatic potential 
 
         temp(1:dimx,1:dimy, 1:dimz) = psi(1:dimx,1:dimy, 1:dimz)
-
         title = 'poten'
         call savetodisk(temp, title, cccc)
 
@@ -401,7 +418,7 @@ subroutine savedata(cccc)
                         do ix=1,dimx
                             fv = (1.0d0-volprot(ix,iy,iz))
                             avfdisB(im)= avfdisB(im)+ avpolB(ix,iy,iz,im)*fv*zpolB(im)/vpolB/vsol*fdisB(ix,iy,iz,im) ! units of |e|/nm^3 
-                            sumavpolB = sumavpolB+avpolB(ix,iy,iz,im)*fv/vpolB/vsol      
+                            sumavpolB = sumavpolB+avpolB(ix,iy,iz,im)*fv/vpolB/vsol  
                         enddo
                     enddo
                 enddo
@@ -418,7 +435,6 @@ subroutine savedata(cccc)
         endif
 
     
-
         ! system
         if(curvedflag==0) then 
             area=dimx*dimy*delta*delta      ! == straight nanopore 

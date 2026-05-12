@@ -36,7 +36,7 @@ subroutine fkfun(x,f,ier2)
     real*8 :: xpotB(dimx, dimy, dimz, N_monomerB)
 
     integer :: id, noffset ! == indices used for flux contrubution to f
-    real*8 :: normvol, normel 
+    real*8 :: normvol, normel, normqtot
 
     ! Charge
     real*8 :: psitemp
@@ -82,6 +82,7 @@ subroutine fkfun(x,f,ier2)
         CALL MPI_BCAST(x, eqs*ncells , MPI_DOUBLE_PRECISION,0, MPI_COMM_WORLD,err)
     endif
 
+    
     !------------------------------------------------------
     ! DEBUG
     !      if(iter.gt.2000) then
@@ -413,7 +414,7 @@ subroutine fkfun(x,f,ier2)
 
     enddo ! N_monomer
 
- ! Calcula xpotA
+   ! Calcula xpotA
 
     sttemp = st/(vpolB*vsol)
 
@@ -603,11 +604,19 @@ subroutine fkfun(x,f,ier2)
                 qtot(ix, iy, iz) =  qtot(ix,iy,iz) + avpolB(ix,iy,iz,im)*zpolB(im)/vpolB*fdisB(ix,iy,iz,im)
             enddo
 
-            qtot(ix, iy,iz) = qtot(ix,iy,iz)*fv + volq(ix,iy,iz)*vsol    ! OJO
+            qtot(ix, iy,iz) = qtot(ix,iy,iz)*fv  + volq(ix,iy,iz)*vsol    ! OJO
 
             enddo
         enddo
     enddo
+
+     do ix=1,dimx
+        do iy=1,dimy
+            do iz=1,dimz
+                write(456,*)volq(ix,iy,iz)
+            enddo
+        enddo
+    enddo        
 
     ! Volume fraction
     do ix=1,dimx
@@ -666,7 +675,7 @@ subroutine fkfun(x,f,ier2)
                     do im = 1, N_monomerB
                         if(hydrophB(im).eq.ip) then 
                             f(ix+dimx*(iy-1)+dimx*dimy*(iz-1)+(ip+N_poorsolA)*ncells) = &
-                            f(ix+dimx*(iy-1)+dimx*dimy*(iz-1)+(ip+N_poorsolB)*ncells) -avpolB(ix,iy,iz,im)
+                            f(ix+dimx*(iy-1)+dimx*dimy*(iz-1)+(ip+N_poorsolB)*ncells) -avpolB(ix,iy,iz,im)  ! N_poorsolB -> N_poorsolA ???
                         endif
                     enddo ! im
                 enddo ! ip
@@ -778,6 +787,7 @@ subroutine fkfun(x,f,ier2)
     norma = 0.0d0      ! == added  d0  without d0 significant number loss can occur
     normvol = 0.0d0
     normel = 0.0d0
+    normqtot = 0.0d0
 
     do i = 1, eqs*ncells
         norma = norma + (f(i))**2
@@ -786,6 +796,7 @@ subroutine fkfun(x,f,ier2)
     do i = 1,ncells
         normvol= normvol +f(i)**2
     enddo
+
     if(electroflag.eq.1) then 
         noffset=(N_poorsolA+N_poorsolB+1)*ncells 
         do i= 1, ncells    
@@ -797,6 +808,7 @@ subroutine fkfun(x,f,ier2)
     if(verbose.ge.3) then
         if(rank.eq.0) write(stdout,*)'fkfun:', iter, sqrt(norma), sqrt(normvol), sqrt(normel), qA(1)
     endif
+
 
     3333 continue
     ier2 = 0.0 
