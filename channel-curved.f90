@@ -101,7 +101,7 @@ contains
                 stop
             endif
         else
-            Rz = radiusL    
+            Rz = RL    
         endif    
 
 
@@ -461,7 +461,8 @@ contains
 
         call integrate_channel_curved(radiusS,radiusL,RdimZ, originc_curv,npoints, volprot1, sumvolprot1, flag)
 
-        call integrate_channel_curved(radiusSq,radiusLq,RdimZ,originc_curv ,npoints, voleps1 , sumvoleps1, flag)
+        ! call integrate_channel_curved(radiusSq,radiusLq,RdimZ,originc_curv ,npoints, voleps1 , sumvoleps1, flag)
+        call integrate_channel_curved(radiusSq,radiusLq,RdimZ,originc_curv ,npoints, volq1 , sumvolq1, flag)
         
 
         call newintegrate_channel_curved(radiusS,radiusL,RdimZ,originc_curv, npoints,volx1,sumvolx1,com1,p1,&
@@ -489,6 +490,15 @@ contains
         volq1 = volprot1-volq1
         temp = sum(volq1)
         volq1 = volq1/temp*echargec/(delta**3) ! sum(volq) is echarge
+
+
+        ! print*,"update_matrix_channel_4_curved: radiusSq:",radiusSq
+        ! print*,"update_matrix_channel_4_curved: radiusLq:",radiusLq
+        ! print*,"update_matrix_channel_4_curved: temp:",temp
+        ! print*,"update_matrix_channel_4_curved: sumvolq1:", sumvolq1
+        ! print*,"update_matrix_channel_4_curved: sumvolprot1:", sumvolprot1
+        ! print*,"update_matrix_channel_4_curved: sumvoleps1:",sumvoleps1
+        ! print*,"update_matrix_channel_4_curved: echargec:",echargec
 
         !! grafting
 

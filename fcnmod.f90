@@ -246,6 +246,7 @@ subroutine fcn_fkfun(x,f,ier2)
 
 
 
+    
     ! Compute dielectric permitivity
 
     xtotalsum = 0.0d0 ! sum of all polymers

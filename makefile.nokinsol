@@ -49,6 +49,7 @@ endif
 
 
 ifeq ($(HOST),mccbmec02cc21mlvdm)
+FFLAGS=  -fcheck=all -fbounds-check -Warray-bounds -g -fbacktrace  
 LDFLAGS=
 LFLAGS= -lm  -framework Accelerate 
 endif
