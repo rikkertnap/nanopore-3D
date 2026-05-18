@@ -113,22 +113,30 @@ subroutine initall
         KaA(im)=10.0d0**(-pKaA(im))
         select case (zpolA(im))
         case (-1) ! acid
-            K0A(im) = (KaA(im)*vsol/xsolbulk)*(Na/1.0d24)! intrinstic equilibruim constant, Ka
+            K0A(im) = (KaA(im)*vsol/xsolbulk)*(Na/1.0d24)! intrinsic equilibruim constant, Ka
+            write(stdout,*) 'initall: monomerA ',im,' acid K0A:',K0A(im)," KaA", KaA(im)," zpol ", zpolA(im)
         case (1) ! base
-            K0A(im) = ((Kw/KaA(im))*vsol/xsolbulk)*(Na/1.0d24)! intrinstic equilibruim constant, Kb 
+            K0A(im) = ((Kw/KaA(im))*vsol/xsolbulk)*(Na/1.0d24)! intrinsic equilibruim constant, Kb 
+            write(stdout,*) 'initall: monomerA ',im,' base K0A:',K0A(im)," KaA", KaA(im)," zpol ",zpolA(im) 
+        case default 
+            write(stdout,*) 'initall: monomerA ',im," neutral zpol : ", zpolA(im)
         end select
-    !   write(stdout,*) 'initall: acid: K0A',K0A
+        
     enddo
 
      do im = 1, N_monomerB
         KaB(im)=10.0d0**(-pKaB(im))
         select case (zpolB(im))
         case (-1) ! acid
-            K0B(im) = (KaB(im)*vsol/xsolbulk)*(Na/1.0d24)! intrinstic equilibruim constant, Ka
+            K0B(im) = (KaB(im)*vsol/xsolbulk)*(Na/1.0d24)! intrinsic equilibruim constant, Ka
+            write(stdout,*) 'initall: monomerB ',im,' acid K0B:',K0B(im)," KaB", KaB(im)," zpol ", zpolB(im)
         case (1) ! base
-            K0B(im) = ((Kw/KaB(im))*vsol/xsolbulk)*(Na/1.0d24)! intrinstic equilibruim constant, Kb 
+            K0B(im) = ((Kw/KaB(im))*vsol/xsolbulk)*(Na/1.0d24)! intrinsic equilibruim constant, Kb 
+            write(stdout,*) 'initall: monomerB ',im,' base K0B:',K0B(im)," KaB", KaB(im)," zpol ",zpolB(im) 
+        case default 
+            write(stdout,*) 'initall: monomerB ',im," neutral zpol : ",zpolB(im)
         end select
-        write(stdout,*) 'initall: acid K0B:',K0B
+        
     enddo
 
 

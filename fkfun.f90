@@ -65,6 +65,8 @@ subroutine fkfun(x,f,ier2)
     real*8 :: hds(100)
 
 
+
+
     hds = -1
 
     !-----------------------------------------------------
@@ -414,7 +416,7 @@ subroutine fkfun(x,f,ier2)
 
     enddo ! N_monomer
 
-   ! Calcula xpotA
+   ! Calcula xpotB
 
     sttemp = st/(vpolB*vsol)
 
@@ -467,7 +469,7 @@ subroutine fkfun(x,f,ier2)
 
                     ! Electrostatics
 
-                    if(zpolA(im).ne.0.0) then
+                    if(zpolB(im).ne.0.0) then
                         xpotB(ix,iy,iz,im) =  xpotB(ix,iy,iz,im)/fdisB(ix,iy,iz,im)*dexp(-psi(ix,iy,iz)*zpolB(im))  
                         ! fdis: por eq ac. base...  
                     endif
@@ -776,10 +778,10 @@ subroutine fkfun(x,f,ier2)
                     do ix=1,dimx
                         id=ix+dimx*(iy-1)+dimx*dimy*(iz-1)+noffset +(i-1)*ncells 
                         f(id)  =  divJ(ix,iy,iz,i)
-                    enddo
-                enddo    
-            enddo    
-        enddo
+                    enddo ! ix
+                enddo  !iy
+            enddo  ! iz  
+        enddo ! i
         
     endif !fluxflag 
  
@@ -803,7 +805,8 @@ subroutine fkfun(x,f,ier2)
             normel = normel +f(i+noffset)**2
         enddo       
     endif
-    
+   
+
     iter = iter + 1
     if(verbose.ge.3) then
         if(rank.eq.0) write(stdout,*)'fkfun:', iter, sqrt(norma), sqrt(normvol), sqrt(normel), qA(1)
