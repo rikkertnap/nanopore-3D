@@ -606,19 +606,19 @@ subroutine fkfun(x,f,ier2)
                 qtot(ix, iy, iz) =  qtot(ix,iy,iz) + avpolB(ix,iy,iz,im)*zpolB(im)/vpolB*fdisB(ix,iy,iz,im)
             enddo
 
-            qtot(ix, iy,iz) = qtot(ix,iy,iz)*fv  + volq(ix,iy,iz)*vsol    ! OJO
+            qtot(ix, iy,iz) = qtot(ix,iy,iz)*fv  + volq(ix,iy,iz)*vsol    ! surface charge 
 
             enddo
         enddo
     enddo
 
-     do ix=1,dimx
-        do iy=1,dimy
-            do iz=1,dimz
-                write(456,*)volq(ix,iy,iz)
-            enddo
-        enddo
-    enddo        
+    !do ix=1,dimx
+    !    do iy=1,dimy
+    !        do iz=1,dimz
+    !            write(456,*)volq(ix,iy,iz)
+    !        enddo
+    !    enddo
+    ! enddo        
 
     ! Volume fraction
     do ix=1,dimx
